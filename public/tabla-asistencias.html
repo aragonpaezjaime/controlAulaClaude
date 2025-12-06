@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabla de Asistencias - Control de Aula</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .filtros-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid var(--card-border);
+            box-shadow: var(--shadow-card);
+        }
+
+        .filtros-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .filtro-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filtro-label {
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filtro-input {
+            padding: 12px 15px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .filtro-input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            background: rgba(139, 92, 246, 0.15);
+        }
+
+        .tabla-scroll-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid var(--card-border);
+            box-shadow: var(--shadow-card);
+            overflow-x: auto;
+        }
+
+        .tabla-asistencias {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 800px;
+        }
+
+        .tabla-asistencias thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .tabla-asistencias th {
+            padding: 15px 12px;
+            text-align: center;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            background: rgba(139, 92, 246, 0.2);
+            border-bottom: 3px solid var(--card-border);
+            white-space: nowrap;
+        }
+
+        .tabla-asistencias th:first-child {
+            text-align: left;
+            position: sticky;
+            left: 0;
+            z-index: 11;
+            background: rgba(139, 92, 246, 0.3);
+            min-width: 200px;
+        }
+
+        .tabla-asistencias td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+            transition: all 0.2s;
+        }
+
+        .tabla-asistencias td:first-child {
+            text-align: left;
+            font-weight: 700;
+            color: var(--text-primary);
+            position: sticky;
+            left: 0;
+            background: var(--card-bg);
+            z-index: 5;
+            border-right: 2px solid var(--card-border);
+        }
+
+        .tabla-asistencias tbody tr:hover {
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .tabla-asistencias tbody tr:hover td:first-child {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .celda-asistencia {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .celda-asistencia:hover {
+            transform: scale(1.2);
+        }
+
+        .celda-presente {
+            background: rgba(16, 185, 129, 0.2);
+            border: 2px solid #10b981;
+        }
+
+        .celda-ausente {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid #ef4444;
+        }
+
+        .celda-retardo {
+            background: rgba(251, 191, 36, 0.2);
+            border: 2px solid var(--accent-gold);
+        }
+
+        .celda-justificado {
+            background: rgba(59, 130, 246, 0.2);
+            border: 2px solid #3b82f6;
+        }
+
+        .celda-sin-registro {
+            background: rgba(107, 114, 128, 0.1);
+            border: 2px dashed rgba(107, 114, 128, 0.3);
+            color: var(--text-muted);
+        }
+
+        .resumen-col {
+            background: rgba(139, 92, 246, 0.1) !important;
+            font-weight: 700;
+            border-left: 2px solid var(--card-border);
+        }
+
+        .resumen-estadisticas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid var(--card-border);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .stat-value.presente { color: #10b981; }
+        .stat-value.ausente { color: #ef4444; }
+        .stat-value.retardo { color: var(--accent-gold); }
+        .stat-value.justificado { color: #3b82f6; }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        .leyenda {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(139, 92, 246, 0.05);
+            border-radius: 15px;
+        }
+
+        .leyenda-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .leyenda-icono {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+
+        .alerta-faltas {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            gap: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(17, 24, 39, 0.95);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filtros-row {
+                grid-template-columns: 1fr;
+            }
+
+            .tabla-asistencias th:first-child,
+            .tabla-asistencias td:first-child {
+                min-width: 150px;
+            }
+
+            .resumen-estadisticas {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="titulo-principal">
+                <img src="/images/logo-escuela.svg" alt="Logo Escuela" class="logo-escuela">
+                📅 Tabla de Asistencias
+            </h1>
+            <p id="subtitulo">Consulta el historial de asistencias del grupo</p>
+            <button class="back-button" onclick="volverDashboard()">← Volver</button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filtros-container">
+            <div class="filtros-row">
+                <div class="filtro-group">
+                    <label class="filtro-label">Fecha Inicio</label>
+                    <input type="date" id="filtro-fecha-inicio" class="filtro-input">
+                </div>
+
+                <div class="filtro-group">
+                    <label class="filtro-label">Fecha Fin</label>
+                    <input type="date" id="filtro-fecha-fin" class="filtro-input">
+                </div>
+
+                <button class="btn btn-secondary" onclick="cargarUltimaSemana()">
+                    📅 Última Semana
+                </button>
+                <button class="btn btn-primary" onclick="cargarTabla()">
+                    🔍 Buscar
+                </button>
+            </div>
+            <div style="margin-top: 15px;">
+                <button class="btn btn-primary" onclick="mostrarPanelJustificacion()"
+                        style="width: 100%; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                    📝 Justificar Faltas
+                </button>
+            </div>
+        </div>
+
+        <!-- Leyenda -->
+        <div class="leyenda">
+            <div class="leyenda-item">
+                <span class="leyenda-icono celda-presente">✓</span>
+                <span>Presente</span>
+            </div>
+            <div class="leyenda-item">
+                <span class="leyenda-icono celda-ausente">✗</span>
+                <span>Ausente</span>
+            </div>
+            <div class="leyenda-item">
+                <span class="leyenda-icono celda-retardo">🕐</span>
+                <span>Retardo</span>
+            </div>
+            <div class="leyenda-item">
+                <span class="leyenda-icono celda-justificado">📝</span>
+                <span>Justificada</span>
+            </div>
+            <div class="leyenda-item">
+                <span class="leyenda-icono celda-sin-registro">-</span>
+                <span>Sin registro</span>
+            </div>
+        </div>
+
+        <!-- Panel de Justificación de Faltas -->
+        <div id="panel-justificacion" class="filtros-container" style="display: none;">
+            <h3 style="margin-bottom: 20px; color: var(--text-primary); font-size: 1.2rem;">
+                📝 Justificar Faltas Retroactivamente
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; align-items: end;">
+                <div class="filtro-group">
+                    <label class="filtro-label">Alumno</label>
+                    <select id="select-alumno-justificar" class="filtro-input">
+                        <option value="">Selecciona un alumno...</option>
+                    </select>
+                </div>
+                <div class="filtro-group">
+                    <label class="filtro-label">Fecha Inicio</label>
+                    <input type="date" id="justificar-fecha-inicio" class="filtro-input">
+                </div>
+                <div class="filtro-group">
+                    <label class="filtro-label">Fecha Fin</label>
+                    <input type="date" id="justificar-fecha-fin" class="filtro-input">
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div class="filtro-group">
+                    <label class="filtro-label">Motivo del Justificante</label>
+                    <textarea id="motivo-justificante" class="filtro-input"
+                              placeholder="Ej: Cita médica, Enfermedad, Asunto familiar..."
+                              rows="2"
+                              style="resize: vertical; font-family: inherit;"></textarea>
+                </div>
+            </div>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="justificarFaltasAlumno()"
+                        style="flex: 1;">
+                    ✅ Justificar Faltas en Periodo
+                </button>
+                <button class="btn btn-secondary" onclick="ocultarPanelJustificacion()"
+                        style="flex: 0;">
+                    ❌ Cancelar
+                </button>
+            </div>
+            <div style="margin-top: 15px; padding: 15px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border-left: 4px solid #3b82f6;">
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                    <strong>💡 Tip:</strong> Selecciona un alumno y un rango de fechas. Todas las <strong>faltas sin justificar</strong> en ese periodo se cambiarán a <strong>justificadas</strong>. También puedes hacer click directamente en cualquier celda de falta (✗) en la tabla para justificarla individualmente.
+                </p>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="tabla-scroll-container">
+            <div id="loading" class="loading-container">
+                <div class="spinner"></div>
+                <p>Cargando asistencias...</p>
+            </div>
+
+            <div id="tabla-container" style="display: none;">
+                <table class="tabla-asistencias" id="tabla-asistencias">
+                    <thead>
+                        <tr id="tabla-header">
+                            <th>Alumno</th>
+                            <!-- Fechas se cargarán aquí -->
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-body">
+                        <!-- Filas se cargarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📭</div>
+                <div class="empty-state-text">No hay asistencias registradas</div>
+                <p style="margin-top: 10px; color: var(--text-muted);">
+                    Intenta seleccionar un rango de fechas diferente
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        const API_URL = '/api';
+        const urlParams = new URLSearchParams(window.location.search);
+        const grupoId = urlParams.get('grupo');
+
+        if (!grupoId) {
+            window.location.href = '/';
+        }
+
+        // Variables globales
+        let alumnosDelGrupo = [];
+        let datosTablaActual = null;
+
+        // Cargar última semana por defecto
+        function cargarUltimaSemana() {
+            const hoy = new Date();
+            const hace7Dias = new Date();
+            hace7Dias.setDate(hoy.getDate() - 7);
+
+            document.getElementById('filtro-fecha-inicio').value = hace7Dias.toISOString().split('T')[0];
+            document.getElementById('filtro-fecha-fin').value = hoy.toISOString().split('T')[0];
+
+            cargarTabla();
+        }
+
+        // Cargar tabla de asistencias
+        async function cargarTabla() {
+            const fechaInicio = document.getElementById('filtro-fecha-inicio').value;
+            const fechaFin = document.getElementById('filtro-fecha-fin').value;
+
+            if (!fechaInicio || !fechaFin) {
+                mostrarNotificacion('Selecciona ambas fechas', 'error');
+                return;
+            }
+
+            // Mostrar loading
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('tabla-container').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+
+            try {
+                const params = new URLSearchParams({
+                    fechaInicio,
+                    fechaFin
+                });
+
+                const response = await fetch(`${API_URL}/asistencia/grupo/${grupoId}/tabla?${params.toString()}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.fechas.length === 0) {
+                        document.getElementById('empty-state').style.display = 'block';
+                    } else {
+                        mostrarTabla(data);
+                    }
+                } else {
+                    mostrarNotificacion(data.mensaje || 'Error al cargar las asistencias', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión con el servidor', 'error');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Mostrar tabla
+        function mostrarTabla(data) {
+            const { fechas, data: alumnos } = data;
+
+            // Construir header
+            const header = document.getElementById('tabla-header');
+            header.innerHTML = '<th>Alumno</th>';
+
+            fechas.forEach(fecha => {
+                const fechaObj = new Date(fecha + 'T00:00:00');
+                const dia = fechaObj.toLocaleDateString('es-MX', { weekday: 'short' });
+                const diaNum = fechaObj.getDate();
+                const mes = fechaObj.toLocaleDateString('es-MX', { month: 'short' });
+
+                header.innerHTML += `
+                    <th>
+                        <div style="text-transform: capitalize;">${dia}</div>
+                        <div>${diaNum} ${mes}</div>
+                    </th>
+                `;
+            });
+
+            // Columnas de resumen
+            header.innerHTML += `
+                <th class="resumen-col">✓</th>
+                <th class="resumen-col">✗</th>
+                <th class="resumen-col">🕐</th>
+                <th class="resumen-col">📝</th>
+            `;
+
+            // Construir body
+            const body = document.getElementById('tabla-body');
+            body.innerHTML = '';
+
+            alumnos.forEach(alumno => {
+                const tr = document.createElement('tr');
+
+                // Resaltar alumnos con muchas faltas
+                if (alumno.resumen.ausente >= 3) {
+                    tr.classList.add('alerta-faltas');
+                }
+
+                // Avatar de robot único
+                const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alumno.nombreCompleto)}`;
+
+                // Columna de nombre con avatar
+                tr.innerHTML = `<td style="display: flex; align-items: center; gap: 10px;">
+                    <img src="${avatarUrl}" alt="${alumno.nombreCompleto}" style="width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;">
+                    <span>${alumno.nombreCompleto}</span>
+                </td>`;
+
+                // Columnas de asistencia por fecha
+                fechas.forEach(fecha => {
+                    const asistenciasDia = alumno.asistencias[fecha];
+                    const td = document.createElement('td');
+
+                    if (asistenciasDia && asistenciasDia.length > 0) {
+                        const iconos = {
+                            'presente': '✓',
+                            'ausente': '✗',
+                            'retardo': '🕐',
+                            'justificado': '📝'
+                        };
+
+                        // Si hay múltiples asistencias en el mismo día, mostrar todas
+                        asistenciasDia.forEach((asistencia, index) => {
+                            const container = document.createElement('div');
+                            container.style.display = 'inline-block';
+                            container.style.marginRight = '5px';
+
+                            const celda = document.createElement('span');
+                            celda.className = `celda-asistencia celda-${asistencia.estado}`;
+                            celda.textContent = iconos[asistencia.estado];
+
+                            // Guardar datos en el elemento
+                            celda.dataset.asistenciaId = asistencia.id;
+                            celda.dataset.alumnoNombre = alumno.nombreCompleto;
+                            celda.dataset.fecha = fecha;
+
+                            // Construir tooltip con hora y observaciones
+                            let tooltipText = `${asistencia.estado.toUpperCase()} - ${asistencia.hora}`;
+                            if (asistencia.observaciones) {
+                                tooltipText += `\n${asistencia.observaciones}`;
+                            }
+
+                            // Si es ausente, agregar hint de click para justificar
+                            if (asistencia.estado === 'ausente') {
+                                tooltipText += '\n\n👆 Click para justificar esta falta';
+                                celda.style.cursor = 'pointer';
+
+                                // Agregar evento de click
+                                celda.addEventListener('click', () => {
+                                    justificarFaltaIndividual(
+                                        asistencia.id,
+                                        alumno.nombreCompleto,
+                                        fecha
+                                    );
+                                });
+                            }
+
+                            celda.title = tooltipText;
+
+                            // Mostrar tooltip detallado
+                            celda.addEventListener('mouseenter', (e) => mostrarTooltip(e, tooltipText));
+                            celda.addEventListener('mouseleave', ocultarTooltip);
+
+                            container.appendChild(celda);
+
+                            // Mostrar hora pequeña si hay múltiples registros
+                            if (asistenciasDia.length > 1) {
+                                const horaLabel = document.createElement('small');
+                                horaLabel.style.display = 'block';
+                                horaLabel.style.fontSize = '0.7rem';
+                                horaLabel.style.color = 'var(--text-muted)';
+                                horaLabel.textContent = asistencia.hora;
+                                container.appendChild(horaLabel);
+                            }
+
+                            td.appendChild(container);
+                        });
+                    } else {
+                        const celda = document.createElement('span');
+                        celda.className = 'celda-asistencia celda-sin-registro';
+                        celda.textContent = '-';
+                        td.appendChild(celda);
+                    }
+
+                    tr.appendChild(td);
+                });
+
+                // Columnas de resumen
+                tr.innerHTML += `
+                    <td class="resumen-col">${alumno.resumen.presente}</td>
+                    <td class="resumen-col">${alumno.resumen.ausente}</td>
+                    <td class="resumen-col">${alumno.resumen.retardo}</td>
+                    <td class="resumen-col">${alumno.resumen.justificado}</td>
+                `;
+
+                body.appendChild(tr);
+            });
+
+            document.getElementById('tabla-container').style.display = 'block';
+        }
+
+        // Cargar alumnos del grupo
+        async function cargarAlumnos() {
+            try {
+                const response = await fetch(`${API_URL}/grupos/${grupoId}/alumnos`);
+                const data = await response.json();
+
+                if (data.success) {
+                    alumnosDelGrupo = data.data;
+
+                    // Llenar el select
+                    const select = document.getElementById('select-alumno-justificar');
+                    select.innerHTML = '<option value="">Selecciona un alumno...</option>';
+
+                    alumnosDelGrupo.forEach(alumno => {
+                        const option = document.createElement('option');
+                        option.value = alumno._id;
+                        option.textContent = `${alumno.nombre} ${alumno.apellidos}`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar alumnos:', error);
+            }
+        }
+
+        // Mostrar panel de justificación
+        function mostrarPanelJustificacion() {
+            const panel = document.getElementById('panel-justificacion');
+            panel.style.display = 'block';
+
+            // Pre-llenar fechas con el rango actual de la tabla
+            const fechaInicio = document.getElementById('filtro-fecha-inicio').value;
+            const fechaFin = document.getElementById('filtro-fecha-fin').value;
+
+            if (fechaInicio && fechaFin) {
+                document.getElementById('justificar-fecha-inicio').value = fechaInicio;
+                document.getElementById('justificar-fecha-fin').value = fechaFin;
+            }
+
+            // Scroll al panel
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Ocultar panel de justificación
+        function ocultarPanelJustificacion() {
+            document.getElementById('panel-justificacion').style.display = 'none';
+            // Limpiar campos
+            document.getElementById('select-alumno-justificar').value = '';
+            document.getElementById('justificar-fecha-inicio').value = '';
+            document.getElementById('justificar-fecha-fin').value = '';
+            document.getElementById('motivo-justificante').value = '';
+        }
+
+        // Justificar faltas de un alumno en un periodo
+        async function justificarFaltasAlumno() {
+            const alumnoId = document.getElementById('select-alumno-justificar').value;
+            const fechaInicio = document.getElementById('justificar-fecha-inicio').value;
+            const fechaFin = document.getElementById('justificar-fecha-fin').value;
+            const motivo = document.getElementById('motivo-justificante').value;
+
+            // Validaciones
+            if (!alumnoId) {
+                mostrarNotificacion('Por favor selecciona un alumno', 'error');
+                return;
+            }
+            if (!fechaInicio || !fechaFin) {
+                mostrarNotificacion('Por favor selecciona ambas fechas', 'error');
+                return;
+            }
+            if (!motivo.trim()) {
+                mostrarNotificacion('Por favor escribe el motivo del justificante', 'error');
+                return;
+            }
+
+            // Confirmar acción
+            const alumno = alumnosDelGrupo.find(a => a._id === alumnoId);
+            const nombreAlumno = alumno ? `${alumno.nombre} ${alumno.apellidos}` : 'este alumno';
+
+            if (!confirm(`¿Estás seguro de justificar TODAS las faltas de ${nombreAlumno} entre ${fechaInicio} y ${fechaFin}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/asistencia/alumno/${alumnoId}/justificar`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fechaInicio,
+                        fechaFin,
+                        motivo
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarNotificacion(`✅ ${data.mensaje}`, 'success');
+                    ocultarPanelJustificacion();
+                    // Recargar tabla
+                    cargarTabla();
+                } else {
+                    mostrarNotificacion(data.mensaje || 'Error al justificar faltas', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión con el servidor', 'error');
+            }
+        }
+
+        // Justificar una falta individual (click en celda)
+        async function justificarFaltaIndividual(asistenciaId, alumnoNombre, fecha) {
+            const motivo = prompt(`Justificar falta de ${alumnoNombre} del ${fecha}\n\nMotivo del justificante:`);
+
+            if (motivo === null) return; // Canceló
+
+            if (!motivo.trim()) {
+                mostrarNotificacion('Por favor escribe el motivo del justificante', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/asistencia/${asistenciaId}/justificar-individual`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ motivo: motivo.trim() })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarNotificacion('✅ Falta justificada exitosamente', 'success');
+                    // Recargar tabla
+                    cargarTabla();
+                } else {
+                    mostrarNotificacion(data.mensaje || 'Error al justificar la falta', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión con el servidor', 'error');
+            }
+        }
+
+        // Mostrar tooltip
+        function mostrarTooltip(event, texto) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.textContent = texto;
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY + 10 + 'px';
+            tooltip.classList.add('show');
+        }
+
+        // Ocultar tooltip
+        function ocultarTooltip() {
+            document.getElementById('tooltip').classList.remove('show');
+        }
+
+        // Volver al dashboard
+        function volverDashboard() {
+            window.location.href = `/dashboard.html?grupo=${grupoId}`;
+        }
+
+        // Mostrar notificaciones
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${tipo}`;
+            notification.textContent = mensaje;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 12px;
+                font-weight: 700;
+                z-index: 10000;
+                animation: slideIn 0.3s ease-out;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            `;
+
+            // Colores según tipo
+            if (tipo === 'error') {
+                notification.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                notification.style.color = 'white';
+            } else if (tipo === 'success') {
+                notification.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                notification.style.color = 'white';
+            } else {
+                notification.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+                notification.style.color = 'white';
+            }
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Inicializar
+        cargarAlumnos(); // Cargar alumnos para el select de justificación
+        cargarUltimaSemana();
+    </script>
+</body>
+</html>

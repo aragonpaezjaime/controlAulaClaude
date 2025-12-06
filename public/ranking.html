@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking del Grupo - Control de Aula</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid var(--card-border);
+            text-align: center;
+            box-shadow: var(--shadow-card);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .ranking-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid var(--card-border);
+            box-shadow: var(--shadow-card);
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: rgba(139, 92, 246, 0.05);
+            border: 2px solid var(--card-border);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .ranking-item:hover {
+            transform: translateX(10px);
+            background: rgba(139, 92, 246, 0.1);
+            border-color: var(--secondary-color);
+        }
+
+        .ranking-item.top-3 {
+            background: rgba(251, 191, 36, 0.1);
+            border: 2px solid var(--accent-gold);
+        }
+
+        .ranking-position {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .ranking-item.top-3 .ranking-position {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            color: #1f2937;
+        }
+
+        .ranking-item:not(.top-3) .ranking-position {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--text-primary);
+            font-size: 1.5rem;
+        }
+
+        .ranking-medal {
+            font-size: 2rem;
+        }
+
+        .ranking-avatar {
+            margin: 0 15px;
+            flex-shrink: 0;
+        }
+
+        .ranking-avatar img {
+            border: 3px solid rgba(139, 92, 246, 0.3);
+            transition: all 0.3s;
+        }
+
+        .ranking-item.top-3 .ranking-avatar img {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+        }
+
+        .ranking-info {
+            flex: 1;
+        }
+
+        .ranking-nombre {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .ranking-nivel {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .ranking-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .ranking-stat {
+            text-align: center;
+        }
+
+        .ranking-stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+        }
+
+        .ranking-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .xp-bar-container {
+            width: 150px;
+            height: 10px;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .xp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-dark));
+            transition: width 0.3s;
+        }
+
+        .xp-bar-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            gap: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .ranking-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .ranking-item {
+                flex-wrap: wrap;
+            }
+
+            .xp-bar-container {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="titulo-principal">
+                <img src="/images/logo-escuela.svg" alt="Logo Escuela" class="logo-escuela">
+                🏆 Ranking del Grupo
+            </h1>
+            <p id="subtitulo">Top alumnos por experiencia</p>
+            <button class="back-button" onclick="volverDashboard()">← Volver</button>
+        </div>
+
+        <!-- Estadísticas del grupo -->
+        <div id="stats-container" class="stats-grid" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total-alumnos">0</div>
+                <div class="stat-label">👥 Alumnos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-xp-promedio">0</div>
+                <div class="stat-label">⚡ XP Promedio</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-hp-promedio">0</div>
+                <div class="stat-label">❤️ HP Promedio</div>
+            </div>
+        </div>
+
+        <!-- Ranking -->
+        <div class="ranking-container">
+            <div id="loading" class="loading-container">
+                <div class="spinner"></div>
+                <p>Cargando ranking...</p>
+            </div>
+
+            <div id="ranking-list" style="display: none;">
+                <!-- Se llenará dinámicamente -->
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📭</div>
+                <div class="empty-state-text">No hay alumnos en el grupo</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        const urlParams = new URLSearchParams(window.location.search);
+        const grupoId = urlParams.get('grupo');
+
+        if (!grupoId) {
+            window.location.href = '/';
+        }
+
+        // Cargar ranking
+        async function cargarRanking() {
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('ranking-list').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('stats-container').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_URL}/xp/grupo/${grupoId}/ranking`);
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.data.length === 0) {
+                        document.getElementById('empty-state').style.display = 'block';
+                    } else {
+                        mostrarRanking(data);
+                        mostrarEstadisticas(data.estadisticas);
+                    }
+                } else {
+                    mostrarError(data.mensaje || 'Error al cargar el ranking');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión con el servidor');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Mostrar ranking
+        function mostrarRanking(data) {
+            const container = document.getElementById('ranking-list');
+            container.innerHTML = '';
+
+            const medallas = {
+                1: '🥇',
+                2: '🥈',
+                3: '🥉'
+            };
+
+            data.data.forEach(alumno => {
+                const isTop3 = alumno.posicion <= 3;
+
+                // Sistema de XP: 0 a 10000 puntos totales
+                const xpMaximo = 10000;
+                const porcentajeXP = (alumno.xp / xpMaximo) * 100;
+
+                // Avatar de robot único
+                const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alumno.nombreCompleto)}`;
+
+                const item = document.createElement('div');
+                item.className = `ranking-item${isTop3 ? ' top-3' : ''}`;
+
+                item.innerHTML = `
+                    <div class="ranking-position">
+                        ${medallas[alumno.posicion] || alumno.posicion}
+                    </div>
+
+                    <div class="ranking-avatar">
+                        <img src="${avatarUrl}" alt="${alumno.nombreCompleto}" style="width: 50px; height: 50px; border-radius: 50%;">
+                    </div>
+
+                    <div class="ranking-info">
+                        <div class="ranking-nombre">${alumno.nombreCompleto}</div>
+                    </div>
+
+                    <div class="ranking-stats">
+                        <div class="ranking-stat">
+                            <div class="ranking-stat-value">⚡${alumno.xp}</div>
+                            <div class="ranking-stat-label">XP Total</div>
+                        </div>
+
+                        <div class="ranking-stat">
+                            <div class="ranking-stat-value">❤️${alumno.hp}</div>
+                            <div class="ranking-stat-label">HP</div>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <div class="xp-bar-container">
+                                <div class="xp-bar-fill" style="width: ${porcentajeXP}%"></div>
+                            </div>
+                            <div class="xp-bar-text">${alumno.xp}/${xpMaximo} XP</div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(item);
+            });
+
+            document.getElementById('ranking-list').style.display = 'block';
+        }
+
+        // Mostrar estadísticas del grupo
+        function mostrarEstadisticas(stats) {
+            document.getElementById('stat-total-alumnos').textContent = stats.totalAlumnos;
+            document.getElementById('stat-xp-promedio').textContent = stats.xpPromedio;
+            document.getElementById('stat-hp-promedio').textContent = stats.hpPromedio;
+
+            document.getElementById('stats-container').style.display = 'grid';
+        }
+
+        // Volver al dashboard
+        function volverDashboard() {
+            window.location.href = `/dashboard.html?grupo=${grupoId}`;
+        }
+
+        // Mostrar notificaciones
+        function mostrarError(mensaje) {
+            const notification = document.createElement('div');
+            notification.className = 'notification error';
+            notification.textContent = mensaje;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Inicializar
+        cargarRanking();
+    </script>
+</body>
+</html>

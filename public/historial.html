@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Eventos - Control de Aula</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .filtros-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid var(--card-border);
+            box-shadow: var(--shadow-card);
+        }
+
+        .filtros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filtro-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filtro-label {
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filtro-input, .filtro-select {
+            padding: 12px 15px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .filtro-input:focus, .filtro-select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            background: rgba(139, 92, 246, 0.15);
+        }
+
+        .filtro-select option {
+            background: #1e1b4b;
+            color: var(--text-primary);
+        }
+
+        .filtros-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .estadisticas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .estadistica-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid var(--card-border);
+            text-align: center;
+        }
+
+        .estadistica-valor {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .estadistica-label {
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .tabla-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid var(--card-border);
+            box-shadow: var(--shadow-card);
+            overflow-x: auto;
+        }
+
+        .eventos-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .eventos-table thead {
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        .eventos-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--card-border);
+        }
+
+        .eventos-table td {
+            padding: 15px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+        }
+
+        .eventos-table tbody tr {
+            transition: all 0.3s;
+        }
+
+        .eventos-table tbody tr:hover {
+            background: rgba(139, 92, 246, 0.05);
+            transform: translateX(5px);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-salida {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid #3b82f6;
+        }
+
+        .badge-disciplinario {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid #ef4444;
+        }
+
+        .badge-asistencia {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid #10b981;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+        }
+
+        @media (max-width: 768px) {
+            .filtros-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabla-container {
+                padding: 15px;
+            }
+
+            .eventos-table {
+                font-size: 0.85rem;
+            }
+
+            .eventos-table th,
+            .eventos-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="titulo-principal">
+                <img src="/images/logo-escuela.svg" alt="Logo Escuela" class="logo-escuela">
+                📊 Historial de Eventos
+            </h1>
+            <p id="subtitulo">Consulta y filtra todos los eventos del aula</p>
+            <button class="back-button" onclick="volverDashboard()">← Volver</button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filtros-container">
+            <div class="filtros-grid">
+                <div class="filtro-group">
+                    <label class="filtro-label">Tipo de Evento</label>
+                    <select id="filtro-tipo" class="filtro-select">
+                        <option value="">Todos</option>
+                        <option value="salida">Salidas</option>
+                        <option value="disciplinario">Disciplinarios</option>
+                    </select>
+                </div>
+
+                <div class="filtro-group">
+                    <label class="filtro-label">Alumno</label>
+                    <select id="filtro-alumno" class="filtro-select">
+                        <option value="">Todos</option>
+                        <!-- Se llenará dinámicamente -->
+                    </select>
+                </div>
+
+                <div class="filtro-group">
+                    <label class="filtro-label">Fecha Inicio</label>
+                    <input type="date" id="filtro-fecha-inicio" class="filtro-input">
+                </div>
+
+                <div class="filtro-group">
+                    <label class="filtro-label">Fecha Fin</label>
+                    <input type="date" id="filtro-fecha-fin" class="filtro-input">
+                </div>
+            </div>
+
+            <div class="filtros-actions">
+                <button class="btn btn-secondary" onclick="limpiarFiltros()">
+                    🔄 Limpiar
+                </button>
+                <button class="btn btn-primary" onclick="aplicarFiltros()">
+                    🔍 Buscar
+                </button>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div id="estadisticas-container" class="estadisticas-grid" style="display: none;">
+            <div class="estadistica-card">
+                <div class="estadistica-valor" id="stat-total">0</div>
+                <div class="estadistica-label">Total Eventos</div>
+            </div>
+            <div class="estadistica-card">
+                <div class="estadistica-valor" id="stat-salidas" style="color: #60a5fa;">0</div>
+                <div class="estadistica-label">Salidas</div>
+            </div>
+            <div class="estadistica-card">
+                <div class="estadistica-valor" id="stat-disciplinarios" style="color: #f87171;">0</div>
+                <div class="estadistica-label">Disciplinarios</div>
+            </div>
+        </div>
+
+        <!-- Tabla de eventos -->
+        <div class="tabla-container">
+            <div id="loading" class="loading-spinner">
+                <div class="spinner"></div>
+            </div>
+
+            <div id="tabla-eventos" style="display: none;">
+                <table class="eventos-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Alumno</th>
+                            <th>Detalles</th>
+                            <th>Observaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventos-body">
+                        <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📭</div>
+                <div class="empty-state-text">No se encontraron eventos</div>
+                <p style="margin-top: 10px; color: var(--text-muted);">
+                    Intenta ajustar los filtros de búsqueda
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        const urlParams = new URLSearchParams(window.location.search);
+        const grupoId = urlParams.get('grupo');
+
+        let alumnos = [];
+
+        // Cargar alumnos del grupo para el filtro
+        async function cargarAlumnos() {
+            if (!grupoId) return;
+
+            try {
+                const response = await fetch(`${API_URL}/grupos/${grupoId}/alumnos`);
+                const data = await response.json();
+
+                if (data.success) {
+                    alumnos = data.data.sort((a, b) => a.apellidos.localeCompare(b.apellidos));
+
+                    const selectAlumno = document.getElementById('filtro-alumno');
+                    alumnos.forEach(alumno => {
+                        const option = document.createElement('option');
+                        option.value = alumno._id;
+                        option.textContent = alumno.nombreCompleto;
+                        selectAlumno.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar alumnos:', error);
+            }
+        }
+
+        // Aplicar filtros y cargar eventos
+        async function aplicarFiltros() {
+            const tipo = document.getElementById('filtro-tipo').value;
+            const alumnoId = document.getElementById('filtro-alumno').value;
+            const fechaInicio = document.getElementById('filtro-fecha-inicio').value;
+            const fechaFin = document.getElementById('filtro-fecha-fin').value;
+
+            // Construir query params
+            const params = new URLSearchParams();
+            if (grupoId) params.append('grupoId', grupoId);
+            if (alumnoId) params.append('alumnoId', alumnoId);
+            if (tipo) params.append('tipoEvento', tipo);
+            if (fechaInicio) params.append('fechaInicio', fechaInicio);
+            if (fechaFin) params.append('fechaFin', fechaFin);
+
+            // Mostrar loading
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('tabla-eventos').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('estadisticas-container').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_URL}/eventos/historial?${params.toString()}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarEventos(data.data);
+                    mostrarEstadisticas(data.estadisticas);
+                } else {
+                    mostrarError(data.mensaje || 'Error al cargar eventos');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión con el servidor');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Mostrar eventos en la tabla
+        function mostrarEventos(eventos) {
+            const tbody = document.getElementById('eventos-body');
+            tbody.innerHTML = '';
+
+            if (eventos.length === 0) {
+                document.getElementById('empty-state').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('tabla-eventos').style.display = 'block';
+
+            eventos.forEach(evento => {
+                const tr = document.createElement('tr');
+
+                const fecha = new Date(evento.fecha);
+                const fechaStr = fecha.toLocaleDateString('es-MX', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const tipoBadge = evento.tipoEvento === 'Salida'
+                    ? '<span class="badge badge-salida">🚪 Salida</span>'
+                    : '<span class="badge badge-disciplinario">⚠️ Disciplina</span>';
+
+                let detalles = '';
+                if (evento.tipoEvento === 'Salida') {
+                    const tipo = evento.tipoSalida || 'N/A';
+                    const regreso = evento.horaRegreso ? '✓' : '⏳';
+                    detalles = `${tipo} ${regreso}`;
+                } else if (evento.tipoEvento === 'Disciplinario') {
+                    const tipo = evento.tipoDisciplina || 'N/A';
+                    const puntos = evento.puntosDescontados || 0;
+                    detalles = `${tipo} (-${puntos} HP)`;
+                }
+
+                const observaciones = evento.observaciones || evento.descripcion || '-';
+                const alumnoNombre = evento.alumno ?
+                    `${evento.alumno.nombre} ${evento.alumno.apellidos}` :
+                    'N/A';
+
+                // Avatar de robot único
+                const avatarUrl = evento.alumno ?
+                    `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alumnoNombre)}` :
+                    '';
+
+                const alumnoConAvatar = evento.alumno ?
+                    `<div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="${avatarUrl}" alt="${alumnoNombre}" style="width: 25px; height: 25px; border-radius: 50%;">
+                        <span>${alumnoNombre}</span>
+                    </div>` :
+                    alumnoNombre;
+
+                tr.innerHTML = `
+                    <td>${fechaStr}</td>
+                    <td>${tipoBadge}</td>
+                    <td style="font-weight: 700;">${alumnoConAvatar}</td>
+                    <td>${detalles}</td>
+                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${observaciones}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Mostrar estadísticas
+        function mostrarEstadisticas(stats) {
+            if (!stats) return;
+
+            document.getElementById('stat-total').textContent = stats.total || 0;
+            document.getElementById('stat-salidas').textContent = stats.salidas || 0;
+            document.getElementById('stat-disciplinarios').textContent = stats.disciplinarios || 0;
+
+            document.getElementById('estadisticas-container').style.display = 'grid';
+        }
+
+        // Limpiar filtros
+        function limpiarFiltros() {
+            document.getElementById('filtro-tipo').value = '';
+            document.getElementById('filtro-alumno').value = '';
+            document.getElementById('filtro-fecha-inicio').value = '';
+            document.getElementById('filtro-fecha-fin').value = '';
+            aplicarFiltros();
+        }
+
+        // Volver al dashboard
+        function volverDashboard() {
+            if (grupoId) {
+                window.location.href = `/dashboard.html?grupo=${grupoId}`;
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        // Mostrar notificaciones
+        function mostrarError(mensaje) {
+            const notification = document.createElement('div');
+            notification.className = 'notification error';
+            notification.textContent = mensaje;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Inicializar
+        async function init() {
+            await cargarAlumnos();
+
+            // Establecer fecha por defecto (últimos 7 días)
+            const hoy = new Date();
+            const hace7Dias = new Date();
+            hace7Dias.setDate(hoy.getDate() - 7);
+
+            document.getElementById('filtro-fecha-inicio').value = hace7Dias.toISOString().split('T')[0];
+            document.getElementById('filtro-fecha-fin').value = hoy.toISOString().split('T')[0];
+
+            // Cargar eventos iniciales
+            aplicarFiltros();
+        }
+
+        init();
+    </script>
+</body>
+</html>

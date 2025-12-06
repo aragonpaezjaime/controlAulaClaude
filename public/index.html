@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Aula - Seleccionar Grupo</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <img src="/images/logo-escuela.svg" alt="Logo Escuela" class="logo-escuela">
+                🎓 Control de Aula
+            </h1>
+            <p>Selecciona un grupo para comenzar</p>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Cargando grupos...</p>
+        </div>
+
+        <div id="grupos-container" class="grupos-grid" style="display: none;">
+            <!-- Los grupos se cargarán aquí dinámicamente -->
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        // Cargar grupos al iniciar
+        async function cargarGrupos() {
+            try {
+                const response = await fetch(`${API_URL}/grupos`);
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarGrupos(data.data);
+                } else {
+                    mostrarError('Error al cargar los grupos');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión con el servidor');
+            }
+        }
+
+        // Mostrar grupos en el grid
+        function mostrarGrupos(grupos) {
+            const container = document.getElementById('grupos-container');
+            const loading = document.getElementById('loading');
+
+            if (grupos.length === 0) {
+                loading.innerHTML = '<p>No hay grupos registrados</p>';
+                return;
+            }
+
+            loading.style.display = 'none';
+            container.style.display = 'grid';
+
+            container.innerHTML = grupos.map(grupo => {
+                // Personalizar el nombre del nivel para Secundaria
+                const nivelTexto = grupo.nivel === 'Secundaria' ? 'Secundaria técnica #50' : grupo.nivel;
+                return `
+                <div class="grupo-card" onclick="irADashboard('${grupo._id}')">
+                    <h3>${grupo.grado}${grupo.grupo}</h3>
+                    <div class="info">📍 Aula: ${grupo.aula}</div>
+                    <div class="info">📅 Ciclo: ${grupo.cicloEscolar}</div>
+                    <div class="info">📊 Horario: ${grupo.horario.length} sesiones</div>
+                    <span class="nivel">${nivelTexto}</span>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Navegar al dashboard del grupo
+        function irADashboard(grupoId) {
+            window.location.href = `/dashboard.html?grupo=${grupoId}`;
+        }
+
+        // Mostrar notificación de error
+        function mostrarError(mensaje) {
+            const notification = document.createElement('div');
+            notification.className = 'notification error';
+            notification.textContent = mensaje;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Inicializar
+        cargarGrupos();
+    </script>
+</body>
+</html>

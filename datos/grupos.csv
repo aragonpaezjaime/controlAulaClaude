@@ -1,0 +1,9 @@
+grado,grupo,nivel,horario,cicloEscolar,aula
+1,B,Secundaria,"Miércoles:07:50-8:40,Jueves:09:10-10:00,Viernes:07:00-07:50",2025-2026,1roB
+2,A,Secundaria,"Martes:09:00-10:00,Jueves:11:00-12:00",2025-2026,A-202
+2,B,Secundaria,"Lunes:10:00-11:00,Miércoles:08:00-09:00,Viernes:09:00-10:00",2025-2026,A-203
+2,C,Secundaria,"Martes:08:00-09:00,Jueves:10:00-11:00",2025-2026,A-204
+2,D,Secundaria,"Lunes:11:00-12:00,Miércoles:09:00-10:00,Viernes:10:00-11:00",2025-2026,A-205
+2,H,Secundaria,"Martes:10:00-11:00,Jueves:09:00-10:00,Sábado:08:00-09:00",2025-2026,A-206
+3,B,Secundaria,"Martes:14:00-15:00,Jueves:14:00-15:00",2025-2026,B-101
+3,I,Secundaria,"Lunes:15:00-16:00,Miércoles:15:00-16:00,Viernes:15:00-16:00",2025-2026,B-102

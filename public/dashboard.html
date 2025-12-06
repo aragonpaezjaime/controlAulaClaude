@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Aula - Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="grupo-nombre">
+                <img src="/images/logo-escuela.svg" alt="Logo Escuela" class="logo-escuela">
+                Cargando...
+            </h1>
+            <p id="grupo-info">Información del grupo</p>
+            <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
+                <button class="back-button" onclick="window.location.href='/'">← Volver a grupos</button>
+                <button id="btn-iniciar-clase" class="back-button" onclick="tomarLista()" style="background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark)); color: #1f2937; border-color: var(--accent-gold);">
+                    📋 Tomar Lista
+                </button>
+                <button class="back-button" onclick="verTablaAsistencias()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border-color: #10b981;">
+                    📅 Tabla Asistencias
+                </button>
+                <button class="back-button" onclick="verRanking()" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: #f59e0b;">
+                    🏆 Ranking
+                </button>
+                <button class="back-button" onclick="verHistorial()" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border-color: #8b5cf6;">
+                    📊 Ver Historial
+                </button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Cargando alumnos...</p>
+        </div>
+
+        <div id="alumnos-container" class="alumnos-grid" style="display: none;">
+            <!-- Los alumnos se cargarán aquí dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Modal para registrar salida -->
+    <div id="modal-salida" class="modal-overlay">
+        <div class="modal">
+            <h3>Registrar Salida</h3>
+            <p id="modal-alumno-nombre" style="margin-bottom: 20px; color: #6b7280; font-weight: 600;"></p>
+
+            <div class="modal-buttons">
+                <button class="modal-btn" data-tipo="baño">🚽 Baño</button>
+                <button class="modal-btn" data-tipo="enfermería">🏥 Enfermería</button>
+                <button class="modal-btn" data-tipo="agua">💧 Agua</button>
+                <button class="modal-btn" data-tipo="otros">📝 Otros</button>
+            </div>
+
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Observaciones (opcional):</label>
+            <textarea id="salida-observaciones" class="modal-input" rows="3" placeholder="Escribe alguna observación..."></textarea>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarModal('salida')">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmarSalida()">Registrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para registrar evento disciplinario -->
+    <div id="modal-disciplina" class="modal-overlay">
+        <div class="modal">
+            <h3>Registrar Evento Disciplinario</h3>
+            <p id="modal-disciplina-alumno" style="margin-bottom: 20px; color: #6b7280; font-weight: 600;"></p>
+
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tipo de falta:</label>
+            <div class="modal-buttons">
+                <button class="modal-btn" data-tipo="indisciplina">⚠️ Indisciplina</button>
+                <button class="modal-btn" data-tipo="teléfono">📱 Teléfono</button>
+                <button class="modal-btn" data-tipo="dormido">😴 Dormido</button>
+                <button class="modal-btn" data-tipo="otros">📝 Otros</button>
+            </div>
+
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; margin-top: 15px;">Puntos a descontar:</label>
+            <input type="number" id="disciplina-puntos" class="modal-input" min="1" max="100" value="5">
+
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Observaciones:</label>
+            <textarea id="disciplina-observaciones" class="modal-input" rows="3" placeholder="Describe la situación..." required></textarea>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarModal('disciplina')">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmarDisciplina()">Registrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ajustar XP/HP -->
+    <div id="modal-ajuste-xp" class="modal-overlay">
+        <div class="modal">
+            <h3>⚡ Ajustar XP / HP</h3>
+            <div id="ajuste-alumno-info" style="margin-bottom: 20px; padding: 15px; background: rgba(139, 92, 246, 0.1); border: 2px solid rgba(139, 92, 246, 0.3); border-radius: 12px;">
+                <div style="font-weight: 800; font-size: 1.1rem; color: var(--text-primary); margin-bottom: 5px;" id="ajuste-alumno-nombre">Alumno</div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">
+                    <span id="ajuste-alumno-stats">⚡ 0 XP | ❤️ 0 HP</span>
+                </div>
+            </div>
+            <input type="hidden" id="ajuste-alumno-id">
+
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tipo de ajuste:</label>
+            <div class="modal-buttons" style="margin-bottom: 15px;">
+                <button class="modal-btn" data-tipo-ajuste="xp-positivo" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981;">
+                    ⚡ Otorgar XP
+                </button>
+                <button class="modal-btn" data-tipo-ajuste="xp-negativo" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444;">
+                    ⚡ Quitar XP
+                </button>
+                <button class="modal-btn" data-tipo-ajuste="hp-positivo" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981;">
+                    ❤️ Otorgar HP
+                </button>
+                <button class="modal-btn" data-tipo-ajuste="hp-negativo" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444;">
+                    ❤️ Quitar HP
+                </button>
+            </div>
+
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Cantidad XP:</label>
+            <input type="number" id="ajuste-cantidad" class="modal-input" min="1" max="1000" value="10" style="margin-bottom: 15px;">
+
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Motivo:</label>
+            <select id="ajuste-motivo" class="modal-input" style="width: 100%; margin-bottom: 15px;">
+                <option value="Tarea">Tarea</option>
+                <option value="Práctica">Práctica</option>
+                <option value="Plickers">Plickers</option>
+                <option value="Jeopardy">Jeopardy</option>
+                <option value="Reto (examen)">Reto (examen)</option>
+                <option value="Bonus de Constancia (Asistencia)">Bonus de Constancia (Asistencia)</option>
+                <option value="Extra">Extra</option>
+                <option value="Escaperoom">Escaperoom</option>
+                <option value="Otro">Otro</option>
+            </select>
+
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Observaciones (opcional):</label>
+            <textarea id="ajuste-observaciones" class="modal-input" rows="3" placeholder="Detalles adicionales..."></textarea>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="cerrarModal('ajuste-xp')">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmarAjusteXP()">Confirmar Ajuste</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para cambiar estado de asistencia (Modo Clase Activa) -->
+    <div id="modal-cambiar-estado" class="modal-overlay">
+        <div class="modal">
+            <h3>🔄 Cambiar Estado de Asistencia</h3>
+            <div id="cambiar-estado-alumno-info" style="margin-bottom: 20px; padding: 15px; background: rgba(139, 92, 246, 0.1); border: 2px solid rgba(139, 92, 246, 0.3); border-radius: 12px;">
+                <div style="font-weight: 800; font-size: 1.1rem; color: var(--text-primary); margin-bottom: 5px;" id="cambiar-estado-alumno-nombre">Alumno</div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">
+                    <span>Estado actual: <span id="cambiar-estado-actual" style="font-weight: 800; color: var(--accent-gold);">-</span></span>
+                </div>
+            </div>
+            <input type="hidden" id="cambiar-estado-alumno-id">
+
+            <label style="display: block; margin-bottom: 10px; font-weight: 600;">Selecciona el nuevo estado:</label>
+            <div class="modal-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <button class="modal-btn" data-nuevo-estado="presente" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981; padding: 20px;">
+                    <div style="font-size: 2rem; margin-bottom: 5px;">✓</div>
+                    <div style="font-weight: 700;">PRESENTE</div>
+                </button>
+                <button class="modal-btn" data-nuevo-estado="ausente" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444; padding: 20px;">
+                    <div style="font-size: 2rem; margin-bottom: 5px;">✗</div>
+                    <div style="font-weight: 700;">AUSENTE</div>
+                </button>
+                <button class="modal-btn" data-nuevo-estado="retardo" style="background: rgba(245, 158, 11, 0.2); border-color: #f59e0b; color: #f59e0b; padding: 20px;">
+                    <div style="font-size: 2rem; margin-bottom: 5px;">🕐</div>
+                    <div style="font-weight: 700;">RETARDO</div>
+                </button>
+                <button class="modal-btn" data-nuevo-estado="justificado" style="background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #3b82f6; padding: 20px;">
+                    <div style="font-size: 2rem; margin-bottom: 5px;">📝</div>
+                    <div style="font-weight: 700;">JUSTIFICADO</div>
+                </button>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="cerrarModal('cambiar-estado')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        let grupoActual = null;
+        let alumnoSeleccionado = null;
+        let tipoSeleccionado = null;
+        let claseActiva = null; // 🎓 Estado de clase activa del sessionStorage
+
+        // ============================================
+        // SISTEMA DE AUDIO GAMING 🎮🔊
+        // ============================================
+        const sonidos = {
+            xpGain: new Audio('/sounds/xp-gain.mp3'),          // Monedas/Power-up
+            xpBigGain: new Audio('/sounds/xp-big-gain.mp3'),   // XP grande (100+)
+            xpLose: new Audio('/sounds/xp-lose.mp3'),          // Perder XP
+            hpGain: new Audio('/sounds/hp-gain.mp3'),          // Recuperar vida
+            hpLose: new Audio('/sounds/hp-lose.mp3'),          // Daño/Perder HP
+            click: new Audio('/sounds/click.mp3'),             // Click general
+            success: new Audio('/sounds/success.mp3'),         // Acción exitosa
+            error: new Audio('/sounds/error.mp3'),             // Error/Cancelar
+            complete: new Audio('/sounds/complete.mp3')        // Tarea completada
+        };
+
+        // Configurar volumen de todos los sonidos (0.0 a 1.0)
+        Object.values(sonidos).forEach(audio => {
+            audio.volume = 0.4; // 40% de volumen (ajustable)
+        });
+
+        // Función helper para reproducir sonidos
+        function reproducirSonido(nombreSonido) {
+            try {
+                const audio = sonidos[nombreSonido];
+                if (audio) {
+                    audio.currentTime = 0; // Reiniciar si ya está sonando
+                    audio.play().catch(err => {
+                        // Ignorar errores de autoplay (navegador bloqueado)
+                        console.log('Audio bloqueado por el navegador:', err);
+                    });
+                }
+            } catch (error) {
+                console.error('Error al reproducir sonido:', error);
+            }
+        }
+
+        // Obtener ID del grupo desde la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const grupoId = urlParams.get('grupo');
+
+        if (!grupoId) {
+            window.location.href = '/';
+        }
+
+        // 🎓 Cargar estado de clase activa desde sessionStorage
+        function cargarClaseActiva() {
+            const claseActivaStr = sessionStorage.getItem('claseActiva');
+            if (claseActivaStr) {
+                try {
+                    const claseActivaData = JSON.parse(claseActivaStr);
+                    // Verificar que sea del mismo grupo
+                    if (claseActivaData.grupoId === grupoId && claseActivaData.activa) {
+                        claseActiva = claseActivaData;
+                        console.log('✅ Clase activa detectada:', claseActiva);
+                        actualizarBotonClase();
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('Error al parsear clase activa:', error);
+                }
+            }
+            claseActiva = null;
+            actualizarBotonClase();
+            return false;
+        }
+
+        // 🎓 Actualizar botón según estado de clase (Iniciar/Finalizar)
+        function actualizarBotonClase() {
+            const btnTomarLista = document.getElementById('btn-iniciar-clase');
+            if (!btnTomarLista) {
+                console.warn('⚠️ No se encontró el botón de iniciar clase');
+                return;
+            }
+
+            if (claseActiva && claseActiva.activa) {
+                // Cambiar a "Finalizar Clase"
+                btnTomarLista.textContent = '🏁 Finalizar Clase';
+                btnTomarLista.onclick = finalizarClase;
+                btnTomarLista.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                btnTomarLista.style.borderColor = '#ef4444';
+                btnTomarLista.style.color = 'white';
+            } else {
+                // Cambiar a "Iniciar Clase"
+                btnTomarLista.textContent = '🎓 Iniciar Clase';
+                btnTomarLista.onclick = tomarLista;
+                btnTomarLista.style.background = 'linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark))';
+                btnTomarLista.style.borderColor = 'var(--accent-gold)';
+                btnTomarLista.style.color = '#1f2937';
+            }
+        }
+
+        // Cargar información del grupo y sus alumnos
+        async function cargarDatos() {
+            // Cargar estado de clase activa primero
+            cargarClaseActiva();
+            try {
+                // Cargar información del grupo
+                const grupoResponse = await fetch(`${API_URL}/grupos/${grupoId}`);
+                const grupoData = await grupoResponse.json();
+
+                if (grupoData.success) {
+                    grupoActual = grupoData.data;
+                    mostrarInfoGrupo(grupoActual);
+                }
+
+                // Cargar alumnos del grupo
+                const alumnosResponse = await fetch(`${API_URL}/grupos/${grupoId}/alumnos`);
+                const alumnosData = await alumnosResponse.json();
+
+                if (alumnosData.success) {
+                    mostrarAlumnos(alumnosData.data);
+                } else {
+                    mostrarError('Error al cargar los alumnos');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión con el servidor');
+            }
+        }
+
+        // Mostrar información del grupo en el header
+        function mostrarInfoGrupo(grupo) {
+            const logoHTML = '<img src="/images/logo-escuela.svg" alt="Logo Escuela" class="logo-escuela">';
+            // Personalizar el nombre del nivel para Secundaria
+            const nivelTexto = grupo.nivel === 'Secundaria' ? 'Secundaria técnica #50' : grupo.nivel;
+            document.getElementById('grupo-nombre').innerHTML = `${logoHTML}${grupo.grado}${grupo.grupo} - ${nivelTexto}`;
+            document.getElementById('grupo-info').textContent = `Aula ${grupo.aula} | Ciclo ${grupo.cicloEscolar}`;
+        }
+
+        // Mostrar alumnos en el grid
+        function mostrarAlumnos(alumnos) {
+            const container = document.getElementById('alumnos-container');
+            const loading = document.getElementById('loading');
+
+            if (alumnos.length === 0) {
+                loading.innerHTML = '<p>No hay alumnos registrados en este grupo</p>';
+                return;
+            }
+
+            loading.style.display = 'none';
+            container.style.display = 'grid';
+
+            // Ordenar alumnos por apellidos
+            alumnos.sort((a, b) => a.apellidos.localeCompare(b.apellidos));
+
+            container.innerHTML = alumnos.map(alumno => {
+                const saludClase = alumno.salud <= 30 ? 'low' : alumno.salud <= 60 ? 'medium' : '';
+
+                // Sistema de XP: 0 a 10000 puntos totales
+                const xpMaximo = 10000;
+                const porcentajeXP = (alumno.xp / xpMaximo) * 100;
+
+                // Avatar de robot único basado en el nombre del alumno
+                const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alumno.nombreCompleto)}`;
+
+                // 🎓 MODO CLASE ACTIVA: Detectar estado de asistencia
+                let estadoClase = '';
+                let badgeHTML = '';
+                let btnCambiarEstado = '';
+
+                if (claseActiva && claseActiva.asistencias && claseActiva.asistencias[alumno._id]) {
+                    const asistencia = claseActiva.asistencias[alumno._id];
+                    const estado = asistencia.estado;
+
+                    if (estado === 'ausente') {
+                        estadoClase = 'alumno-ausente';
+                        badgeHTML = '<div class="estado-badge ausente">✗ AUSENTE</div>';
+                    } else if (estado === 'retardo') {
+                        estadoClase = 'alumno-retardo';
+                        badgeHTML = '<div class="estado-badge retardo">🕐 RETARDO</div>';
+                    } else if (estado === 'justificado') {
+                        estadoClase = 'alumno-justificado';
+                        badgeHTML = '<div class="estado-badge justificado">📝 JUSTIFICADO</div>';
+                    }
+
+                    // Botón para cambiar estado (solo visible cuando hay clase activa)
+                    btnCambiarEstado = `
+                        <button class="btn-cambiar-estado" onclick="abrirModalCambiarEstado('${alumno._id}', '${alumno.nombreCompleto.replace(/'/g, "\\'")}', '${estado}')">
+                            🔄 Cambiar Estado
+                        </button>
+                    `;
+                }
+
+                return `
+                    <div class="alumno-card ${estadoClase}">
+                        ${badgeHTML}
+                        <div class="alumno-header">
+                            <div class="alumno-avatar">
+                                <img src="${avatarUrl}" alt="${alumno.nombreCompleto}" style="width: 100%; height: 100%; border-radius: 50%;">
+                            </div>
+                            <div class="alumno-info">
+                                <div class="alumno-nombre">${alumno.nombreCompleto}</div>
+                            </div>
+                        </div>
+
+                        <div class="alumno-stats">
+                            <div class="stat-box" onclick="abrirModalAjusteXP('${alumno._id}', '${alumno.nombreCompleto.replace(/'/g, "\\'")}', ${alumno.xp}, ${alumno.salud})" title="Click para ajustar XP/HP">
+                                <div class="stat-label">🏅 Insignia</div>
+                                <div class="stat-value level-value">-</div>
+                            </div>
+                            <div class="stat-box xp-box" onclick="abrirModalAjusteXP('${alumno._id}', '${alumno.nombreCompleto.replace(/'/g, "\\'")}', ${alumno.xp}, ${alumno.salud})" title="Click para ajustar XP/HP">
+                                <div class="stat-label">⚡ XP Total</div>
+                                <div class="stat-value xp-value">${alumno.xp}</div>
+                            </div>
+                        </div>
+
+                        <div class="xp-progress">
+                            <div class="xp-progress-label">
+                                <span>⚡ Progreso XP</span>
+                                <span>${alumno.xp}/${xpMaximo}</span>
+                            </div>
+                            <div class="xp-progress-bar">
+                                <div class="xp-progress-fill" style="width: ${porcentajeXP}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="health-bar">
+                            <div class="health-bar-label">
+                                <span class="hp-text">❤️ HP</span>
+                                <span>${alumno.salud}/100</span>
+                            </div>
+                            <div class="health-bar-container">
+                                <div class="health-bar-fill ${saludClase}" style="width: ${alumno.salud}%">
+                                    ${alumno.salud}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <button class="action-btn salida" onclick="abrirModalSalida('${alumno._id}', '${alumno.nombreCompleto}')">
+                                🚪 Salida
+                            </button>
+                            <button class="action-btn disciplina" onclick="abrirModalDisciplina('${alumno._id}', '${alumno.nombreCompleto}')">
+                                ⚠️ Disciplina
+                            </button>
+                        </div>
+                        ${btnCambiarEstado}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Abrir modal para registrar salida
+        function abrirModalSalida(alumnoId, nombreCompleto) {
+            alumnoSeleccionado = alumnoId;
+            tipoSeleccionado = null;
+            document.getElementById('modal-alumno-nombre').textContent = `Alumno: ${nombreCompleto}`;
+            document.getElementById('salida-observaciones').value = '';
+
+            // Limpiar selección previa
+            document.querySelectorAll('#modal-salida .modal-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            document.getElementById('modal-salida').classList.add('active');
+        }
+
+        // Abrir modal para evento disciplinario
+        function abrirModalDisciplina(alumnoId, nombreCompleto) {
+            alumnoSeleccionado = alumnoId;
+            tipoSeleccionado = null;
+            document.getElementById('modal-disciplina-alumno').textContent = `Alumno: ${nombreCompleto}`;
+            document.getElementById('disciplina-observaciones').value = '';
+            document.getElementById('disciplina-puntos').value = 5;
+
+            // Limpiar selección previa
+            document.querySelectorAll('#modal-disciplina .modal-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            document.getElementById('modal-disciplina').classList.add('active');
+        }
+
+        // Cerrar modal
+        function cerrarModal(tipo) {
+            document.getElementById(`modal-${tipo}`).classList.remove('active');
+            alumnoSeleccionado = null;
+            tipoSeleccionado = null;
+        }
+
+        // 🎓 FUNCIONES PARA MODO CLASE ACTIVA
+
+        // Abrir modal para cambiar estado de asistencia
+        function abrirModalCambiarEstado(alumnoId, nombreCompleto, estadoActual) {
+            if (!claseActiva) {
+                mostrarError('No hay una clase activa');
+                return;
+            }
+
+            alumnoSeleccionado = alumnoId;
+            document.getElementById('cambiar-estado-alumno-nombre').textContent = nombreCompleto;
+
+            // Mostrar estado actual con formato bonito
+            const estadosFormato = {
+                'presente': '✓ Presente',
+                'ausente': '✗ Ausente',
+                'retardo': '🕐 Retardo',
+                'justificado': '📝 Justificado'
+            };
+            document.getElementById('cambiar-estado-actual').textContent = estadosFormato[estadoActual] || estadoActual;
+            document.getElementById('cambiar-estado-alumno-id').value = alumnoId;
+
+            // Limpiar selección previa
+            document.querySelectorAll('#modal-cambiar-estado .modal-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            document.getElementById('modal-cambiar-estado').classList.add('active');
+        }
+
+        // Event listener para los botones de cambio de estado
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('#modal-cambiar-estado [data-nuevo-estado]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const nuevoEstado = this.getAttribute('data-nuevo-estado');
+                    cambiarEstadoAsistencia(nuevoEstado);
+                });
+            });
+        });
+
+        // Cambiar estado de asistencia en sessionStorage y re-renderizar
+        function cambiarEstadoAsistencia(nuevoEstado) {
+            if (!claseActiva || !alumnoSeleccionado) {
+                mostrarError('Error: No se puede cambiar el estado');
+                return;
+            }
+
+            // Actualizar el estado en sessionStorage
+            if (claseActiva.asistencias[alumnoSeleccionado]) {
+                claseActiva.asistencias[alumnoSeleccionado].estado = nuevoEstado;
+
+                // Guardar en sessionStorage
+                sessionStorage.setItem('claseActiva', JSON.stringify(claseActiva));
+
+                // Sonidos según el nuevo estado
+                if (nuevoEstado === 'presente') {
+                    reproducirSonido('success');
+                } else if (nuevoEstado === 'ausente') {
+                    reproducirSonido('error');
+                } else {
+                    reproducirSonido('click');
+                }
+
+                // Cerrar modal
+                cerrarModal('cambiar-estado');
+
+                // Re-cargar datos para actualizar la visualización
+                cargarDatos();
+
+                mostrarExito(`Estado cambiado a: ${nuevoEstado.toUpperCase()}`);
+
+                console.log('✅ Estado actualizado en sessionStorage:', nuevoEstado);
+            }
+        }
+
+        // Finalizar clase
+        async function finalizarClase() {
+            if (!claseActiva) {
+                mostrarError('No hay una clase activa');
+                return;
+            }
+
+            // Confirmación del docente
+            if (!confirm('¿Confirmar y finalizar la clase?\n\nSe guardará el estado final de asistencias.')) {
+                return;
+            }
+
+            try {
+                // Convertir asistencias de objeto a array
+                const asistenciasArray = Object.values(claseActiva.asistencias);
+
+                // Opcional: Aquí podrías enviar una actualización al backend si hubo cambios
+                // Por ahora, solo limpiamos el sessionStorage
+
+                // Limpiar sessionStorage
+                sessionStorage.removeItem('claseActiva');
+                claseActiva = null;
+
+                // Sonido de éxito
+                reproducirSonido('complete');
+
+                // Recargar datos para actualizar visualización
+                await cargarDatos();
+
+                mostrarExito('✅ Clase finalizada correctamente');
+
+                console.log('✅ Clase finalizada y sessionStorage limpiado');
+            } catch (error) {
+                console.error('Error al finalizar clase:', error);
+                mostrarError('Error al finalizar la clase');
+            }
+        }
+
+        // Manejar selección de tipo en modales
+        document.querySelectorAll('.modal-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const modal = this.closest('.modal');
+                modal.querySelectorAll('.modal-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                tipoSeleccionado = this.getAttribute('data-tipo');
+            });
+        });
+
+        // Confirmar registro de salida
+        async function confirmarSalida() {
+            if (!tipoSeleccionado) {
+                mostrarError('Selecciona un tipo de salida');
+                return;
+            }
+
+            try {
+                const observaciones = document.getElementById('salida-observaciones').value;
+
+                const response = await fetch(`${API_URL}/eventos/salida`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        alumno: alumnoSeleccionado,
+                        tipoSalida: tipoSeleccionado,
+                        horaSalida: new Date().toISOString(),
+                        observaciones: observaciones || undefined
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarExito('Salida registrada correctamente');
+                    cerrarModal('salida');
+                    // Recargar alumnos
+                    await cargarDatos();
+                } else {
+                    mostrarError(data.mensaje || 'Error al registrar la salida');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión con el servidor');
+            }
+        }
+
+        // Confirmar registro de evento disciplinario
+        async function confirmarDisciplina() {
+            if (!tipoSeleccionado) {
+                mostrarError('Selecciona un tipo de falta');
+                return;
+            }
+
+            const observaciones = document.getElementById('disciplina-observaciones').value;
+            if (!observaciones.trim()) {
+                mostrarError('Las observaciones son obligatorias');
+                return;
+            }
+
+            const puntos = parseInt(document.getElementById('disciplina-puntos').value);
+            if (puntos < 1 || puntos > 100) {
+                mostrarError('Los puntos deben estar entre 1 y 100');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/eventos/disciplinario`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        alumno: alumnoSeleccionado,
+                        tipoDisciplina: tipoSeleccionado,
+                        puntosDescontados: puntos,
+                        observaciones: observaciones
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarExito('Evento disciplinario registrado correctamente');
+                    cerrarModal('disciplina');
+                    // Recargar alumnos para ver la salud actualizada
+                    await cargarDatos();
+                } else {
+                    mostrarError(data.mensaje || 'Error al registrar el evento');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión con el servidor');
+            }
+        }
+
+        // Mostrar notificación de éxito
+        function mostrarExito(mensaje) {
+            const notification = document.createElement('div');
+            notification.className = 'notification success';
+            notification.textContent = mensaje;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Mostrar notificación de error
+        function mostrarError(mensaje) {
+            const notification = document.createElement('div');
+            notification.className = 'notification error';
+            notification.textContent = mensaje;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Ir a toma de lista
+        function tomarLista() {
+            window.location.href = `/asistencia.html?grupo=${grupoId}`;
+        }
+
+        // Ver tabla de asistencias
+        function verTablaAsistencias() {
+            window.location.href = `/tabla-asistencias.html?grupo=${grupoId}`;
+        }
+
+        // Ver historial
+        function verHistorial() {
+            window.location.href = `/historial.html?grupo=${grupoId}`;
+        }
+
+        // Ver ranking
+        function verRanking() {
+            window.location.href = `/ranking.html?grupo=${grupoId}`;
+        }
+
+        // ============================================
+        // FUNCIONES DEL MODAL DE AJUSTE XP/HP
+        // ============================================
+
+        let tipoAjusteSeleccionado = null;
+
+        // Abrir modal de ajuste XP para un alumno específico
+        function abrirModalAjusteXP(alumnoId, nombreCompleto, xp, hp) {
+            tipoAjusteSeleccionado = null;
+
+            // Establecer datos del alumno
+            document.getElementById('ajuste-alumno-id').value = alumnoId;
+            document.getElementById('ajuste-alumno-nombre').textContent = nombreCompleto;
+            document.getElementById('ajuste-alumno-stats').textContent = `⚡ ${xp} XP | ❤️ ${hp} HP`;
+
+            // Resetear selecciones
+            document.getElementById('ajuste-cantidad').value = '10';
+            document.getElementById('ajuste-observaciones').value = '';
+
+            // Limpiar selección de tipo
+            document.querySelectorAll('#modal-ajuste-xp .modal-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            document.getElementById('modal-ajuste-xp').classList.add('active');
+        }
+
+        // Manejar selección de tipo de ajuste
+        document.querySelectorAll('#modal-ajuste-xp .modal-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('#modal-ajuste-xp .modal-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                tipoAjusteSeleccionado = this.getAttribute('data-tipo-ajuste');
+            });
+        });
+
+        // Confirmar ajuste de XP/HP
+        async function confirmarAjusteXP() {
+            const alumnoId = document.getElementById('ajuste-alumno-id').value;
+            const cantidad = parseInt(document.getElementById('ajuste-cantidad').value);
+            const motivo = document.getElementById('ajuste-motivo').value;
+            const observaciones = document.getElementById('ajuste-observaciones').value;
+
+            // Validaciones
+            if (!alumnoId) {
+                mostrarError('Error: No se pudo identificar al alumno');
+                return;
+            }
+
+            if (!tipoAjusteSeleccionado) {
+                mostrarError('Selecciona un tipo de ajuste');
+                return;
+            }
+
+            if (!cantidad || cantidad <= 0) {
+                mostrarError('La cantidad debe ser mayor a 0');
+                return;
+            }
+
+            try {
+                // Determinar endpoint y cantidad (positiva o negativa)
+                const [tipo, signo] = tipoAjusteSeleccionado.split('-');
+                const cantidadFinal = signo === 'positivo' ? cantidad : -cantidad;
+                const endpoint = tipo === 'xp' ? 'ajustar-xp' : 'ajustar-hp';
+
+                const response = await fetch(`${API_URL}/xp/alumno/${alumnoId}/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cantidad: cantidadFinal,
+                        motivo,
+                        observaciones: observaciones || undefined
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 🎮 SONIDOS GAMING
+                    if (tipo === 'xp') {
+                        if (signo === 'positivo') {
+                            // Sonido diferente según cantidad de XP
+                            reproducirSonido(cantidadFinal >= 100 ? 'xpBigGain' : 'xpGain');
+                        } else {
+                            reproducirSonido('xpLose');
+                        }
+                    } else if (tipo === 'hp') {
+                        reproducirSonido(signo === 'positivo' ? 'hpGain' : 'hpLose');
+                    }
+
+                    const tipoTexto = tipo === 'xp' ? 'XP' : 'HP';
+                    const accion = signo === 'positivo' ? 'otorgado' : 'descontado';
+                    mostrarExito(`${tipoTexto} ${accion} exitosamente a ${data.data.alumno}`);
+                    cerrarModal('ajuste-xp');
+
+                    // Recargar datos del dashboard
+                    await cargarDatos();
+                } else {
+                    reproducirSonido('error');
+                    mostrarError(data.mensaje || 'Error al ajustar');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión con el servidor');
+            }
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    const modalId = this.id.replace('modal-', '');
+                    cerrarModal(modalId);
+                }
+            });
+        });
+
+        // Inicializar
+        cargarDatos();
+    </script>
+</body>
+</html>

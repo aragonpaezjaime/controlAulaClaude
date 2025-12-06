@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toma de Lista - Control de Aula</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Estilos específicos para la toma de lista */
+        .asistencia-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            min-height: 80vh;
+            padding: 20px;
+            align-items: start;
+        }
+
+        .asistencia-main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-bar-top {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 30px;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .progress-bar-container-top {
+            width: 100%;
+            height: 20px;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid var(--card-border);
+        }
+
+        .progress-bar-fill-top {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-gold));
+            transition: width 0.5s ease;
+            box-shadow: var(--glow-purple);
+        }
+
+        .alumno-card-large {
+            background: var(--card-bg);
+            border-radius: 30px;
+            padding: 50px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: var(--shadow-elevated), var(--glow-blue);
+            border: 3px solid var(--card-border);
+            text-align: center;
+            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .alumno-avatar-large {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--level-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            border: 5px solid var(--accent-gold);
+            box-shadow: var(--glow-gold);
+            margin: 0 auto 30px;
+            position: relative;
+        }
+
+        .alumno-avatar-large::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--accent-gold), transparent, var(--accent-gold));
+            z-index: -1;
+            animation: rotate 3s linear infinite;
+        }
+
+        .alumno-nombre-large {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .alumno-nivel-large {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        /* Panel lateral para ausentes */
+        .panel-lateral {
+            position: sticky;
+            top: 20px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid var(--card-border);
+            box-shadow: var(--shadow-elevated);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .panel-titulo {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-seccion {
+            margin-bottom: 25px;
+        }
+
+        .panel-seccion-titulo {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-lista {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .panel-item {
+            padding: 10px 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid #ef4444;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            animation: slideInRight 0.3s ease;
+        }
+
+        .panel-item.retardo {
+            background: rgba(251, 191, 36, 0.1);
+            border-left-color: var(--accent-gold);
+        }
+
+        .panel-empty {
+            color: var(--text-muted);
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .asistencia-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn-asistencia {
+            padding: 30px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-asistencia::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-asistencia:active::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .btn-presente {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-presente:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.7);
+        }
+
+        .btn-ausente {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-ausente:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(239, 68, 68, 0.7);
+        }
+
+        .btn-retardo {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            color: #1f2937;
+            box-shadow: 0 8px 20px rgba(251, 191, 36, 0.5);
+        }
+
+        .btn-retardo:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(251, 191, 36, 0.7);
+        }
+
+        .btn-justificado {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-justificado:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.7);
+        }
+
+        .navigation-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-nav {
+            padding: 15px 30px;
+            border: 2px solid var(--card-border);
+            border-radius: 15px;
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-nav:hover:not(:disabled) {
+            border-color: var(--secondary-color);
+            background: rgba(139, 92, 246, 0.3);
+            transform: scale(1.05);
+        }
+
+        .btn-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn-finalizar {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            color: #1f2937;
+            border: none;
+            box-shadow: var(--glow-gold);
+        }
+
+        .btn-finalizar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(251, 191, 36, 0.7);
+        }
+
+        /* Pantalla de resumen */
+        .resumen-container {
+            display: none;
+            padding: 40px;
+        }
+
+        .resumen-card {
+            background: var(--card-bg);
+            border-radius: 30px;
+            padding: 50px;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: var(--shadow-elevated), var(--glow-purple);
+            border: 3px solid var(--card-border);
+        }
+
+        .resumen-title {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .resumen-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .resumen-stat {
+            background: rgba(139, 92, 246, 0.1);
+            border: 2px solid var(--card-border);
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .resumen-stat-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .resumen-stat-value.ausente {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .resumen-stat-value.retardo {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .resumen-stat-label {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .resumen-lista {
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .resumen-lista-item {
+            padding: 10px 15px;
+            background: rgba(139, 92, 246, 0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .keyboard-hint {
+            margin-top: 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .asistencia-container {
+                grid-template-columns: 1fr;
+            }
+
+            .panel-lateral {
+                position: relative;
+                max-height: 400px;
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .alumno-nombre-large {
+                font-size: 1.8rem;
+            }
+
+            .asistencia-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .resumen-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="grupo-nombre">
+                <img src="/images/logo-escuela.svg" alt="Logo Escuela" class="logo-escuela">
+                📋 Toma de Lista
+            </h1>
+            <p id="grupo-info">Cargando...</p>
+        </div>
+
+        <!-- Pantalla de toma de lista -->
+        <div id="asistencia-screen" class="asistencia-container">
+            <!-- Columna principal -->
+            <div class="asistencia-main">
+                <div class="progress-bar-top">
+                    <div class="progress-text">
+                        <span id="progreso-texto">Alumno 1 de 35</span>
+                    </div>
+                    <div class="progress-bar-container-top">
+                        <div id="progress-fill" class="progress-bar-fill-top" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div id="alumno-actual" class="alumno-card-large">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
+                <div class="navigation-buttons">
+                    <button id="btn-anterior" class="btn-nav" onclick="navegarAnterior()">
+                        ← Anterior
+                    </button>
+                    <button id="btn-siguiente" class="btn-nav" onclick="navegarSiguiente()">
+                        Siguiente →
+                    </button>
+                    <button id="btn-finalizar" class="btn-nav btn-finalizar" onclick="finalizarAsistencia()" style="display: none;">
+                        ✓ Finalizar
+                    </button>
+                </div>
+
+                <div class="keyboard-hint">
+                    💡 Atajos: [P] = Presente | [A] = Ausente | [R] = Retardo | [J] = Justificado | [←] [→] = Navegar
+                </div>
+            </div>
+
+            <!-- Panel lateral -->
+            <div class="panel-lateral">
+                <div class="panel-titulo">
+                    📋 Registro
+                </div>
+
+                <div class="panel-seccion">
+                    <div class="panel-seccion-titulo">
+                        ✗ Ausentes (<span id="count-ausentes">0</span>)
+                    </div>
+                    <ul id="lista-ausentes" class="panel-lista">
+                        <li class="panel-empty">Ninguno</li>
+                    </ul>
+                </div>
+
+                <div class="panel-seccion">
+                    <div class="panel-seccion-titulo">
+                        🕐 Retardos (<span id="count-retardos">0</span>)
+                    </div>
+                    <ul id="lista-retardos" class="panel-lista">
+                        <li class="panel-empty">Ninguno</li>
+                    </ul>
+                </div>
+
+                <div class="panel-seccion">
+                    <div class="panel-seccion-titulo">
+                        📝 Justificados (<span id="count-justificados">0</span>)
+                    </div>
+                    <ul id="lista-justificados" class="panel-lista">
+                        <li class="panel-empty">Ninguno</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de resumen -->
+        <div id="resumen-screen" class="resumen-container">
+            <div class="resumen-card">
+                <div class="resumen-title">¡Lista Completada!</div>
+
+                <div class="resumen-stats">
+                    <div class="resumen-stat">
+                        <div class="resumen-stat-value ausente" id="total-ausentes">0</div>
+                        <div class="resumen-stat-label">✗ Ausentes</div>
+                        <div id="resumen-lista-ausentes" class="resumen-lista">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                    <div class="resumen-stat">
+                        <div class="resumen-stat-value retardo" id="total-retardos">0</div>
+                        <div class="resumen-stat-label">🕐 Retardos</div>
+                        <div id="resumen-lista-retardos" class="resumen-lista">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                    <div class="resumen-stat">
+                        <div class="resumen-stat-value" id="total-justificados" style="background: linear-gradient(135deg, #3b82f6, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">0</div>
+                        <div class="resumen-stat-label">📝 Justificados</div>
+                        <div id="resumen-lista-justificados" class="resumen-lista">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="volverDashboard()" style="width: 100%; padding: 20px; font-size: 1.2rem;">
+                    Volver al Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        const urlParams = new URLSearchParams(window.location.search);
+        const grupoId = urlParams.get('grupo');
+
+        let alumnos = [];
+        let indiceActual = 0;
+        let asistencias = new Map(); // Cambiado a Map para permitir navegación libre
+
+        // ============================================
+        // SISTEMA DE AUDIO GAMING 🎮🔊
+        // ============================================
+        const sonidos = {
+            presente: new Audio('/sounds/check-presente.mp3'),     // ✓ Presente
+            ausente: new Audio('/sounds/alert-ausente.mp3'),       // ✗ Ausente
+            retardo: new Audio('/sounds/warning-retardo.mp3'),     // 🕐 Retardo
+            justificado: new Audio('/sounds/notify-justificado.mp3'), // 📝 Justificado
+            complete: new Audio('/sounds/complete-fanfare.mp3'),   // 🎉 Lista completada
+            click: new Audio('/sounds/click.mp3')                  // Click navegación
+        };
+
+        // Configurar volumen
+        Object.values(sonidos).forEach(audio => {
+            audio.volume = 0.4;
+        });
+
+        // Función helper para reproducir sonidos
+        function reproducirSonido(nombreSonido) {
+            try {
+                const audio = sonidos[nombreSonido];
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play().catch(err => console.log('Audio bloqueado:', err));
+                }
+            } catch (error) {
+                console.error('Error al reproducir sonido:', error);
+            }
+        }
+
+        if (!grupoId) {
+            window.location.href = '/';
+        }
+
+        // Cargar datos del grupo y alumnos
+        async function cargarDatos() {
+            try {
+                const grupoResponse = await fetch(`${API_URL}/grupos/${grupoId}`);
+                const grupoData = await grupoResponse.json();
+
+                if (grupoData.success) {
+                    const logoHTML = '<img src="/images/logo-escuela.svg" alt="Logo Escuela" class="logo-escuela">';
+                    // Personalizar el nombre del nivel para Secundaria
+                    const nivelTexto = grupoData.data.nivel === 'Secundaria' ? 'Secundaria técnica #50' : grupoData.data.nivel;
+                    document.getElementById('grupo-nombre').innerHTML = `${logoHTML}📋 Toma de Lista - ${grupoData.data.grado}${grupoData.data.grupo}`;
+                    document.getElementById('grupo-info').textContent = `${nivelTexto} | Aula ${grupoData.data.aula}`;
+                }
+
+                const alumnosResponse = await fetch(`${API_URL}/grupos/${grupoId}/alumnos`);
+                const alumnosData = await alumnosResponse.json();
+
+                if (alumnosData.success) {
+                    alumnos = alumnosData.data.sort((a, b) => a.apellidos.localeCompare(b.apellidos));
+                    mostrarAlumnoActual();
+                } else {
+                    mostrarError('Error al cargar los alumnos');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión con el servidor');
+            }
+        }
+
+        // Mostrar alumno actual
+        function mostrarAlumnoActual() {
+            if (alumnos.length === 0) return;
+
+            const alumno = alumnos[indiceActual];
+
+            // Avatar de robot único basado en el nombre del alumno
+            const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alumno.nombreCompleto)}`;
+
+            // Actualizar progreso
+            const porcentaje = ((indiceActual + 1) / alumnos.length) * 100;
+            document.getElementById('progreso-texto').textContent = `Alumno ${indiceActual + 1} de ${alumnos.length}`;
+            document.getElementById('progress-fill').style.width = `${porcentaje}%`;
+
+            // Actualizar tarjeta
+            const estadoActual = asistencias.get(alumno._id);
+            const estadoMarcado = estadoActual ? ` - ${estadoActual.estado.toUpperCase()}` : '';
+
+            document.getElementById('alumno-actual').innerHTML = `
+                <div class="alumno-avatar-large">
+                    <img src="${avatarUrl}" alt="${alumno.nombreCompleto}" style="width: 100%; height: 100%; border-radius: 50%;">
+                </div>
+                <div class="alumno-nombre-large">${alumno.nombreCompleto}${estadoMarcado}</div>
+                <div class="alumno-nivel-large">⚡ ${alumno.xp} XP | ❤️ ${alumno.salud} HP</div>
+
+                <div class="asistencia-buttons">
+                    <button class="btn-asistencia btn-presente" onclick="marcarAsistencia('presente')">
+                        ✓ PRESENTE
+                    </button>
+                    <button class="btn-asistencia btn-ausente" onclick="marcarAsistencia('ausente')">
+                        ✗ AUSENTE
+                    </button>
+                    <button class="btn-asistencia btn-retardo" onclick="marcarAsistencia('retardo')">
+                        🕐 RETARDO
+                    </button>
+                    <button class="btn-asistencia btn-justificado" onclick="marcarAsistencia('justificado')">
+                        📝 JUSTIFICADO
+                    </button>
+                </div>
+            `;
+
+            // Actualizar botones de navegación
+            document.getElementById('btn-anterior').disabled = indiceActual === 0;
+            document.getElementById('btn-siguiente').style.display = indiceActual < alumnos.length - 1 ? 'block' : 'none';
+            document.getElementById('btn-finalizar').style.display = indiceActual === alumnos.length - 1 ? 'block' : 'none';
+        }
+
+        // Marcar asistencia
+        function marcarAsistencia(estado) {
+            const alumno = alumnos[indiceActual];
+
+            // Guardar asistencia en el Map
+            asistencias.set(alumno._id, {
+                alumnoId: alumno._id,
+                nombreCompleto: alumno.nombreCompleto,
+                estado: estado
+            });
+
+            // 🎮 REPRODUCIR SONIDO según el estado
+            reproducirSonido(estado);
+
+            // Actualizar panel lateral
+            actualizarPanelLateral();
+
+            // Mostrar feedback visual
+            const emojis = {
+                'presente': '✓',
+                'ausente': '✗',
+                'retardo': '🕐',
+                'justificado': '📝'
+            };
+            const emoji = emojis[estado] || '?';
+            mostrarExito(`${emoji} ${alumno.nombreCompleto}: ${estado.toUpperCase()}`);
+
+            // Auto-avanzar solo si no estamos en el último alumno
+            if (indiceActual < alumnos.length - 1) {
+                setTimeout(() => {
+                    indiceActual++;
+                    mostrarAlumnoActual();
+                }, 200);
+            }
+        }
+
+        // Actualizar panel lateral con ausentes, retardos y justificados
+        function actualizarPanelLateral() {
+            const asistenciasArray = Array.from(asistencias.values());
+
+            // Filtrar ausentes, retardos y justificados
+            const ausentes = asistenciasArray.filter(a => a.estado === 'ausente');
+            const retardos = asistenciasArray.filter(a => a.estado === 'retardo');
+            const justificados = asistenciasArray.filter(a => a.estado === 'justificado');
+
+            // Actualizar ausentes
+            const listaAusentes = document.getElementById('lista-ausentes');
+            document.getElementById('count-ausentes').textContent = ausentes.length;
+
+            if (ausentes.length === 0) {
+                listaAusentes.innerHTML = '<li class="panel-empty">Ninguno</li>';
+            } else {
+                listaAusentes.innerHTML = ausentes.map(a =>
+                    `<li class="panel-item">${a.nombreCompleto}</li>`
+                ).join('');
+            }
+
+            // Actualizar retardos
+            const listaRetardos = document.getElementById('lista-retardos');
+            document.getElementById('count-retardos').textContent = retardos.length;
+
+            if (retardos.length === 0) {
+                listaRetardos.innerHTML = '<li class="panel-empty">Ninguno</li>';
+            } else {
+                listaRetardos.innerHTML = retardos.map(a =>
+                    `<li class="panel-item retardo">${a.nombreCompleto}</li>`
+                ).join('');
+            }
+
+            // Actualizar justificados
+            const listaJustificados = document.getElementById('lista-justificados');
+            document.getElementById('count-justificados').textContent = justificados.length;
+
+            if (justificados.length === 0) {
+                listaJustificados.innerHTML = '<li class="panel-empty">Ninguno</li>';
+            } else {
+                listaJustificados.innerHTML = justificados.map(a =>
+                    `<li class="panel-item" style="background: rgba(59, 130, 246, 0.1); border-left-color: #3b82f6;">${a.nombreCompleto}</li>`
+                ).join('');
+            }
+        }
+
+        // Navegar
+        function navegarAnterior() {
+            if (indiceActual > 0) {
+                indiceActual--;
+                mostrarAlumnoActual();
+            }
+        }
+
+        function navegarSiguiente() {
+            if (indiceActual < alumnos.length - 1) {
+                indiceActual++;
+                mostrarAlumnoActual();
+            }
+        }
+
+        // Finalizar y enviar asistencias
+        async function finalizarAsistencia() {
+            if (asistencias.size !== alumnos.length) {
+                mostrarError(`Completa la asistencia de todos los alumnos (${asistencias.size}/${alumnos.length})`);
+                return;
+            }
+
+            try {
+                // Convertir el Map a array
+                const asistenciasArray = Array.from(asistencias.values());
+
+                const response = await fetch(`${API_URL}/asistencia/grupo`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        grupoId: grupoId,
+                        asistencias: asistenciasArray,
+                        fecha: new Date().toISOString()
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 🎮 SONIDO DE VICTORIA - Lista completada
+                    reproducirSonido('complete');
+
+                    // 💾 GUARDAR ESTADO DE CLASE ACTIVA EN SESSIONSTORAGE
+                    guardarClaseActiva(asistenciasArray);
+
+                    mostrarResumen();
+                } else {
+                    mostrarError(data.mensaje || 'Error al guardar la asistencia');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión con el servidor');
+            }
+        }
+
+        // Mostrar resumen
+        function mostrarResumen() {
+            const asistenciasArray = Array.from(asistencias.values());
+            const ausentes = asistenciasArray.filter(a => a.estado === 'ausente');
+            const retardos = asistenciasArray.filter(a => a.estado === 'retardo');
+            const justificados = asistenciasArray.filter(a => a.estado === 'justificado');
+
+            // Actualizar contadores
+            document.getElementById('total-ausentes').textContent = ausentes.length;
+            document.getElementById('total-retardos').textContent = retardos.length;
+            document.getElementById('total-justificados').textContent = justificados.length;
+
+            // Mostrar lista de ausentes
+            const listaAusentesResumen = document.getElementById('resumen-lista-ausentes');
+            if (ausentes.length === 0) {
+                listaAusentesResumen.innerHTML = '<div class="panel-empty">Ninguno</div>';
+            } else {
+                listaAusentesResumen.innerHTML = ausentes.map((a, index) =>
+                    `<div class="resumen-lista-item">${index + 1}. ${a.nombreCompleto}</div>`
+                ).join('');
+            }
+
+            // Mostrar lista de retardos
+            const listaRetardosResumen = document.getElementById('resumen-lista-retardos');
+            if (retardos.length === 0) {
+                listaRetardosResumen.innerHTML = '<div class="panel-empty">Ninguno</div>';
+            } else {
+                listaRetardosResumen.innerHTML = retardos.map((a, index) =>
+                    `<div class="resumen-lista-item">${index + 1}. ${a.nombreCompleto}</div>`
+                ).join('');
+            }
+
+            // Mostrar lista de justificados
+            const listaJustificadosResumen = document.getElementById('resumen-lista-justificados');
+            if (justificados.length === 0) {
+                listaJustificadosResumen.innerHTML = '<div class="panel-empty">Ninguno</div>';
+            } else {
+                listaJustificadosResumen.innerHTML = justificados.map((a, index) =>
+                    `<div class="resumen-lista-item">${index + 1}. ${a.nombreCompleto}</div>`
+                ).join('');
+            }
+
+            document.getElementById('asistencia-screen').style.display = 'none';
+            document.getElementById('resumen-screen').style.display = 'block';
+
+            mostrarExito('Asistencia guardada exitosamente');
+        }
+
+        // Volver al dashboard
+        function volverDashboard() {
+            window.location.href = `/dashboard.html?grupo=${grupoId}`;
+        }
+
+        // 💾 Guardar estado de clase activa en sessionStorage
+        function guardarClaseActiva(asistenciasArray) {
+            // Convertir array de asistencias a objeto indexado por alumnoId
+            const asistenciasMap = {};
+            asistenciasArray.forEach(asistencia => {
+                asistenciasMap[asistencia.alumnoId] = {
+                    estado: asistencia.estado,
+                    alumnoId: asistencia.alumnoId,
+                    nombreCompleto: asistencia.nombreCompleto
+                };
+            });
+
+            // Crear objeto de clase activa
+            const claseActiva = {
+                activa: true,
+                grupoId: grupoId,
+                fechaInicio: new Date().toISOString(),
+                asistencias: asistenciasMap
+            };
+
+            // Guardar en sessionStorage
+            sessionStorage.setItem('claseActiva', JSON.stringify(claseActiva));
+
+            console.log('✅ Clase activa guardada en sessionStorage:', claseActiva);
+        }
+
+        // Atajos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('asistencia-screen').style.display !== 'none') {
+                if (e.key === 'p' || e.key === 'P') {
+                    marcarAsistencia('presente');
+                } else if (e.key === 'a' || e.key === 'A') {
+                    marcarAsistencia('ausente');
+                } else if (e.key === 'r' || e.key === 'R') {
+                    marcarAsistencia('retardo');
+                } else if (e.key === 'j' || e.key === 'J') {
+                    marcarAsistencia('justificado');
+                } else if (e.key === 'ArrowLeft') {
+                    navegarAnterior();
+                } else if (e.key === 'ArrowRight') {
+                    navegarSiguiente();
+                }
+            }
+        });
+
+        // Notificaciones
+        function mostrarExito(mensaje) {
+            const notification = document.createElement('div');
+            notification.className = 'notification success';
+            notification.textContent = mensaje;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function mostrarError(mensaje) {
+            const notification = document.createElement('div');
+            notification.className = 'notification error';
+            notification.textContent = mensaje;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Inicializar
+        cargarDatos();
+    </script>
+</body>
+</html>
