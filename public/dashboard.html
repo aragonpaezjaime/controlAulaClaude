@@ -28,6 +28,9 @@
                 <button class="back-button" onclick="verHistorial()" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border-color: #8b5cf6;">
                     📊 Ver Historial
                 </button>
+                <button class="back-button" onclick="verActividades()" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white; border-color: #ec4899;">
+                    📝 Actividades
+                </button>
             </div>
         </div>
 
@@ -723,6 +726,11 @@
         // Ver ranking
         function verRanking() {
             window.location.href = `/ranking.html?grupo=${grupoId}`;
+        }
+
+        // Ver actividades
+        function verActividades() {
+            window.location.href = `/actividades.html?grupo=${grupoId}`;
         }
 
         // ============================================

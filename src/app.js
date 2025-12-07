@@ -41,7 +41,10 @@ app.get('/', (req, res) => {
     endpoints: {
       grupos: '/api/grupos',
       alumnos: '/api/alumnos',
-      eventos: '/api/eventos'
+      eventos: '/api/eventos',
+      asistencia: '/api/asistencia',
+      xp: '/api/xp',
+      actividades: '/api/actividades'
     }
   });
 });
@@ -52,6 +55,7 @@ const alumnoRoutes = require('./routes/alumnoRoutes');
 const eventoRoutes = require('./routes/eventoRoutes');
 const asistenciaRoutes = require('./routes/asistenciaRoutes');
 const xpRoutes = require('./routes/xpRoutes');
+const actividadRoutes = require('./routes/actividadRoutes');
 
 // Montar las rutas en la aplicación
 app.use('/api/grupos', grupoRoutes);
@@ -59,6 +63,7 @@ app.use('/api/alumnos', alumnoRoutes);
 app.use('/api/eventos', eventoRoutes);
 app.use('/api/asistencia', asistenciaRoutes);
 app.use('/api/xp', xpRoutes);
+app.use('/api/actividades', actividadRoutes);
 
 // ============================================
 // MANEJO DE ERRORES

@@ -187,6 +187,59 @@ eventoDisciplinarioSchema.index({ tipoDisciplina: 1, fecha: -1 });
 const EventoDisciplinario = Evento.discriminator('Disciplinario', eventoDisciplinarioSchema);
 
 // ============================================
+// DISCRIMINADOR: EVENTO DE ACTIVIDAD/CALIFICACIÓN
+// ============================================
+const eventoActividadSchema = new mongoose.Schema({
+  // Referencia al alumno que está siendo calificado
+  alumno: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Alumno',
+    required: [true, 'El alumno es obligatorio']
+  },
+
+  // Referencia a la actividad que se está calificando
+  actividad: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Actividad',
+    required: [true, 'La actividad es obligatoria']
+  },
+
+  // Calificación numérica (escala de 0 a 10, puede ser mayor a 10 para puntos extra)
+  calificacion: {
+    type: Number,
+    required: [true, 'La calificación es obligatoria'],
+    min: [0, 'La calificación no puede ser negativa'],
+    max: [15, 'La calificación no puede exceder 15 (incluye puntos extra)']
+  },
+
+  // XP ganado (calculado automáticamente basado en calificación y puntos máximos)
+  xpGanado: {
+    type: Number,
+    required: [true, 'El XP ganado es obligatorio'],
+    min: [0, 'El XP ganado no puede ser negativo']
+  },
+
+  // Feedback opcional del profesor
+  feedback: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'El feedback no puede exceder 500 caracteres']
+  }
+});
+
+// Índices para consultas frecuentes
+eventoActividadSchema.index({ alumno: 1, actividad: 1 }, { unique: true }); // Un alumno solo puede tener una calificación por actividad
+eventoActividadSchema.index({ actividad: 1, fecha: -1 });
+eventoActividadSchema.index({ alumno: 1, fecha: -1 });
+
+// Método de instancia: Calcular porcentaje de logro
+eventoActividadSchema.methods.calcularPorcentaje = function() {
+  return Math.round((this.calificacion / 10) * 100);
+};
+
+const EventoActividad = Evento.discriminator('CalificacionActividad', eventoActividadSchema);
+
+// ============================================
 // MÉTODOS ESTÁTICOS ÚTILES
 // ============================================
 
@@ -239,5 +292,6 @@ EventoSalida.obtenerSalidasBanoSemana = async function(alumnoId, fecha = new Dat
 module.exports = {
   Evento, // Modelo base
   EventoSalida,
-  EventoDisciplinario
+  EventoDisciplinario,
+  EventoActividad
 };
