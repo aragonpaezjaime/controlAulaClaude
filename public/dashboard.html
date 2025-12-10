@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Aula - Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="/images/logo-escuela.svg">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -14,6 +15,10 @@
                 Cargando...
             </h1>
             <p id="grupo-info">Información del grupo</p>
+            <!-- 💾 Indicador de auto-guardado -->
+            <div id="indicador-guardado" style="display: none; position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 20px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); z-index: 9999; animation: fadeIn 0.3s ease;">
+                💾 Guardando asistencias...
+            </div>
             <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
                 <button class="back-button" onclick="window.location.href='/'">← Volver a grupos</button>
                 <button id="btn-iniciar-clase" class="back-button" onclick="tomarLista()" style="background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark)); color: #1f2937; border-color: var(--accent-gold);">
@@ -25,14 +30,20 @@
                 <button class="back-button" onclick="verRanking()" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: #f59e0b;">
                     🏆 Ranking
                 </button>
-                <button class="back-button" onclick="verHistorial()" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border-color: #8b5cf6;">
+                <button class="back-button" onclick="verHistorial()" style="background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; border-color: #06b6d4;">
                     📊 Ver Historial
                 </button>
                 <button class="back-button" onclick="verActividades()" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white; border-color: #ec4899;">
                     📝 Actividades
                 </button>
+                <button class="back-button" onclick="abrirImportarPlickers()" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border-color: #8b5cf6;">
+                    📂 Importar Plickers
+                </button>
             </div>
         </div>
+
+        <!-- Input file oculto para importar CSV -->
+        <input type="file" id="input-csv-plickers" accept=".csv" style="display: none;" onchange="procesarArchivoPlickers(event)">
 
         <div id="loading" class="loading">
             <div class="spinner"></div>
@@ -248,6 +259,10 @@
                         claseActiva = claseActivaData;
                         console.log('✅ Clase activa detectada:', claseActiva);
                         actualizarBotonClase();
+
+                        // 💾 Iniciar sistema de auto-guardado
+                        iniciarAutoGuardado();
+
                         return true;
                     }
                 } catch (error) {
@@ -318,8 +333,10 @@
             const logoHTML = '<img src="/images/logo-escuela.svg" alt="Logo Escuela" class="logo-escuela">';
             // Personalizar el nombre del nivel para Secundaria
             const nivelTexto = grupo.nivel === 'Secundaria' ? 'Secundaria técnica #50' : grupo.nivel;
-            document.getElementById('grupo-nombre').innerHTML = `${logoHTML}${grupo.grado}${grupo.grupo} - ${nivelTexto}`;
-            document.getElementById('grupo-info').textContent = `Aula ${grupo.aula} | Ciclo ${grupo.cicloEscolar}`;
+            const materia = grupo.materia || 'General';
+            document.getElementById('grupo-nombre').innerHTML = `${logoHTML}${grupo.grado}°${grupo.grupo} - ${materia}`;
+            const sesiones = grupo.sesionesImpartidas || 0;
+            document.getElementById('grupo-info').textContent = `${nivelTexto} | Ciclo ${grupo.cicloEscolar} | 📊 Clases: ${sesiones}`;
         }
 
         // Mostrar alumnos en el grid
@@ -389,7 +406,7 @@
                         </div>
 
                         <div class="alumno-stats">
-                            <div class="stat-box" onclick="abrirModalAjusteXP('${alumno._id}', '${alumno.nombreCompleto.replace(/'/g, "\\'")}', ${alumno.xp}, ${alumno.salud})" title="Click para ajustar XP/HP">
+                            <div class="stat-box" onclick="verInsignias()" title="Ver sistema de insignias y privilegios" style="cursor: pointer; background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15)); border-color: rgba(251, 191, 36, 0.4);">
                                 <div class="stat-label">🏅 Insignia</div>
                                 <div class="stat-value level-value">-</div>
                             </div>
@@ -564,8 +581,22 @@
                 // Convertir asistencias de objeto a array
                 const asistenciasArray = Object.values(claseActiva.asistencias);
 
-                // Opcional: Aquí podrías enviar una actualización al backend si hubo cambios
-                // Por ahora, solo limpiamos el sessionStorage
+                // Incrementar contador de sesiones en el backend
+                const grupoId = new URLSearchParams(window.location.search).get('grupo');
+                const resIncremento = await fetch(`/api/grupos/${grupoId}/incrementar-sesion`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (resIncremento.ok) {
+                    const dataIncremento = await resIncremento.json();
+                    console.log(`✅ ${dataIncremento.mensaje}`);
+                } else {
+                    console.warn('⚠️ No se pudo incrementar el contador de sesiones');
+                }
+
+                // 🛑 Detener el auto-guardado antes de limpiar
+                detenerAutoGuardado();
 
                 // Limpiar sessionStorage
                 sessionStorage.removeItem('claseActiva');
@@ -585,6 +616,134 @@
                 mostrarError('Error al finalizar la clase');
             }
         }
+
+        // ============================================
+        // 💾 SISTEMA DE AUTO-GUARDADO
+        // ============================================
+        let intervaloAutoGuardado = null;
+
+        // Función para auto-guardar asistencias en el backend
+        async function autoGuardarAsistencia() {
+            // Solo ejecutar si hay clase activa
+            if (!claseActiva || !claseActiva.activa) {
+                console.log('⏭️ Auto-guardado omitido: No hay clase activa');
+                return;
+            }
+
+            try {
+                // Mostrar indicador visual
+                mostrarIndicadorGuardado();
+
+                // Convertir asistencias de objeto a array
+                const asistenciasArray = Object.keys(claseActiva.asistencias).map(alumnoId => ({
+                    alumnoId: alumnoId,
+                    estado: claseActiva.asistencias[alumnoId].estado,
+                    observaciones: claseActiva.asistencias[alumnoId].observaciones
+                }));
+
+                // Enviar al endpoint de auto-guardado (upsert)
+                const response = await fetch(`${API_URL}/asistencia/grupo/auto-guardar`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        grupoId: claseActiva.grupoId,
+                        asistencias: asistenciasArray,
+                        fecha: new Date().toISOString().split('T')[0]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Auto-guardado exitoso:', data.data);
+                    // Ocultar indicador después de 2 segundos
+                    setTimeout(ocultarIndicadorGuardado, 2000);
+                } else {
+                    console.error('❌ Error en auto-guardado:', data.mensaje);
+                    ocultarIndicadorGuardado();
+                }
+            } catch (error) {
+                console.error('❌ Error al auto-guardar:', error);
+                ocultarIndicadorGuardado();
+            }
+        }
+
+        // Mostrar indicador de guardado
+        function mostrarIndicadorGuardado() {
+            const indicador = document.getElementById('indicador-guardado');
+            if (indicador) {
+                indicador.style.display = 'block';
+            }
+        }
+
+        // Ocultar indicador de guardado
+        function ocultarIndicadorGuardado() {
+            const indicador = document.getElementById('indicador-guardado');
+            if (indicador) {
+                indicador.style.display = 'none';
+            }
+        }
+
+        // Iniciar el intervalo de auto-guardado
+        function iniciarAutoGuardado() {
+            // Solo iniciar si hay clase activa y no hay intervalo previo
+            if (claseActiva && claseActiva.activa && !intervaloAutoGuardado) {
+                console.log('🔄 Iniciando auto-guardado cada 5 minutos...');
+
+                // Ejecutar el primer guardado inmediatamente
+                autoGuardarAsistencia();
+
+                // Configurar intervalo de 5 minutos (300,000 ms)
+                intervaloAutoGuardado = setInterval(autoGuardarAsistencia, 300000);
+            }
+        }
+
+        // Detener el intervalo de auto-guardado
+        function detenerAutoGuardado() {
+            if (intervaloAutoGuardado) {
+                console.log('🛑 Deteniendo auto-guardado');
+                clearInterval(intervaloAutoGuardado);
+                intervaloAutoGuardado = null;
+            }
+        }
+
+        // 🚨 Listener para cierre inesperado de ventana o cambio de pestaña
+        window.addEventListener('beforeunload', async function(e) {
+            // Intentar guardar si hay clase activa
+            if (claseActiva && claseActiva.activa) {
+                // Navigator.sendBeacon es más confiable para beforeunload
+                const asistenciasArray = Object.keys(claseActiva.asistencias).map(alumnoId => ({
+                    alumnoId: alumnoId,
+                    estado: claseActiva.asistencias[alumnoId].estado,
+                    observaciones: claseActiva.asistencias[alumnoId].observaciones
+                }));
+
+                const payload = {
+                    grupoId: claseActiva.grupoId,
+                    asistencias: asistenciasArray,
+                    fecha: new Date().toISOString().split('T')[0]
+                };
+
+                // Crear Blob con tipo application/json para sendBeacon
+                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+
+                // Usar sendBeacon para enviar datos de forma confiable
+                navigator.sendBeacon(`${API_URL}/asistencia/grupo/auto-guardar`, blob);
+
+                console.log('💾 Guardado de emergencia ejecutado (beforeunload)');
+            }
+        });
+
+        // 👁️ Listener para cambio de visibilidad (cambio de pestaña)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && claseActiva && claseActiva.activa) {
+                // Usuario cambió de pestaña, guardar asistencias
+                autoGuardarAsistencia();
+                console.log('💾 Auto-guardado por cambio de pestaña');
+            }
+        });
 
         // Manejar selección de tipo en modales
         document.querySelectorAll('.modal-btn').forEach(btn => {
@@ -733,6 +892,11 @@
             window.location.href = `/actividades.html?grupo=${grupoId}`;
         }
 
+        // Ver insignias (sistema próximamente)
+        function verInsignias() {
+            window.location.href = `/insignias.html`;
+        }
+
         // ============================================
         // FUNCIONES DEL MODAL DE AJUSTE XP/HP
         // ============================================
@@ -851,6 +1015,109 @@
                 }
             });
         });
+
+        // ============================================
+        // IMPORTACIÓN DE PLICKERS 📂
+        // ============================================
+
+        // Variable global para almacenar puntos de la actividad
+        let puntosTotalesActividad = null;
+
+        // Abrir selector de archivo
+        function abrirImportarPlickers() {
+            // Primero pedir los puntos totales de la actividad
+            const puntos = prompt('¿Cuántos puntos vale esta actividad de Plickers?\n\nEjemplo: Si vale 20 puntos, escribe 20', '20');
+
+            if (puntos === null) {
+                // Usuario canceló
+                return;
+            }
+
+            const puntosNum = parseInt(puntos, 10);
+
+            if (isNaN(puntosNum) || puntosNum <= 0 || puntosNum > 10000) {
+                mostrarError('Por favor ingresa un número válido entre 1 y 10,000');
+                return;
+            }
+
+            // Guardar los puntos totales
+            puntosTotalesActividad = puntosNum;
+
+            // Ahora sí abrir el selector de archivo
+            document.getElementById('input-csv-plickers').click();
+        }
+
+        // Procesar archivo CSV seleccionado
+        async function procesarArchivoPlickers(event) {
+            const archivo = event.target.files[0];
+
+            if (!archivo) {
+                return;
+            }
+
+            // Validar que tengamos los puntos totales
+            if (!puntosTotalesActividad) {
+                mostrarError('Error: No se especificaron los puntos de la actividad');
+                return;
+            }
+
+            // Validar que sea un archivo CSV
+            if (!archivo.name.endsWith('.csv')) {
+                mostrarError('Por favor selecciona un archivo CSV válido');
+                puntosTotalesActividad = null; // Resetear
+                return;
+            }
+
+            try {
+                // Crear FormData para enviar el archivo
+                const formData = new FormData();
+                formData.append('archivo', archivo);
+                formData.append('puntosTotales', puntosTotalesActividad);
+
+                // Mostrar indicador de carga
+                mostrarExito(`⏳ Procesando archivo CSV... (Actividad: ${puntosTotalesActividad} puntos)`);
+
+                // Enviar al servidor
+                const response = await fetch(`${API_URL}/importar/plickers`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Mostrar resumen detallado
+                    let mensaje = `✅ Importación completada:\n\n`;
+                    mensaje += `🎯 Actividad: ${data.datos.puntosTotales} puntos totales\n`;
+                    mensaje += `📊 Procesados: ${data.datos.procesados}\n`;
+                    mensaje += `✓ Actualizados: ${data.datos.actualizados}\n`;
+                    mensaje += `✗ Errores: ${data.datos.errores}\n`;
+
+                    if (data.datos.noEncontrados.length > 0) {
+                        mensaje += `\n⚠️ No encontrados (${data.datos.noEncontrados.length}):\n`;
+                        data.datos.noEncontrados.forEach(alumno => {
+                            mensaje += `  • ${alumno.nombre} (${alumno.score}% = ${alumno.puntosXP} pts)\n`;
+                        });
+                    }
+
+                    alert(mensaje);
+                    mostrarExito(`✅ ${data.datos.actualizados} alumnos actualizados correctamente`);
+
+                    // Recargar los datos del dashboard
+                    await cargarDatos();
+                } else {
+                    mostrarError(data.mensaje || 'Error al importar el archivo');
+                }
+            } catch (error) {
+                console.error('Error al importar Plickers:', error);
+                mostrarError('Error de conexión con el servidor');
+            } finally {
+                // Limpiar el input file para permitir seleccionar el mismo archivo de nuevo
+                event.target.value = '';
+                // Resetear puntos totales
+                puntosTotalesActividad = null;
+            }
+        }
 
         // Inicializar
         cargarDatos();

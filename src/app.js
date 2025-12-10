@@ -44,7 +44,9 @@ app.get('/', (req, res) => {
       eventos: '/api/eventos',
       asistencia: '/api/asistencia',
       xp: '/api/xp',
-      actividades: '/api/actividades'
+      actividades: '/api/actividades',
+      backup: '/api/backup',
+      importar: '/api/importar'
     }
   });
 });
@@ -56,6 +58,8 @@ const eventoRoutes = require('./routes/eventoRoutes');
 const asistenciaRoutes = require('./routes/asistenciaRoutes');
 const xpRoutes = require('./routes/xpRoutes');
 const actividadRoutes = require('./routes/actividadRoutes');
+const backupRoutes = require('./routes/backupRoutes');
+const importarRoutes = require('./routes/importarRoutes');
 
 // Montar las rutas en la aplicación
 app.use('/api/grupos', grupoRoutes);
@@ -64,6 +68,8 @@ app.use('/api/eventos', eventoRoutes);
 app.use('/api/asistencia', asistenciaRoutes);
 app.use('/api/xp', xpRoutes);
 app.use('/api/actividades', actividadRoutes);
+app.use('/api/backup', backupRoutes);
+app.use('/api/importar', importarRoutes);
 
 // ============================================
 // MANEJO DE ERRORES

@@ -1,7 +1,7 @@
 # 📚 RESUMEN DEL PROYECTO - Sistema de Control de Aula
 
 **Fecha de creación**: Noviembre 29, 2025
-**Última actualización**: Diciembre 6, 2025 - 21:00
+**Última actualización**: Diciembre 9, 2025 - 22:00
 **Desarrollador**: Docente en México aprendiendo Node.js
 **Propósito**: Sistema gamificado para registrar eventos del aula (asistencias, salidas, indisciplina, etc.) con sistema de puntos XP/HP
 
@@ -50,6 +50,26 @@
 - ✅ **Fix error de validación XP** - Enum actualizado en modelo Ajuste.js
 - ✅ **Fix selector de botón** - Agregado id="btn-iniciar-clase" para mejor manejo
 
+### ✅ REFACTORIZACIÓN MAJOR (8-9 Dic 2025)
+- ✅ **Sistema de Contador de Sesiones** - Reemplazó lógica de "Horarios" por contador de clases impartidas
+- ✅ **Sistema de Materias/Asignaturas** - Soporte para diferentes materias por grupo
+- ✅ **Sistema de Backup XP/HP** - Exportación/importación completa de puntos de estudiantes
+- ✅ **Recuperación de datos reales** - 8 grupos y 272 estudiantes restaurados desde CSV
+- ✅ **Migración de índices MongoDB** - Actualización de constraints para incluir materia
+- ✅ **8 materias asignadas** - Tecnología 1/2/3, Física Elemental, Robótica
+
+### ✅ IMPORTACIÓN AUTOMÁTICA DE PLICKERS (9 Dic 2025)
+- ✅ **Sistema de importación CSV de Plickers** - Endpoint POST /api/importar/plickers implementado
+- ✅ **Multiplicador variable de puntos** - Sistema solicita valor total de actividad y calcula XP proporcionalmente
+- ✅ **Procesamiento automático de CSV** - Salta 6 líneas de metadatos, lee nombres y porcentajes
+- ✅ **Normalización de nombres** - Elimina acentos y compara insensible a mayúsculas para mejorar coincidencias
+- ✅ **Limpieza masiva de nombres** - Script elimina guiones "-" de 16 alumnos (272 verificados)
+- ✅ **Cálculo con fórmula** - `XP = PuntosTotales × (Porcentaje / 100)` con redondeo automático
+- ✅ **Registro de auditoría completo** - Cada importación crea registro en colección Ajustes con motivo "Plickers"
+- ✅ **Interfaz intuitiva** - Botón en dashboard solicita puntos de actividad antes de seleccionar archivo
+- ✅ **Resumen detallado** - Muestra procesados, actualizados, errores y alumnos no encontrados con cálculos
+- ✅ **Carpeta uploads/** - Creada para almacenamiento temporal de CSV (agregada a .gitignore)
+
 ### ⏳ PENDIENTE (Futuro)
 - [ ] Descargar archivos MP3 de sonidos (guía completa en SONIDOS_GAMING.md)
 - [ ] Sistema de insignias/badges personalizado
@@ -59,6 +79,368 @@
 - [ ] Reportes avanzados y estadísticas
 - [ ] Exportación Excel/PDF
 - [ ] Notificaciones automáticas
+
+---
+
+## 📝 NOTAS DE LA SESIÓN (9 DIC 2025) - IMPORTACIÓN AUTOMÁTICA DE PLICKERS
+
+### 🎯 OBJETIVO: Sistema de Importación de Calificaciones desde Plickers
+
+Crear un módulo completo que permita importar archivos CSV exportados desde la plataforma Plickers y convertir automáticamente las calificaciones en puntos XP con un multiplicador variable.
+
+### 📂 Implementación Completa
+
+#### 1. **Backend - Controlador de Importación**
+**Archivo**: `src/controllers/importarController.js`
+
+**Funcionalidad**:
+- Endpoint: `POST /api/importar/plickers`
+- Recibe archivo CSV + parámetro `puntosTotales`
+- Procesa CSV con `csv-parser` (salta 6 líneas de metadatos)
+- Normaliza nombres (elimina acentos, compara insensible a mayúsculas/minúsculas)
+- **Fórmula de cálculo**: `XP = Math.round(puntosTotales × (porcentaje / 100))`
+- Actualiza XP de alumnos (suma, no reemplaza)
+- Crea registro de auditoría en colección Ajustes
+- Responde con resumen: procesados, actualizados, errores, no encontrados
+
+**Ejemplo de cálculo**:
+```
+Actividad vale: 20 puntos
+Alumno saca: 80%
+XP otorgado: 20 × 0.80 = 16 puntos
+```
+
+#### 2. **Backend - Rutas**
+**Archivo**: `src/routes/importarRoutes.js`
+
+**Funcionalidad**:
+- Configuración de Multer para subida de archivos
+- Límite de 5MB por archivo
+- Solo acepta archivos `.csv`
+- Almacenamiento temporal en carpeta `uploads/`
+- Limpieza automática de archivos después de procesar
+
+#### 3. **Frontend - Interfaz de Usuario**
+**Archivo**: `public/dashboard.html`
+
+**Funcionalidad**:
+- Botón "📂 Importar Plickers" en barra de acciones
+- Prompt solicita puntos totales de la actividad (1-10,000)
+- Validación de entrada numérica
+- Input file oculto para seleccionar CSV
+- Envío via FormData con `fetch` API
+- Resumen detallado en alert con:
+  - Puntos totales de la actividad
+  - Alumnos procesados y actualizados
+  - Lista de no encontrados con porcentaje y XP calculado
+- Recarga automática del dashboard después de importar
+
+#### 4. **Limpieza de Datos - Scripts Utilitarios**
+
+**Script 1**: `scripts/limpiarNombresConGuion.js`
+- Encuentra alumnos con "-" en nombre o apellidos
+- Elimina todos los guiones
+- Resultado: 16 alumnos corregidos de 272 totales
+- Ejemplos corregidos:
+  - `"Natsumi Valentina - Herrera Millan"` → `"Natsumi Valentina Herrera Millan"`
+  - `"Jareth Antonio -- Encinas Higuera"` → `"Jareth Antonio Encinas Higuera"`
+
+**Script 2**: `scripts/buscarAlumnosNoEncontrados.js`
+- Busca alumnos no encontrados en importación
+- Normaliza nombres y busca coincidencias exactas
+- Sugiere coincidencias parciales por palabras
+- Ayuda a identificar problemas de nombres
+
+### 📊 Estructura del CSV de Plickers
+
+```csv
+Línea 1: Título del set (ej: "Tec 3B 2025/2026 08/12/2025-09/12/2025")
+Línea 2: Vacía
+Línea 3: Encabezados ("Card Number","First name","Last Name","Score",...)
+Línea 4: Nombres de cuestionarios
+Línea 5: URLs de reportes
+Línea 6: Respuestas correctas
+Línea 7+: DATOS DE ALUMNOS
+```
+
+**Columnas relevantes**:
+- Columna 1 (índice "1"): First name
+- Columna 2 (índice "2"): Last name
+- Columna 3 (índice "3"): Score (formato: "80%", "100%", "-")
+
+### 🔧 Archivos Creados/Modificados
+
+**Backend**:
+- `src/controllers/importarController.js` (NUEVO)
+- `src/routes/importarRoutes.js` (NUEVO)
+- `src/app.js` (modificado - agregada ruta /api/importar)
+
+**Frontend**:
+- `public/dashboard.html` (modificado - botón e interfaz de importación)
+
+**Scripts**:
+- `scripts/limpiarNombresConGuion.js` (NUEVO)
+- `scripts/buscarAlumnosNoEncontrados.js` (NUEVO)
+- `scripts/testImportarPlickers.js` (NUEVO - pruebas)
+
+**Configuración**:
+- `.gitignore` (modificado - agregada carpeta uploads/)
+- `package.json` (modificado - dependencia multer agregada)
+
+### ✅ Pruebas Realizadas
+
+**Prueba con archivo real** (`plicker.csv` - 3ro B):
+- 📊 Actividad configurada: 20 puntos totales
+- 📋 Alumnos procesados: 34
+- ✅ Actualizados correctamente: 32 (94% éxito)
+- ❌ No encontrados: 2
+  - Gabriel Barraza Carranza (ya no está en la escuela) ✓
+  - Viridiana Johana Medina Urrea (nombre invertido en BD) ⚠️
+
+**Ejemplos de cálculos correctos**:
+| Alumno | Score CSV | Puntos Calculados | XP Antes | XP Después |
+|--------|-----------|-------------------|----------|------------|
+| ALEXIS ORLANDO | 80% | 16 | 640 | 656 |
+| AMALIA MIREYA | 100% | 20 | 200 | 220 |
+| KEVIN ALONSO | 86% | 17 | 326 | 343 |
+| MANUEL ALEJANDRO | 60% | 12 | 240 | 252 |
+| NATSUMI VALENTINA | 50% | 10 | 180 | 190 |
+
+### 🎯 Ventajas del Sistema
+
+1. **Flexible**: Funciona con cualquier valor de actividad (1-10,000 puntos)
+2. **Proporcional**: Respeta el porcentaje obtenido por cada alumno
+3. **Trazable**: Cada importación queda registrada en Ajustes
+4. **Robusto**: No detiene el proceso si un alumno no existe
+5. **Informativo**: Resumen detallado muestra qué alumnos no fueron encontrados
+6. **Normalizado**: Mejora coincidencias eliminando acentos y comparando sin mayúsculas
+
+### 📝 Notas Importantes
+
+- El sistema **suma** puntos XP, no los reemplaza
+- Los puntos se redondean al entero más cercano
+- XP no puede exceder 10,000 (límite máximo del sistema)
+- Los archivos CSV se eliminan automáticamente después de procesar
+- La carpeta `uploads/` está en `.gitignore` (no se sube al repositorio)
+
+---
+
+## 📝 NOTAS DE LA SESIÓN (8-9 DIC 2025) - CONTADOR DE SESIONES, MATERIAS Y BACKUP
+
+### 🎯 REFACTORIZACIÓN 1: Contador de Clases Impartidas
+
+**Objetivo**: Reemplazar la lógica de "Horarios" (no utilizada) por un contador de sesiones que se incrementa al finalizar cada clase.
+
+#### Implementación completa:
+1. ✅ **Campo `sesionesImpartidas` en modelo Grupo**:
+   - Tipo: Number, default: 0, min: 0
+   - Se incrementa automáticamente al finalizar clase
+   - Se muestra en dashboard y página principal
+
+2. ✅ **Endpoint para incrementar sesiones**:
+   - Ruta: `POST /api/grupos/:id/incrementar-sesion`
+   - Controlador: `grupoController.incrementarSesiones()`
+   - Incrementa contador usando `$inc` de MongoDB
+   - Retorna mensaje: "Sesión #X registrada exitosamente"
+
+3. ✅ **Integración en Frontend**:
+   - **index.html**: Muestra "📊 Clases: X" en cada tarjeta de grupo
+   - **dashboard.html**:
+     - Muestra contador en info del grupo
+     - Llama a endpoint al ejecutar `finalizarClase()`
+     - Incremento automático antes de limpiar sessionStorage
+
+#### Archivos modificados:
+- `src/models/Grupo.js:23-28` - Campo sesionesImpartidas
+- `src/controllers/grupoController.js:105-134` - Función incrementarSesiones
+- `src/routes/grupoRoutes.js:16` - Ruta POST incrementar-sesion
+- `public/index.html:78` - Display de contador en tarjetas
+- `public/dashboard.html:317,467-479` - Display y llamada API
+
+---
+
+### 🎯 REFACTORIZACIÓN 2: Sistema de Materias/Asignaturas
+
+**Objetivo**: Permitir que un mismo docente imparta diferentes materias a diferentes grupos (Robótica, Física, Tecnología 1/2/3).
+
+#### Implementación completa:
+1. ✅ **Campo `materia` en modelo Grupo**:
+   - Tipo: String, required: true, default: 'General'
+   - Agregado a índice único compuesto
+   - Actualizado método `obtenerNombreCompleto()` para mostrar materia en lugar de nivel
+
+2. ✅ **Migración de índice MongoDB**:
+   - Problema: Índice anterior causaba duplicate key error
+   - Solución: Script `migrarIndiceGrupos.js` para eliminar índice viejo
+   - Nuevo índice: `{ grado, grupo, cicloEscolar, nivel, materia }` unique
+
+3. ✅ **8 Materias reales asignadas**:
+   - 1°B: Tecnología 1
+   - 2°A: Física Elemental
+   - 2°B: Tecnología 2
+   - 2°C: Física Elemental
+   - 2°D: Física Elemental
+   - 2°H: Física Elemental
+   - 3°B: Tecnología 3
+   - 3°I: Tecnología 3
+
+4. ✅ **Frontend actualizado**:
+   - **index.html**: Materia destacada en oro (1.3em, font-weight 600)
+   - **dashboard.html**: Header muestra "Grado°Grupo - Materia"
+   - **asistencia.html**: Info del grupo incluye materia
+
+#### Archivos modificados:
+- `src/models/Grupo.js:35-40,125-130,144` - Campo materia + índice
+- `src/controllers/grupoController.js:24` - Incluir materia en creación
+- `scripts/poblarDatosEjemplo.js:25-28,35-38,45-48,55-58` - Datos con materia
+- `scripts/importarDatos.js:59` - Default materia='Robótica'
+- `scripts/migrarIndiceGrupos.js` - Script de migración (NUEVO)
+- `scripts/actualizarMaterias.js` - Actualización masiva materias (NUEVO)
+- `public/index.html:74-76` - Display dorado de materia
+- `public/dashboard.html:317` - Header con materia
+- `public/asistencia.html:613` - Info con materia
+
+---
+
+### 🎯 IMPLEMENTACIÓN 3: Sistema de Backup XP/HP
+
+**Objetivo**: Prevenir pérdida de datos de puntos de estudiantes mediante exportación/importación CSV.
+
+**Contexto**: El docente perdió accidentalmente datos de XP cuando se ejecutó script de ejemplo. 116 estudiantes tenían entre 40-300 XP que no pudieron recuperarse.
+
+#### Sistema completo de 3 partes:
+
+##### 1. **Exportación Manual (CLI)**
+- **Script**: `scripts/exportarPuntos.js`
+- **Función**: Exporta todos los alumnos activos con XP/HP a CSV
+- **Formato archivo**: `backup-puntos-YYYY-MM-DDTHH-MM-SS.csv`
+- **Ubicación**: `/backups/` directory
+- **Columnas**: nombre, apellidos, nombreCompleto, grupo, grado, nivel, materia, xp, salud, activo
+- **Uso**: `node scripts/exportarPuntos.js`
+
+##### 2. **Importación/Restauración (CLI)**
+- **Script**: `scripts/importarPuntos.js`
+- **Función**: Restaura XP/HP desde archivo CSV
+- **Mapeo**: Por nombre + apellidos o nombreCompleto
+- **Actualiza**: Solo campos xp y salud
+- **Uso**: `node scripts/importarPuntos.js backups/backup-puntos-2025-12-09.csv`
+
+##### 3. **Exportación Web (UI)**
+- **Controlador**: `src/controllers/backupController.js`
+- **Endpoint**: `GET /api/backup/exportar-puntos`
+- **Ruta**: `src/routes/backupRoutes.js`
+- **Frontend**: Botón verde "💾 Respaldar Puntos XP/HP" en `index.html`
+- **Características**:
+  - Diálogo de confirmación antes de descargar
+  - Descarga automática del CSV
+  - Notificación de éxito
+  - Headers HTTP para descarga: `Content-Disposition: attachment`
+
+#### Archivos creados:
+- `scripts/exportarPuntos.js` - Exportación CLI (NUEVO)
+- `scripts/importarPuntos.js` - Importación CLI (NUEVO)
+- `src/controllers/backupController.js` - Controlador API (NUEVO)
+- `src/routes/backupRoutes.js` - Rutas backup (NUEVO)
+
+#### Archivos modificados:
+- `src/app.js:60,69` - Importar y montar rutas de backup
+- `public/index.html:18-20,102-129` - Botón y función exportarPuntos()
+
+#### Prueba exitosa:
+- ✅ Generado: `backups/backup-puntos-2025-12-09T04-36-47.csv`
+- ✅ Contiene: 272 estudiantes activos
+- ✅ Formato: CSV válido con todos los campos
+
+---
+
+### 🎯 RECUPERACIÓN DE DATOS REALES
+
+**Problema**: Al ejecutar `poblarDatosEjemplo.js`, se eliminaron 273 estudiantes reales con sus puntos XP.
+
+**Solución implementada**:
+
+#### 1. **Importación desde CSV**:
+- Fuentes: `datos/grupos.csv` (8 grupos) y `datos/alumnos.csv` (272 estudiantes)
+- Script: `scripts/importarDatos.js` (modificado para incluir materia)
+- Resultado: ✅ 8 grupos y 272 estudiantes recuperados
+
+#### 2. **Limpieza de datos de prueba**:
+- Script: `scripts/limpiarGruposPrueba.js` (NUEVO)
+- Eliminó: 4 grupos de ejemplo (3°A, 1°B, etc.)
+- Conservó: Solo datos reales
+
+#### 3. **Intento de recuperación de XP**:
+- Scripts creados:
+  - `scripts/verificarHistorialXP.js` - Análisis de ajustes históricos (NUEVO)
+  - `scripts/reconstruirXP.js` - Intento de mapeo por IDs (NUEVO)
+  - `scripts/recuperarXPPorOrden.js` - Intento de mapeo por orden (NUEVO)
+- Hallazgos: 134 ajustes XP encontrados (distribución: 57×40XP, 16×80XP, 29×300XP, 11×45XP)
+- Problema: Ajustes solo contenían IDs antiguos, no nombres
+- Resultado: ❌ No recuperable automáticamente
+
+#### 4. **Estado final**:
+- ✅ 8 grupos con materias correctas
+- ✅ 272 estudiantes activos
+- ❌ Todos en 0 XP (pérdida aceptada por usuario)
+- ✅ Sistema de backup implementado para prevenir futuras pérdidas
+
+---
+
+### 📊 Estado de datos reales (9 Dic 2025):
+
+**Grupos activos: 8**
+- 1°B - Tecnología 1
+- 2°A - Física Elemental
+- 2°B - Tecnología 2
+- 2°C - Física Elemental
+- 2°D - Física Elemental
+- 2°H - Física Elemental
+- 3°B - Tecnología 3
+- 3°I - Tecnología 3
+
+**Estudiantes**: 272 activos (todos en 0 XP)
+
+**Institución**: Secundaria técnica #50
+
+---
+
+### 📁 Archivos nuevos creados (8-9 Dic 2025):
+
+#### Scripts de mantenimiento:
+- `scripts/migrarIndiceGrupos.js` - Migración de índices MongoDB
+- `scripts/actualizarMaterias.js` - Actualización masiva de materias
+- `scripts/limpiarGruposPrueba.js` - Limpieza de datos de prueba
+- `scripts/verificarHistorialXP.js` - Análisis de ajustes XP históricos
+- `scripts/reconstruirXP.js` - Intento de reconstrucción de XP
+- `scripts/recuperarXPPorOrden.js` - Intento de recuperación por orden
+- `scripts/exportarPuntos.js` - **Exportación CSV de XP/HP**
+- `scripts/importarPuntos.js` - **Importación CSV de XP/HP**
+
+#### Backend:
+- `src/controllers/backupController.js` - Controlador de backup
+- `src/routes/backupRoutes.js` - Rutas de backup
+
+---
+
+### 🐛 Issues resueltos (8-9 Dic 2025):
+
+#### 1. Error de índice duplicado MongoDB
+**Error**: `E11000 duplicate key error collection: test.grupos index: grado_1_grupo_1_cicloEscolar_1_nivel_1`
+
+**Causa**: Índice único antiguo no incluía campo `materia`, impidiendo crear múltiples grupos con diferentes materias.
+
+**Solución**:
+- Creado `scripts/migrarIndiceGrupos.js`
+- Eliminado índice antiguo: `grado_1_grupo_1_cicloEscolar_1_nivel_1`
+- MongoDB recreó índice automáticamente con campo materia incluido
+
+#### 2. Pérdida de datos de producción
+**Problema**: Script `poblarDatosEjemplo.js` eliminó 273 estudiantes reales con XP.
+
+**Solución**:
+- Importación desde CSV backups
+- Sistema de backup completo implementado
+- Usuario aceptó pérdida de XP (nuevo inicio)
 
 ---
 
@@ -785,9 +1167,17 @@ controlAulaClaude/
 │       └── styles.css      # Estilos globales
 │
 ├── scripts/
-│   ├── poblarDatosEjemplo.js    # Script para datos de prueba
-│   ├── importarDatos.js         # Script para importar datos reales
-│   └── resetearXP.js            # Script para resetear XP a 0
+│   ├── poblarDatosEjemplo.js         # Script para datos de prueba
+│   ├── importarDatos.js              # Script para importar datos reales (CSV)
+│   ├── resetearXP.js                 # Script para resetear XP a 0
+│   ├── migrarIndiceGrupos.js         # Migración de índices MongoDB (8-Dic-2025)
+│   ├── actualizarMaterias.js         # Actualización masiva de materias (8-Dic-2025)
+│   ├── limpiarGruposPrueba.js        # Limpieza de datos de prueba (8-Dic-2025)
+│   ├── verificarHistorialXP.js       # Análisis de ajustes XP históricos (8-Dic-2025)
+│   ├── reconstruirXP.js              # Intento de reconstrucción de XP (8-Dic-2025)
+│   ├── recuperarXPPorOrden.js        # Intento de recuperación por orden (8-Dic-2025)
+│   ├── exportarPuntos.js             # ⭐ Exportación CSV de XP/HP (8-Dic-2025)
+│   └── importarPuntos.js             # ⭐ Importación CSV de XP/HP (8-Dic-2025)
 │
 ├── server.js               # Punto de entrada (inicia servidor)
 ├── package.json
@@ -811,11 +1201,14 @@ controlAulaClaude/
 Representa los grupos escolares (ej: 3°A Secundaria)
 
 **Campos principales:**
-- `nombre`: String (ej: "3A")
-- `nivel`: Enum ['Secundaria', 'Preparatoria', 'Universidad']
 - `grado`: Number (1-6)
+- `grupo`: String (ej: "A", "B")
+- `nivel`: Enum ['Secundaria', 'Preparatoria', 'Universidad']
+- `materia`: String (required, default: 'General') - **NUEVO 8-Dic-2025**
 - `cicloEscolar`: String formato "YYYY-YYYY"
 - `turno`: Enum ['Matutino', 'Vespertino']
+- `horario`: Object (días y horas)
+- `sesionesImpartidas`: Number (default: 0, min: 0) - **NUEVO 8-Dic-2025**
 - `capacidad`: Number (opcional)
 - `activo`: Boolean
 
@@ -823,10 +1216,10 @@ Representa los grupos escolares (ej: 3°A Secundaria)
 - `numeroAlumnos`: Cuenta cuántos alumnos tiene el grupo
 
 **Métodos:**
-- `obtenerNombreCompleto()`: Retorna "3° 3A - Secundaria (Matutino)"
+- `obtenerNombreCompleto()`: Retorna "1ro°A - Tecnología 1" (actualizado para mostrar materia)
 
 **Índices:**
-- Único compuesto: `nombre + cicloEscolar + turno`
+- Único compuesto: `grado + grupo + cicloEscolar + nivel + materia` (actualizado 8-Dic-2025)
 
 ---
 
@@ -962,6 +1355,7 @@ Campos adicionales:
 | PUT | `/api/grupos/:id` | Actualizar |
 | DELETE | `/api/grupos/:id` | Desactivar (soft delete) |
 | GET | `/api/grupos/:id/alumnos` | Obtener alumnos del grupo |
+| POST | `/api/grupos/:id/incrementar-sesion` | **NUEVO 8-Dic-2025** - Incrementar contador de sesiones |
 
 ### 👨‍🎓 ALUMNOS
 
@@ -993,9 +1387,22 @@ Campos adicionales:
 | GET | `/api/asistencia/grupo/:grupoId` | Obtener asistencias del grupo (filtros: ?fecha=YYYY-MM-DD) |
 | GET | `/api/asistencia/grupo/:grupoId/tabla` | Tabla histórica de asistencias (filtros: ?fechaInicio=YYYY-MM-DD&fechaFin=YYYY-MM-DD) |
 
-**Nota**: Al registrar asistencia se otorga automáticamente:
-- `presente`: +10 XP
-- `retardo`: +5 XP
+**Nota**: ❌ XP automático DESACTIVADO desde 3-Dic-2025 (antes: +10 XP presente, +5 XP retardo)
+
+### 💾 BACKUP (Sistema de Respaldo)
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/backup/exportar-puntos` | **NUEVO 8-Dic-2025** - Descargar backup CSV de todos los puntos XP/HP |
+
+**Características**:
+- Exporta todos los alumnos activos con XP, HP y datos de grupo
+- Formato: CSV con timestamp `backup-puntos-YYYY-MM-DDTHH-MM-SS.csv`
+- Columnas: nombre, apellidos, nombreCompleto, grupo, grado, nivel, materia, xp, salud, activo
+- Headers HTTP para descarga automática
+- Accesible desde botón verde en UI (`index.html`)
+- Script CLI alternativo: `node scripts/exportarPuntos.js`
+- Script de restauración: `node scripts/importarPuntos.js <archivo.csv>`
 
 ### 📝 EVENTOS
 
@@ -1495,17 +1902,21 @@ curl http://localhost:3000/api/grupos  # Test rápido
 
 ---
 
-**Fecha de última actualización**: 2025-12-06 21:00
-**Estado del proyecto**: ✅ Funcionando completamente (Backend + Frontend + Avatares + Audio + Modo Clase Activa)
-**Backend**: ✅ Completo con sistema XP/HP manual (sin niveles)
+**Fecha de última actualización**: 2025-12-09 05:00
+**Estado del proyecto**: ✅ Funcionando completamente (Backend + Frontend + Avatares + Audio + Modo Clase Activa + Materias + Backup)
+**Backend**: ✅ Completo con sistema XP/HP manual (sin niveles) + contador de sesiones + materias + backup
 **Frontend**: ✅ Completo y funcional (HTML/CSS/JS vanilla)
 **Avatares**: 🤖 Implementado (robots únicos por alumno)
 **Audio**: 🔊 Implementado (15 sonidos gaming - pendiente descarga MP3)
 **Branding**: 🏫 Logo institucional en 6 páginas + personalización "Secundaria técnica #50"
 **Modo Clase**: 🎯 FASE 1 implementada (sesión de clase en vivo con estados visuales)
+**Contador Sesiones**: ✅ Implementado (8-Dic-2025) - Reemplaza lógica de horarios
+**Sistema Materias**: ✅ Implementado (8-Dic-2025) - 8 materias diferentes asignadas
+**Sistema Backup**: 💾 Implementado (8-9-Dic-2025) - Exportación/importación CSV de XP/HP
+**Datos**: 8 grupos reales, 272 estudiantes (todos en 0 XP después de recuperación)
 **Sistema**: 🎮 En uso real por el docente
-**XP**: 0-10,000 exclusivamente manual (273 alumnos reseteados a 0)
-**Bugs conocidos**: ✅ Ninguno (últimos 2 bugs corregidos 6-Dic-2025)
+**XP**: 0-10,000 exclusivamente manual
+**Bugs conocidos**: ✅ Ninguno
 **Próxima sesión**: Después del periodo de prueba de 2 semanas
 **Planes futuros**: Insignias/badges, gráficas temporales, portal para estudiantes, control de versiones con Git/GitHub
 
@@ -1549,11 +1960,15 @@ kill [PID]
 7. ✅ Tabla de asistencias con avatares
 8. ✅ Sistema de audio gaming implementado (15 sonidos)
 9. ✅ Placeholder de insignias para futuro sistema de badges
-10. ✅ Sistema en uso real por el docente
+10. ✅ **Contador de sesiones/clases impartidas** (8-Dic-2025)
+11. ✅ **Sistema de materias/asignaturas** (8-Dic-2025)
+12. ✅ **Sistema de backup XP/HP completo** (8-9-Dic-2025)
+13. ✅ Sistema en uso real por el docente
 
 ### 📊 Estado actual:
 - **Sistema**: En periodo de prueba (2 semanas)
-- **Datos**: 273 alumnos reseteados a 0 XP para nuevo inicio
+- **Datos**: 8 grupos reales, 272 estudiantes (todos en 0 XP después de recuperación)
+- **Materias**: 8 materias asignadas (Tecnología 1/2/3, Física Elemental, Robótica)
 - **XP**: Exclusivamente manual (no automático en asistencias)
 - **Frontend**: HTML/CSS/JS vanilla (NO React)
 - **Base de datos**: MongoDB Atlas
@@ -1561,30 +1976,38 @@ kill [PID]
 - **Avatares**: 🤖 Robots únicos por alumno (DiceBear API)
 - **Audio**: 🔊 15 sonidos gaming implementados (pendiente descarga MP3)
 - **Niveles**: ❌ Eliminados - Sistema 0-10,000 XP
-- **Última actualización**: 3-Dic-2025 20:30
+- **Backup**: 💾 Sistema completo de exportación/importación CSV
+- **Última actualización**: 9-Dic-2025 05:00
 
 ### 🔜 Próximos pasos sugeridos:
 1. **INMEDIATO**: Descargar archivos MP3 de sonidos (ver SONIDOS_GAMING.md)
-2. Usar el sistema durante 2 semanas con XP manual
-3. Recopilar feedback de los alumnos sobre avatares y sonidos
-4. Identificar mejoras necesarias
-5. Implementar sistema de insignias/badges personalizado
-6. Crear gráficas de evolución temporal (Chart.js)
-7. Crear portal para estudiantes
+2. **RECOMENDADO**: Hacer backup de XP/HP regularmente (botón verde en index.html)
+3. Usar el sistema durante 2 semanas con XP manual
+4. Recopilar feedback de los alumnos sobre avatares y sonidos
+5. Identificar mejoras necesarias
+6. Implementar sistema de insignias/badges personalizado
+7. Crear gráficas de evolución temporal (Chart.js)
+8. Crear portal para estudiantes
 
 ### 📁 Archivos clave para referencia rápida:
 - **Este archivo**: Contexto completo del proyecto
 - `AVATARES.md` 🤖 - Documentación del sistema de avatares (robots)
 - `SONIDOS_GAMING.md` 🔊 - Guía completa de sonidos gaming (sitios de descarga)
-- `public/dashboard.html` - Dashboard principal (avatares + audio + sin niveles)
+- `public/index.html` - Página principal con botón de backup verde
+- `public/dashboard.html` - Dashboard principal (avatares + audio + contador sesiones + materia)
 - `public/asistencia.html` - Toma de lista (avatares + audio)
 - `public/ranking.html` - Ranking (avatares, sin niveles)
+- `src/models/Grupo.js` - Modelo actualizado (sesionesImpartidas + materia)
+- `src/controllers/grupoController.js` - Controlador con incrementarSesiones
+- `src/controllers/backupController.js` - Controlador de backup (NUEVO)
 - `src/controllers/xpController.js` - Sistema XP/HP (sin niveles)
 - `src/controllers/asistenciaController.js` - Asistencias (XP desactivado)
 - `src/models/Alumno.js` - Modelo (método nivel comentado)
-- `scripts/resetearXP.js` - Script para resetear XP a 0
+- `scripts/exportarPuntos.js` - **Script de exportación CSV (NUEVO)**
+- `scripts/importarPuntos.js` - **Script de importación CSV (NUEVO)**
 
-### 🎮 Cambios clave de la sesión:
+### 🎮 Cambios clave de las últimas sesiones:
+**3-Dic-2025:**
 - ❌ Sistema de niveles eliminado → ✅ XP 0-10,000
 - ❌ XP automático en asistencias → ✅ XP manual exclusivo
 - ✅ 9 opciones específicas de motivos (Tarea, Práctica, Plickers, etc.)
@@ -1592,10 +2015,47 @@ kill [PID]
 - 🔊 Sistema de audio gaming (smart behavior: sonido diferente si XP ≥100)
 - 🎯 Placeholder de insignias para futuro sistema
 
+**6-Dic-2025:**
+- 🏫 Logo institucional en 6 páginas HTML
+- 🎯 FASE 1: Modo Clase Activa con estados visuales
+- 📝 Personalización "Secundaria técnica #50"
+
+**8-9-Dic-2025:**
+- 📊 Contador de sesiones/clases impartidas (reemplaza horarios)
+- 📚 Sistema de materias/asignaturas (8 materias diferentes)
+- 💾 Sistema completo de backup XP/HP (3 métodos: CLI export, CLI import, Web UI)
+- 🔧 Migración de índices MongoDB
+- 📥 Recuperación de 272 estudiantes desde CSV
+- 📁 8 nuevos scripts de mantenimiento/backup
+
+**9-Dic-2025:**
+- 📂 Sistema de importación automática de Plickers
+- 🎯 Multiplicador variable de puntos (actividad vale X puntos)
+- 🧹 Limpieza masiva de 16 nombres con guiones "-"
+- 📊 Fórmula: XP = PuntosTotales × (Porcentaje / 100)
+- 📝 Registro de auditoría en Ajustes con motivo "Plickers"
+- 🔍 Normalización avanzada de nombres para mejorar coincidencias
+
 ---
 
-**¡Sistema completo y funcionando con avatares, audio, modo clase activa y branding institucional! 🎓🎮🤖🔊🏫**
+**¡Sistema completo y funcionando con avatares, audio, modo clase activa, materias, backup e importación Plickers! 🎓🎮🤖🔊🏫💾📂**
 
-**Siguiente paso: Configurar Git/GitHub para control de versiones (RECOMENDADO)**
-**Otros pasos**: Descargar 15 archivos MP3 de sonidos (guía en SONIDOS_GAMING.md)
+**COMPLETADO (8-9-Dic-2025):**
+- ✅ Contador de sesiones/clases impartidas
+- ✅ Sistema de materias/asignaturas por grupo
+- ✅ Sistema completo de backup XP/HP (3 métodos)
+- ✅ Recuperación de datos reales (8 grupos, 272 estudiantes)
+
+**COMPLETADO (9-Dic-2025):**
+- ✅ Sistema de importación automática de Plickers
+- ✅ Multiplicador variable de puntos XP
+- ✅ Limpieza masiva de 16 nombres con guiones
+- ✅ 3 scripts utilitarios de importación y limpieza
+
+**Siguiente paso recomendado:**
+1. **CRÍTICO**: Hacer backup regular de XP/HP (botón verde en index.html)
+2. **NUEVO**: Usar botón "📂 Importar Plickers" en dashboard para cargar calificaciones automáticamente
+3. Descargar 15 archivos MP3 de sonidos (guía en SONIDOS_GAMING.md)
+4. Configurar Git/GitHub para control de versiones
+
 **Éxito con el periodo de prueba. Nos vemos en 2 semanas con feedback real de uso.** 😊
