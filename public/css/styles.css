@@ -156,12 +156,12 @@ body::before {
 
 /* Logo de la escuela en header */
 .logo-escuela {
-  width: 80px;
-  height: 80px;
+  width: 140px;
+  height: 140px;
   filter: brightness(0) invert(1);  /* Convertir a blanco */
   opacity: 0.95;
   transition: all 0.3s ease;
-  margin-right: 10px;
+  margin-right: 15px;
   flex-shrink: 0;  /* No permitir que se encoja en responsive */
 }
 

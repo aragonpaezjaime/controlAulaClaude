@@ -4,16 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Aula - Seleccionar Grupo</title>
+    <link rel="icon" type="image/svg+xml" href="/images/logo-escuela.svg">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
     <div class="container">
-        <div class="header">
+        <div class="header" style="position: relative;">
             <h1>
                 <img src="/images/logo-escuela.svg" alt="Logo Escuela" class="logo-escuela">
                 🎓 Control de Aula
             </h1>
             <p>Selecciona un grupo para comenzar</p>
+            <button onclick="exportarPuntos()" class="btn-backup" style="position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                💾 Respaldar Puntos XP/HP
+            </button>
         </div>
 
         <div id="loading" class="loading">
@@ -62,12 +66,16 @@
             container.innerHTML = grupos.map(grupo => {
                 // Personalizar el nombre del nivel para Secundaria
                 const nivelTexto = grupo.nivel === 'Secundaria' ? 'Secundaria técnica #50' : grupo.nivel;
+                const sesiones = grupo.sesionesImpartidas || 0;
+                const materia = grupo.materia || 'General';
                 return `
                 <div class="grupo-card" onclick="irADashboard('${grupo._id}')">
-                    <h3>${grupo.grado}${grupo.grupo}</h3>
-                    <div class="info">📍 Aula: ${grupo.aula}</div>
+                    <h3>${grupo.grado}°${grupo.grupo}</h3>
+                    <div class="info" style="font-size: 1.3em; font-weight: 600; color: var(--accent-gold); margin: 10px 0;">
+                        📚 ${materia}
+                    </div>
                     <div class="info">📅 Ciclo: ${grupo.cicloEscolar}</div>
-                    <div class="info">📊 Horario: ${grupo.horario.length} sesiones</div>
+                    <div class="info">📊 Clases: ${sesiones}</div>
                     <span class="nivel">${nivelTexto}</span>
                 </div>
                 `;
@@ -89,6 +97,35 @@
             setTimeout(() => {
                 notification.remove();
             }, 3000);
+        }
+
+        // Exportar/Respaldar puntos XP/HP
+        function exportarPuntos() {
+            // Mostrar confirmación
+            const confirmacion = confirm(
+                '💾 RESPALDO DE PUNTOS XP/HP\n\n' +
+                'Se descargará un archivo CSV con todos los puntos de tus alumnos.\n\n' +
+                '¡Guárdalo en un lugar seguro para poder restaurar en caso necesario!\n\n' +
+                '¿Continuar?'
+            );
+
+            if (!confirmacion) return;
+
+            // Descargar el archivo
+            window.location.href = `${API_URL}/backup/exportar-puntos`;
+
+            // Mostrar mensaje de éxito
+            setTimeout(() => {
+                const notification = document.createElement('div');
+                notification.className = 'notification success';
+                notification.innerHTML = '✅ Backup descargado correctamente<br>💡 Guárdalo en un lugar seguro';
+                notification.style.cssText = 'background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 20px; border-radius: 12px; position: fixed; top: 20px; right: 20px; z-index: 10000; box-shadow: 0 8px 16px rgba(0,0,0,0.3); font-weight: 600; max-width: 300px; text-align: center;';
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.remove();
+                }, 5000);
+            }, 500);
         }
 
         // Inicializar

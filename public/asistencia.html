@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Toma de Lista - Control de Aula</title>
+    <link rel="icon" type="image/svg+xml" href="/images/logo-escuela.svg">
     <link rel="stylesheet" href="/css/styles.css">
     <style>
         /* Estilos específicos para la toma de lista */
@@ -581,8 +582,29 @@
 
         // Configurar volumen
         Object.values(sonidos).forEach(audio => {
-            audio.volume = 0.4;
+            audio.volume = 0.5;
         });
+
+        // Sistema de desbloqueo de audio
+        let audioDesbloqueado = false;
+
+        function desbloquearAudio() {
+            if (!audioDesbloqueado) {
+                // Intentar reproducir y pausar inmediatamente para desbloquear
+                Object.values(sonidos).forEach(audio => {
+                    audio.play().then(() => {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }).catch(() => {});
+                });
+                audioDesbloqueado = true;
+                console.log('🔊 Audio desbloqueado');
+            }
+        }
+
+        // Desbloquear audio con el primer click en cualquier parte de la página
+        document.addEventListener('click', desbloquearAudio, { once: true });
+        document.addEventListener('touchstart', desbloquearAudio, { once: true });
 
         // Función helper para reproducir sonidos
         function reproducirSonido(nombreSonido) {
@@ -590,7 +612,19 @@
                 const audio = sonidos[nombreSonido];
                 if (audio) {
                     audio.currentTime = 0;
-                    audio.play().catch(err => console.log('Audio bloqueado:', err));
+                    const playPromise = audio.play();
+
+                    if (playPromise !== undefined) {
+                        playPromise
+                            .then(() => {
+                                console.log(`🔊 Reproduciendo: ${nombreSonido}`);
+                            })
+                            .catch(err => {
+                                console.log(`⚠️ Audio bloqueado: ${nombreSonido}`, err);
+                                // Intentar desbloquear
+                                desbloquearAudio();
+                            });
+                    }
                 }
             } catch (error) {
                 console.error('Error al reproducir sonido:', error);
@@ -612,7 +646,7 @@
                     // Personalizar el nombre del nivel para Secundaria
                     const nivelTexto = grupoData.data.nivel === 'Secundaria' ? 'Secundaria técnica #50' : grupoData.data.nivel;
                     document.getElementById('grupo-nombre').innerHTML = `${logoHTML}📋 Toma de Lista - ${grupoData.data.grado}${grupoData.data.grupo}`;
-                    document.getElementById('grupo-info').textContent = `${nivelTexto} | Aula ${grupoData.data.aula}`;
+                    document.getElementById('grupo-info').textContent = `${nivelTexto}`;
                 }
 
                 const alumnosResponse = await fetch(`${API_URL}/grupos/${grupoId}/alumnos`);

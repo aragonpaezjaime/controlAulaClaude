@@ -454,6 +454,103 @@ const justificarFaltaIndividual = async (req, res) => {
 };
 
 // ============================================
+// UPSERT ASISTENCIA GRUPO (AUTO-GUARDADO)
+// ============================================
+const upsertAsistenciaGrupo = async (req, res) => {
+  try {
+    const { grupoId, asistencias, fecha } = req.body;
+
+    // Validar que el grupo existe
+    const grupo = await Grupo.findById(grupoId);
+    if (!grupo) {
+      return res.status(404).json({
+        success: false,
+        mensaje: "Grupo no encontrado",
+      });
+    }
+
+    // Preparar fecha de registro
+    const fechaRegistro = fecha ? new Date(fecha) : new Date();
+    fechaRegistro.setHours(0, 0, 0, 0);
+
+    // Capturar hora actual para el registro
+    const horaRegistroActual = new Date();
+
+    // Buscar asistencias existentes para hoy
+    const asistenciasExistentes = await Asistencia.find({
+      grupo: grupoId,
+      fecha: fechaRegistro,
+    });
+
+    // Crear un mapa de asistencias existentes por alumnoId
+    const mapaExistentes = {};
+    asistenciasExistentes.forEach((asist) => {
+      // Usar el último registro de cada alumno
+      const alumnoIdStr = asist.alumno.toString();
+      if (
+        !mapaExistentes[alumnoIdStr] ||
+        asist.horaRegistro > mapaExistentes[alumnoIdStr].horaRegistro
+      ) {
+        mapaExistentes[alumnoIdStr] = asist;
+      }
+    });
+
+    // Preparar operaciones de actualización/inserción
+    let actualizadas = 0;
+    let creadas = 0;
+
+    for (const asistencia of asistencias) {
+      const alumnoIdStr = asistencia.alumnoId;
+      const asistenciaExistente = mapaExistentes[alumnoIdStr];
+
+      if (asistenciaExistente) {
+        // ACTUALIZAR asistencia existente
+        await Asistencia.findByIdAndUpdate(asistenciaExistente._id, {
+          estado: asistencia.estado,
+          observaciones: asistencia.observaciones || undefined,
+          horaRegistro: horaRegistroActual, // Actualizar hora de último guardado
+        });
+        actualizadas++;
+      } else {
+        // CREAR nueva asistencia
+        await Asistencia.create({
+          alumno: asistencia.alumnoId,
+          grupo: grupoId,
+          fecha: fechaRegistro,
+          horaRegistro: horaRegistroActual,
+          estado: asistencia.estado,
+          observaciones: asistencia.observaciones || undefined,
+        });
+        creadas++;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      mensaje: "Asistencia auto-guardada exitosamente",
+      data: {
+        actualizadas,
+        creadas,
+        total: asistencias.length,
+        grupo: grupo.obtenerNombreCompleto(),
+        horaGuardado: horaRegistroActual.toLocaleString("es-MX", {
+          timeZone: "America/Mexico_City",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    });
+  } catch (error) {
+    console.error("Error en upsert asistencia:", error);
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al auto-guardar la asistencia",
+      error: error.message,
+    });
+  }
+};
+
+// ============================================
 // EXPORTAR CONTROLADORES
 // ============================================
 
@@ -465,4 +562,5 @@ module.exports = {
   obtenerTablaAsistencias,
   justificarFaltas,
   justificarFaltaIndividual,
+  upsertAsistenciaGrupo, // 🆕 Nuevo endpoint para auto-guardado
 };

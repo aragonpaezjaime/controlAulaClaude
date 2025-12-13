@@ -8,18 +8,19 @@ async function limpiarNombresConGuion() {
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('✅ Conectado a MongoDB');
 
-        // Buscar todos los alumnos con "-" en nombre o apellidos
+        // Buscar todos los alumnos con "-", "…" u otros caracteres especiales en nombre o apellidos
+        // El carácter "…" es el ellipsis Unicode (U+2026)
         const alumnos = await Alumno.find({
             $or: [
-                { nombre: { $regex: '-' } },
-                { apellidos: { $regex: '-' } }
+                { nombre: { $regex: /[-….]/ } },
+                { apellidos: { $regex: /[-….]/ } }
             ]
         });
 
-        console.log(`\n📊 Encontrados ${alumnos.length} alumnos con "-" en sus nombres:\n`);
+        console.log(`\n📊 Encontrados ${alumnos.length} alumnos con caracteres especiales ("-", "…", ".") en sus nombres:\n`);
 
         if (alumnos.length === 0) {
-            console.log('✅ No hay alumnos con "-" en sus nombres');
+            console.log('✅ No hay alumnos con caracteres especiales en sus nombres');
             process.exit(0);
         }
 
@@ -41,9 +42,21 @@ async function limpiarNombresConGuion() {
             const apellidosAnterior = alumno.apellidos;
             const nombreCompletoAnterior = alumno.nombreCompleto;
 
-            // Limpiar los guiones
-            alumno.nombre = alumno.nombre.replace(/-/g, '').trim();
-            alumno.apellidos = alumno.apellidos.replace(/-/g, '').trim();
+            // Limpiar guiones, puntos suspensivos y puntos
+            // Reemplaza: "-", "…" (ellipsis Unicode U+2026), ".", "..", "...", "...."
+            alumno.nombre = alumno.nombre
+                .replace(/-/g, '')           // Guiones
+                .replace(/…/g, '')           // Ellipsis Unicode (U+2026)
+                .replace(/\.+/g, '')         // Todos los puntos (uno o más)
+                .replace(/\s+/g, ' ')        // Múltiples espacios a uno solo
+                .trim();
+
+            alumno.apellidos = alumno.apellidos
+                .replace(/-/g, '')
+                .replace(/…/g, '')
+                .replace(/\.+/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
 
             // Recalcular nombreCompleto (esto debería hacerse automáticamente con el virtual)
             // Pero por si acaso, lo guardamos manualmente

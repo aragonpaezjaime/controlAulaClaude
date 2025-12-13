@@ -10,6 +10,10 @@ const asistenciaController = require('../controllers/asistenciaController');
 // POST /api/asistencia/grupo
 router.post('/grupo', asistenciaController.registrarAsistenciaGrupo);
 
+// 🆕 Upsert (auto-guardar) asistencia de un grupo - Actualiza si existe, crea si no
+// POST /api/asistencia/grupo/auto-guardar
+router.post('/grupo/auto-guardar', asistenciaController.upsertAsistenciaGrupo);
+
 // Obtener asistencia de un grupo por fecha
 // GET /api/asistencia/grupo/:grupoId?fecha=2025-01-15
 router.get('/grupo/:grupoId', asistenciaController.obtenerAsistenciaPorGrupoYFecha);

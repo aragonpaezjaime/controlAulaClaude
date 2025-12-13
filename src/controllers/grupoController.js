@@ -6,16 +6,16 @@ const Grupo = require('../models/Grupo');
 const crearGrupo = async (req, res) => {
   try {
     // Extraer datos del cuerpo de la petición
-    const { grado, grupo, nivel, horario, cicloEscolar, aula } = req.body;
+    const { grado, grupo, nivel, materia, horario, cicloEscolar } = req.body;
 
     // Crear nueva instancia del modelo Grupo
     const nuevoGrupo = new Grupo({
       grado,
       grupo,
       nivel,
+      materia,
       horario,
-      cicloEscolar,
-      aula
+      cicloEscolar
     });
 
     // Guardar en la base de datos
@@ -244,6 +244,43 @@ const obtenerAlumnosDelGrupo = async (req, res) => {
   }
 };
 
+// ============================================
+// INCREMENTAR SESIONES IMPARTIDAS
+// ============================================
+const incrementarSesiones = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar grupo y aumentar contador en +1
+    const grupo = await Grupo.findByIdAndUpdate(
+      id,
+      { $inc: { sesionesImpartidas: 1 } },
+      { new: true, runValidators: true }
+    ).populate('numeroAlumnos');
+
+    // Validar si existe
+    if (!grupo) {
+      return res.status(404).json({
+        success: false,
+        mensaje: 'Grupo no encontrado'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      mensaje: `Sesión #${grupo.sesionesImpartidas} registrada exitosamente`,
+      data: grupo
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      mensaje: 'Error al incrementar sesiones',
+      error: error.message
+    });
+  }
+};
+
 // Exportar todas las funciones del controlador
 module.exports = {
   crearGrupo,
@@ -251,5 +288,6 @@ module.exports = {
   obtenerGrupoPorId,
   actualizarGrupo,
   eliminarGrupo,
-  obtenerAlumnosDelGrupo
+  obtenerAlumnosDelGrupo,
+  incrementarSesiones
 };

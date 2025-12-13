@@ -39,6 +39,9 @@
                 <button class="back-button" onclick="abrirImportarPlickers()" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border-color: #8b5cf6;">
                     📂 Importar Plickers
                 </button>
+                <button class="back-button" onclick="gestionarAlumnos()" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-color: #3b82f6;">
+                    👥 Gestionar Alumnos
+                </button>
             </div>
         </div>
 
@@ -895,6 +898,11 @@
         // Ver insignias (sistema próximamente)
         function verInsignias() {
             window.location.href = `/insignias.html`;
+        }
+
+        // Gestionar alumnos
+        function gestionarAlumnos() {
+            window.location.href = `/gestion-alumnos.html?grupo=${grupoId}`;
         }
 
         // ============================================

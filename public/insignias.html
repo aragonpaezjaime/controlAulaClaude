@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 Sistema de Insignias - Próximamente</title>
+    <link rel="icon" type="image/svg+xml" href="/images/logo-escuela.svg">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Fondo épico con animación */
+        body {
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(251, 191, 36, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            animation: pulseGlow 4s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Partículas flotantes */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: linear-gradient(45deg, var(--accent-gold), var(--secondary-color));
+            border-radius: 50%;
+            animation: float 15s infinite;
+            opacity: 0.6;
+            box-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Header épico */
+        .hero-header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            padding: 60px 40px;
+            margin-bottom: 40px;
+            border-radius: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                var(--shadow-elevated),
+                0 0 60px rgba(139, 92, 246, 0.6),
+                inset 0 0 100px rgba(255, 255, 255, 0.1);
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .hero-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 30%,
+                rgba(255, 255, 255, 0.2) 50%,
+                transparent 70%
+            );
+            animation: heroShine 3s infinite;
+        }
+
+        @keyframes heroShine {
+            0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 30px rgba(251, 191, 36, 0.5);
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .hero-subtitle {
+            font-size: 1.8rem;
+            color: white;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        .coming-soon {
+            display: inline-block;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #1f2937;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+            box-shadow:
+                0 10px 30px rgba(251, 191, 36, 0.5),
+                0 0 20px rgba(251, 191, 36, 0.8);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 10px 30px rgba(251, 191, 36, 0.5), 0 0 20px rgba(251, 191, 36, 0.8);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 15px 40px rgba(251, 191, 36, 0.7), 0 0 30px rgba(251, 191, 36, 1);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Grid de insignias */
+        .insignias-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Card de insignia */
+        .insignia-card {
+            background: linear-gradient(145deg, #1f2937 0%, #111827 100%);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: var(--shadow-elevated);
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: cardEntrance 0.6s ease-out both;
+        }
+
+        .insignia-card:nth-child(1) { animation-delay: 0.1s; }
+        .insignia-card:nth-child(2) { animation-delay: 0.2s; }
+        .insignia-card:nth-child(3) { animation-delay: 0.3s; }
+        .insignia-card:nth-child(4) { animation-delay: 0.4s; }
+        .insignia-card:nth-child(5) { animation-delay: 0.5s; }
+        .insignia-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes cardEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .insignia-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--accent-gold), var(--secondary-color), var(--accent-gold));
+            background-size: 200% 100%;
+            animation: shimmerBorder 3s linear infinite;
+        }
+
+        @keyframes shimmerBorder {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .insignia-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            border-color: var(--accent-gold);
+            box-shadow:
+                var(--shadow-elevated),
+                0 20px 60px rgba(251, 191, 36, 0.4),
+                0 0 40px rgba(139, 92, 246, 0.3);
+        }
+
+        .insignia-card:hover .insignia-image {
+            transform: scale(1.1) rotate(5deg);
+            filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.8));
+        }
+
+        /* Imagen de insignia */
+        .insignia-image-container {
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .insignia-image {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            transition: all 0.5s ease;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+            animation: float-badge 3s ease-in-out infinite;
+        }
+
+        @keyframes float-badge {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .insignia-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: glowPulse 2s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        /* Nivel de insignia */
+        .insignia-nivel {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(251, 191, 36, 0.5);
+        }
+
+        /* Privilegios */
+        .privilegios-lista {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .privilegio-item {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: rgba(139, 92, 246, 0.1);
+            border-left: 4px solid var(--accent-gold);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: privilegioSlide 0.5s ease-out both;
+        }
+
+        @keyframes privilegioSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .privilegio-item::before {
+            content: '✨';
+            font-size: 1.2rem;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .insignia-card:hover .privilegio-item {
+            background: rgba(139, 92, 246, 0.2);
+            border-left-color: var(--secondary-color);
+            transform: translateX(5px);
+        }
+
+        /* Mensaje motivacional */
+        .motivacional {
+            text-align: center;
+            margin-top: 60px;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            border-radius: 20px;
+            border: 2px solid rgba(139, 92, 246, 0.4);
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 1s ease-out 1s both;
+        }
+
+        .motivacional h2 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--accent-gold), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            font-weight: 900;
+        }
+
+        .motivacional p {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.3rem;
+            }
+
+            .insignias-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .motivacional h2 {
+                font-size: 1.8rem;
+            }
+
+            .motivacional p {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Partículas de fondo -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <!-- Header épico -->
+        <div class="hero-header">
+            <h1 class="hero-title">🏆 SISTEMA DE INSIGNIAS 🏆</h1>
+            <p class="hero-subtitle">Desbloquea privilegios según tu desempeño</p>
+            <div class="coming-soon">⏳ PRÓXIMAMENTE ⏳</div>
+        </div>
+
+        <!-- Botón volver -->
+        <button class="back-button" onclick="history.back()">← Volver</button>
+
+        <!-- Grid de insignias -->
+        <div class="insignias-grid">
+            <!-- Nivel 1 - Elite -->
+            <div class="insignia-card">
+                <div class="insignia-image-container">
+                    <div class="insignia-glow"></div>
+                    <img src="/images/nivel1.png" alt="Insignia Nivel 1" class="insignia-image">
+                </div>
+                <div class="insignia-nivel">NIVEL 1 - ELITE</div>
+                <ul class="privilegios-lista">
+                    <li class="privilegio-item">💧 Sale a tomar agua</li>
+                    <li class="privilegio-item">🪑 Puede sentarse en otro lugar</li>
+                    <li class="privilegio-item">📱 Puede tener su teléfono en la butaca</li>
+                    <li class="privilegio-item">📝 Puede entregar tarea hasta 3 días después</li>
+                    <li class="privilegio-item">🎧 Puede tener audífonos</li>
+                    <li class="privilegio-item">🍔 Puede ir por alimentos a la tienda y comerlos</li>
+                </ul>
+            </div>
+
+            <!-- Nivel 2 - Avanzado -->
+            <div class="insignia-card">
+                <div class="insignia-image-container">
+                    <div class="insignia-glow"></div>
+                    <img src="/images/nivel2.png" alt="Insignia Nivel 2" class="insignia-image">
+                </div>
+                <div class="insignia-nivel">NIVEL 2 - AVANZADO</div>
+                <ul class="privilegios-lista">
+                    <li class="privilegio-item">💧 Sale a tomar agua</li>
+                    <li class="privilegio-item">🪑 Puede sentarse en otro lugar</li>
+                    <li class="privilegio-item">📱 Puede tener su teléfono en la butaca</li>
+                    <li class="privilegio-item">📝 Puede entregar tarea hasta 3 días después</li>
+                    <li class="privilegio-item">🎧 Puede tener audífonos</li>
+                </ul>
+            </div>
+
+            <!-- Nivel 3 - Competente -->
+            <div class="insignia-card">
+                <div class="insignia-image-container">
+                    <div class="insignia-glow"></div>
+                    <img src="/images/nivel3.png" alt="Insignia Nivel 3" class="insignia-image">
+                </div>
+                <div class="insignia-nivel">NIVEL 3 - COMPETENTE</div>
+                <ul class="privilegios-lista">
+                    <li class="privilegio-item">💧 Sale a tomar agua</li>
+                    <li class="privilegio-item">🪑 Puede sentarse en otro lugar</li>
+                    <li class="privilegio-item">📱 Puede tener su teléfono en la butaca</li>
+                    <li class="privilegio-item">📝 Puede entregar tarea hasta 3 días después</li>
+                </ul>
+            </div>
+
+            <!-- Nivel 4 - Intermedio -->
+            <div class="insignia-card">
+                <div class="insignia-image-container">
+                    <div class="insignia-glow"></div>
+                    <img src="/images/nivel4.png" alt="Insignia Nivel 4" class="insignia-image">
+                </div>
+                <div class="insignia-nivel">NIVEL 4 - INTERMEDIO</div>
+                <ul class="privilegios-lista">
+                    <li class="privilegio-item">💧 Sale a tomar agua</li>
+                    <li class="privilegio-item">🪑 Puede sentarse en otro lugar</li>
+                    <li class="privilegio-item">📱 Puede tener su teléfono en la butaca</li>
+                </ul>
+            </div>
+
+            <!-- Nivel 5 - Básico -->
+            <div class="insignia-card">
+                <div class="insignia-image-container">
+                    <div class="insignia-glow"></div>
+                    <img src="/images/nivel5.png" alt="Insignia Nivel 5" class="insignia-image">
+                </div>
+                <div class="insignia-nivel">NIVEL 5 - BÁSICO</div>
+                <ul class="privilegios-lista">
+                    <li class="privilegio-item">💧 Sale a tomar agua</li>
+                    <li class="privilegio-item">🪑 Puede sentarse en otro lugar</li>
+                </ul>
+            </div>
+
+            <!-- Nivel 6 - Inicial -->
+            <div class="insignia-card">
+                <div class="insignia-image-container">
+                    <div class="insignia-glow"></div>
+                    <img src="/images/nivel6.png" alt="Insignia Nivel 6" class="insignia-image">
+                </div>
+                <div class="insignia-nivel">NIVEL 6 - INICIAL</div>
+                <ul class="privilegios-lista">
+                    <li class="privilegio-item">💧 Sale a tomar agua</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Mensaje motivacional -->
+        <div class="motivacional">
+            <h2>💪 ¡Desafíate a ti mismo!</h2>
+            <p>
+                Tu desempeño, asistencia y compromiso determinarán tu nivel de insignia.<br>
+                Cada nivel desbloquea privilegios especiales en el aula.<br>
+                <strong>¿Hasta dónde llegarás?</strong>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Generar partículas flotantes
+        const particlesContainer = document.getElementById('particles');
+        const particleCount = 30;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 15 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            particlesContainer.appendChild(particle);
+        }
+
+        // Animación de retraso en privilegios
+        document.querySelectorAll('.privilegio-item').forEach((item, index) => {
+            item.style.animationDelay = (index * 0.1) + 's';
+        });
+    </script>
+</body>
+</html>

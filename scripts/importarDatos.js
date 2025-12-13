@@ -72,9 +72,9 @@ async function importarGrupos(rutaArchivo) {
           grado: parseInt(fila.grado),
           grupo: fila.grupo,
           nivel: fila.nivel,
+          materia: fila.materia || 'Robótica', // Por defecto Robótica, puede actualizarse después
           horario: horario,
-          cicloEscolar: fila.cicloEscolar,
-          aula: fila.aula
+          cicloEscolar: fila.cicloEscolar
         });
 
         const grupoGuardado = await grupo.save();

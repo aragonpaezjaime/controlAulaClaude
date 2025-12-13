@@ -8,7 +8,8 @@ const {
   obtenerGrupoPorId,
   actualizarGrupo,
   eliminarGrupo,
-  obtenerAlumnosDelGrupo
+  obtenerAlumnosDelGrupo,
+  incrementarSesiones
 } = require('../controllers/grupoController');
 
 // ============================================
@@ -35,5 +36,8 @@ router.delete('/:id', eliminarGrupo);
 
 // GET /api/grupos/:id/alumnos - Obtener todos los alumnos de un grupo
 router.get('/:id/alumnos', obtenerAlumnosDelGrupo);
+
+// POST /api/grupos/:id/incrementar-sesion - Incrementar contador de sesiones impartidas
+router.post('/:id/incrementar-sesion', incrementarSesiones);
 
 module.exports = router;

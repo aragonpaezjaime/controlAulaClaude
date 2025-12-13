@@ -26,6 +26,14 @@ const grupoSchema = new mongoose.Schema({
     trim: true
   },
 
+  // Materia/Asignatura que se imparte al grupo
+  materia: {
+    type: String,
+    required: true,
+    default: 'General',
+    trim: true
+  },
+
   // Horario de clases del grupo
   horario: [{
     // Día de la semana
@@ -59,17 +67,17 @@ const grupoSchema = new mongoose.Schema({
     match: [/^\d{4}-\d{4}$/, 'El formato debe ser YYYY-YYYY (ej: 2025-2026)']
   },
 
-  // Aula/Salón donde se imparten las clases
-  aula: {
-    type: String,
-    required: [true, 'El aula es obligatoria'],
-    trim: true
-  },
-
   // Indicador si el grupo está activo
   activo: {
     type: Boolean,
     default: true
+  },
+
+  // Contador de clases/sesiones impartidas
+  sesionesImpartidas: {
+    type: Number,
+    default: 0,
+    min: [0, 'Las sesiones impartidas no pueden ser negativas']
   }
 }, {
   // Opciones del esquema
@@ -93,7 +101,7 @@ grupoSchema.methods.obtenerNombreCompleto = function() {
                        this.grado === 2 ? '2do' :
                        this.grado === 3 ? '3ro' :
                        `${this.grado}to`;
-  return `${gradoFormato}${this.grupo} - ${this.nivel} (${this.aula})`;
+  return `${gradoFormato}${this.grupo} - ${this.materia}`;
 };
 
 // Método de instancia: Obtiene el horario formateado
@@ -112,8 +120,8 @@ grupoSchema.methods.tieneClaseEnDia = function(dia) {
   return this.horario.some(h => h.dia === dia);
 };
 
-// Índice compuesto: Evita duplicados de grado+grupo+ciclo+nivel
-grupoSchema.index({ grado: 1, grupo: 1, cicloEscolar: 1, nivel: 1 }, { unique: true });
+// Índice compuesto: Evita duplicados de grado+grupo+ciclo+nivel+materia
+grupoSchema.index({ grado: 1, grupo: 1, cicloEscolar: 1, nivel: 1, materia: 1 }, { unique: true });
 
 // Exportar el modelo
 module.exports = mongoose.model('Grupo', grupoSchema);

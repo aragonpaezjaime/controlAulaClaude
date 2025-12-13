@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Alumnos</title>
+    <link rel="icon" type="image/svg+xml" href="/images/logo-escuela.svg">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .gestion-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        /* FILTROS */
+        .filtros-section {
+            background: linear-gradient(145deg, rgba(31, 41, 55, 0.7), rgba(17, 24, 39, 0.7));
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .filtros-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 200px;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .form-group select,
+        .form-group input {
+            background: rgba(17, 24, 39, 0.8);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 12px 15px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-top: 8px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: rgba(139, 92, 246, 0.3);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            left: 33px;
+        }
+
+        /* LISTADO DE ALUMNOS */
+        .alumnos-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .alumno-card {
+            background: linear-gradient(145deg, rgba(31, 41, 55, 0.7), rgba(17, 24, 39, 0.7));
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            gap: 20px;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .alumno-card:hover {
+            border-color: var(--accent-gold);
+            box-shadow: 0 8px 30px rgba(251, 191, 36, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .alumno-card.nuevo-highlight {
+            border-color: #10b981;
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+            animation: pulseGlow 2s ease-in-out 3;
+        }
+
+        .alumno-avatar img {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            border: 3px solid rgba(139, 92, 246, 0.5);
+        }
+
+        .alumno-info h3 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0 0 8px 0;
+        }
+
+        .alumno-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+        }
+
+        .stat-mini {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-mini .valor {
+            font-weight: 800;
+            color: var(--accent-gold);
+        }
+
+        .alumno-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.8), rgba(99, 102, 241, 0.8));
+            border: none;
+            border-radius: 12px;
+            padding: 12px 20px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.5);
+        }
+
+        .action-btn.delete {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(220, 38, 38, 0.8));
+        }
+
+        .action-btn.delete:hover {
+            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.5);
+        }
+
+        /* PANEL DERECHO */
+        .panel-derecho {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .btn-nuevo-alumno {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            border: none;
+            border-radius: 16px;
+            padding: 20px;
+            color: #1f2937;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
+        }
+
+        .btn-nuevo-alumno:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(251, 191, 36, 0.5);
+        }
+
+        .stats-panel {
+            background: linear-gradient(145deg, rgba(31, 41, 55, 0.7), rgba(17, 24, 39, 0.7));
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .stats-panel h3 {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin: 0 0 20px 0;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .stat-value {
+            color: var(--accent-gold);
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        /* MODALES */
+        .form-modal {
+            display: none;
+        }
+
+        .form-modal.active {
+            display: flex;
+        }
+
+        .modal-form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group input[type="date"],
+        .form-group input[type="number"],
+        .form-group input[type="text"] {
+            width: 100%;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            flex: 1;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            color: #1f2937;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            background: rgba(75, 85, 99, 0.8);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            color: var(--text-primary);
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(75, 85, 99, 1);
+        }
+
+        .advertencia-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 2px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 10px 0;
+        }
+
+        .error-mensaje {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            color: #f87171;
+            font-size: 0.9rem;
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .error-mensaje.visible {
+            display: block;
+        }
+
+        .confirmacion-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .confirmacion-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .confirmacion-checkbox label {
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .filtros-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .alumno-card {
+                grid-template-columns: 60px 1fr;
+                gap: 15px;
+            }
+
+            .alumno-actions {
+                grid-column: 2;
+                margin-top: 10px;
+            }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 8px 30px rgba(16, 185, 129, 0.3);
+            }
+            50% {
+                box-shadow: 0 8px 40px rgba(16, 185, 129, 0.7);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container gestion-container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                <img src="/images/logo-escuela.svg" alt="Logo" class="logo-escuela">
+                👥 Gestión de Alumnos
+            </h1>
+            <p>Agregar, editar y administrar estudiantes</p>
+            <button class="back-button" onclick="window.location.href='/dashboard.html?grupo=' + grupoIdActual">← Volver al Dashboard</button>
+        </div>
+
+        <div class="main-layout">
+            <!-- COLUMNA IZQUIERDA -->
+            <div>
+                <!-- FILTROS -->
+                <div class="filtros-section">
+                    <div class="filtros-grid">
+                        <div class="form-group">
+                            <label for="filtro-grupo">📚 Grupo</label>
+                            <select id="filtro-grupo" onchange="cargarAlumnos()">
+                                <option value="">Seleccionar grupo...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="filtro-busqueda">🔍 Buscar por nombre</label>
+                            <input type="text" id="filtro-busqueda" placeholder="Escribe para buscar..." oninput="filtrarAlumnos()">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <div class="toggle-container">
+                                <span style="color: var(--text-secondary); font-size: 0.9rem;">Solo activos</span>
+                                <div class="toggle-switch active" id="toggle-activos" onclick="toggleActivos()">
+                                    <div class="toggle-slider"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LISTADO DE ALUMNOS -->
+                <div id="alumnos-container">
+                    <div class="loading">Selecciona un grupo para ver los alumnos...</div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA -->
+            <div class="panel-derecho">
+                <button class="btn-nuevo-alumno" onclick="abrirModalCrear()">
+                    ➕ Nuevo Alumno
+                </button>
+
+                <div class="stats-panel">
+                    <h3>📊 Estadísticas</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Total de alumnos</span>
+                        <span class="stat-value" id="stat-total">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Alumnos activos</span>
+                        <span class="stat-value" id="stat-activos">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Promedio XP</span>
+                        <span class="stat-value" id="stat-xp">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Promedio HP</span>
+                        <span class="stat-value" id="stat-hp">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CREAR ALUMNO -->
+    <div id="modal-crear" class="modal-overlay form-modal">
+        <div class="modal">
+            <h3>⭐ Registrar Nuevo Alumno</h3>
+
+            <div id="error-crear" class="error-mensaje"></div>
+
+            <form class="modal-form" onsubmit="crearAlumno(event)">
+                <div class="form-group">
+                    <label for="crear-nombre">Nombre(s) *</label>
+                    <input type="text" id="crear-nombre" required pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" minlength="2" maxlength="50" placeholder="Nombre del alumno">
+                </div>
+
+                <div class="form-group">
+                    <label for="crear-apellidos">Apellidos *</label>
+                    <input type="text" id="crear-apellidos" required pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" minlength="2" maxlength="50" placeholder="Apellidos del alumno">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="crear-fecha">Fecha de Nacimiento *</label>
+                        <input type="date" id="crear-fecha" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="crear-grupo">Grupo *</label>
+                        <select id="crear-grupo" required>
+                            <option value="">Seleccionar...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="crear-xp">XP Inicial</label>
+                        <input type="number" id="crear-xp" min="0" max="10000" value="0" placeholder="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="crear-hp">HP Inicial</label>
+                        <input type="number" id="crear-hp" min="0" max="100" value="100" placeholder="100">
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="cerrarModal('crear')">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btn-crear">✓ Registrar Alumno</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR ALUMNO -->
+    <div id="modal-editar" class="modal-overlay form-modal">
+        <div class="modal">
+            <h3 id="titulo-editar">✏️ Editar Alumno</h3>
+
+            <div id="error-editar" class="error-mensaje"></div>
+
+            <form class="modal-form" onsubmit="actualizarAlumno(event)">
+                <input type="hidden" id="editar-id">
+
+                <div class="form-group">
+                    <label for="editar-nombre">Nombre(s) *</label>
+                    <input type="text" id="editar-nombre" required pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" minlength="2" maxlength="50">
+                </div>
+
+                <div class="form-group">
+                    <label for="editar-apellidos">Apellidos *</label>
+                    <input type="text" id="editar-apellidos" required pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" minlength="2" maxlength="50">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editar-fecha">Fecha de Nacimiento *</label>
+                        <input type="date" id="editar-fecha" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editar-grupo">Grupo *</label>
+                        <select id="editar-grupo" required onchange="verificarCambioGrupo()">
+                            <option value="">Seleccionar...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="advertencia-grupo" class="advertencia-box" style="display: none;">
+                    ⚠️ Cambiar de grupo afectará el historial del alumno. Se recomienda hacer esto solo si es necesario.
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editar-xp">XP Actual</label>
+                        <input type="number" id="editar-xp" min="0" max="10000">
+                        <small style="color: var(--text-secondary); font-size: 0.85rem;">💡 Mejor usar ajustes desde dashboard</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editar-hp">HP Actual</label>
+                        <input type="number" id="editar-hp" min="0" max="100">
+                        <small style="color: var(--text-secondary); font-size: 0.85rem;">💡 Mejor usar ajustes desde dashboard</small>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="cerrarModal('editar')">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btn-editar">💾 Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL ELIMINAR ALUMNO -->
+    <div id="modal-eliminar" class="modal-overlay form-modal">
+        <div class="modal">
+            <h3>⚠️ Desactivar Alumno</h3>
+
+            <p id="mensaje-eliminar" style="color: var(--text-secondary); margin: 20px 0; font-size: 1.1rem; text-align: center;"></p>
+
+            <div class="advertencia-box">
+                <strong>⚠️ ADVERTENCIA:</strong><br>
+                • El alumno quedará inactivo<br>
+                • Su historial se conservará<br>
+                • Podrá reactivarse después<br>
+                • NO se eliminarán sus datos
+            </div>
+
+            <div class="confirmacion-checkbox">
+                <input type="checkbox" id="confirmar-eliminar" onchange="toggleBotonEliminar()">
+                <label for="confirmar-eliminar">Entiendo que esto es reversible</label>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="cerrarModal('eliminar')">Cancelar</button>
+                <button type="button" class="btn-primary delete" id="btn-eliminar" onclick="confirmarEliminar()" disabled style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(220, 38, 38, 0.8));">🗑️ Desactivar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        let grupoIdActual = '';
+        let grupoIdOriginal = '';
+        let alumnoIdEliminar = '';
+        let alumnosData = [];
+        let gruposData = [];
+        let soloActivos = true;
+
+        // Obtener grupoId de la URL si viene del dashboard
+        const urlParams = new URLSearchParams(window.location.search);
+        const grupoFromUrl = urlParams.get('grupo');
+
+        // SONIDOS GAMING
+        const sonidos = {
+            success: new Audio('/sounds/success.mp3'),
+            error: new Audio('/sounds/error.mp3'),
+            click: new Audio('/sounds/click.mp3')
+        };
+
+        function reproducirSonido(tipo) {
+            if (sonidos[tipo]) {
+                sonidos[tipo].currentTime = 0;
+                sonidos[tipo].play().catch(e => console.log('No se pudo reproducir sonido'));
+            }
+        }
+
+        // CARGAR GRUPOS
+        async function cargarGrupos() {
+            try {
+                const response = await fetch(`${API_URL}/grupos`);
+                const data = await response.json();
+
+                if (data.success) {
+                    gruposData = data.data.filter(g => g.activo);
+
+                    const selectFiltro = document.getElementById('filtro-grupo');
+                    const selectCrear = document.getElementById('crear-grupo');
+                    const selectEditar = document.getElementById('editar-grupo');
+
+                    gruposData.forEach(grupo => {
+                        const option = document.createElement('option');
+                        option.value = grupo._id;
+                        option.textContent = `${grupo.grado}° ${grupo.grupo} - ${grupo.materia || 'Sin materia'}`;
+
+                        selectFiltro.appendChild(option.cloneNode(true));
+                        selectCrear.appendChild(option.cloneNode(true));
+                        selectEditar.appendChild(option.cloneNode(true));
+                    });
+
+                    // Auto-seleccionar grupo si viene de URL
+                    if (grupoFromUrl) {
+                        selectFiltro.value = grupoFromUrl;
+                        grupoIdActual = grupoFromUrl;
+                        cargarAlumnos();
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar grupos:', error);
+                mostrarError('Error al cargar los grupos');
+            }
+        }
+
+        // CARGAR ALUMNOS
+        async function cargarAlumnos() {
+            const grupoId = document.getElementById('filtro-grupo').value;
+
+            if (!grupoId) {
+                document.getElementById('alumnos-container').innerHTML = '<div class="loading">Selecciona un grupo para ver los alumnos...</div>';
+                actualizarEstadisticas([]);
+                return;
+            }
+
+            grupoIdActual = grupoId;
+            document.getElementById('alumnos-container').innerHTML = '<div class="loading">Cargando alumnos...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/alumnos?grupo=${grupoId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    alumnosData = data.data;
+                    renderizarAlumnos(alumnosData);
+                    actualizarEstadisticas(alumnosData);
+                }
+            } catch (error) {
+                console.error('Error al cargar alumnos:', error);
+                document.getElementById('alumnos-container').innerHTML = '<div class="empty-state"><h3>Error al cargar alumnos</h3><p>Intenta recargar la página</p></div>';
+            }
+        }
+
+        // RENDERIZAR ALUMNOS
+        function renderizarAlumnos(alumnos) {
+            const container = document.getElementById('alumnos-container');
+
+            // Filtrar por búsqueda
+            const busqueda = document.getElementById('filtro-busqueda').value.toLowerCase();
+            let alumnosFiltrados = alumnos.filter(a => {
+                const nombreCompleto = `${a.nombre} ${a.apellidos}`.toLowerCase();
+                return nombreCompleto.includes(busqueda);
+            });
+
+            // Filtrar por activos
+            if (soloActivos) {
+                alumnosFiltrados = alumnosFiltrados.filter(a => a.activo !== false);
+            }
+
+            if (alumnosFiltrados.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No se encontraron alumnos</h3><p>Prueba cambiando los filtros</p></div>';
+                return;
+            }
+
+            const html = `
+                <div class="alumnos-grid">
+                    ${alumnosFiltrados.map(alumno => {
+                        const edad = calcularEdad(alumno.fechaNacimiento);
+                        const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alumno.nombre + ' ' + alumno.apellidos)}`;
+
+                        return `
+                            <div class="alumno-card" id="alumno-${alumno._id}">
+                                <div class="alumno-avatar">
+                                    <img src="${avatarUrl}" alt="${alumno.nombre}">
+                                </div>
+                                <div class="alumno-info">
+                                    <h3>${alumno.nombre} ${alumno.apellidos}</h3>
+                                    <div class="alumno-stats">
+                                        <div class="stat-mini">
+                                            <span>⚡ XP:</span>
+                                            <span class="valor">${alumno.xp || 0}</span>
+                                        </div>
+                                        <div class="stat-mini">
+                                            <span>❤️ HP:</span>
+                                            <span class="valor">${alumno.salud || 100}</span>
+                                        </div>
+                                        <div class="stat-mini">
+                                            <span>🎂 Edad:</span>
+                                            <span class="valor">${edad} años</span>
+                                        </div>
+                                        ${!alumno.activo ? '<div class="stat-mini"><span style="color: #f87171;">⚠️ INACTIVO</span></div>' : ''}
+                                    </div>
+                                </div>
+                                <div class="alumno-actions">
+                                    <button class="action-btn" onclick="abrirModalEditar('${alumno._id}')">
+                                        ✏️ Editar
+                                    </button>
+                                    <button class="action-btn delete" onclick="abrirModalEliminar('${alumno._id}', '${alumno.nombre} ${alumno.apellidos}')">
+                                        🗑️ Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // CALCULAR EDAD
+        function calcularEdad(fechaNacimiento) {
+            const hoy = new Date();
+            const nacimiento = new Date(fechaNacimiento);
+            let edad = hoy.getFullYear() - nacimiento.getFullYear();
+            const mes = hoy.getMonth() - nacimiento.getMonth();
+
+            if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+                edad--;
+            }
+
+            return edad;
+        }
+
+        // ACTUALIZAR ESTADÍSTICAS
+        function actualizarEstadisticas(alumnos) {
+            const activos = alumnos.filter(a => a.activo !== false);
+            const promedioXP = activos.length > 0 ? Math.round(activos.reduce((sum, a) => sum + (a.xp || 0), 0) / activos.length) : 0;
+            const promedioHP = activos.length > 0 ? Math.round(activos.reduce((sum, a) => sum + (a.salud || 100), 0) / activos.length) : 0;
+
+            document.getElementById('stat-total').textContent = alumnos.length;
+            document.getElementById('stat-activos').textContent = activos.length;
+            document.getElementById('stat-xp').textContent = promedioXP;
+            document.getElementById('stat-hp').textContent = promedioHP;
+        }
+
+        // FILTRAR ALUMNOS (con debounce)
+        let timeoutBusqueda;
+        function filtrarAlumnos() {
+            clearTimeout(timeoutBusqueda);
+            timeoutBusqueda = setTimeout(() => {
+                renderizarAlumnos(alumnosData);
+            }, 300);
+        }
+
+        // TOGGLE ACTIVOS
+        function toggleActivos() {
+            soloActivos = !soloActivos;
+            const toggle = document.getElementById('toggle-activos');
+            toggle.classList.toggle('active', soloActivos);
+            renderizarAlumnos(alumnosData);
+        }
+
+        // ABRIR MODAL CREAR
+        function abrirModalCrear() {
+            if (!grupoIdActual) {
+                mostrarError('Selecciona un grupo primero');
+                return;
+            }
+
+            document.getElementById('modal-crear').classList.add('active');
+            document.getElementById('crear-grupo').value = grupoIdActual;
+            document.getElementById('error-crear').classList.remove('visible');
+
+            // Establecer fecha máxima (hoy) y mínima (hace 25 años)
+            const hoy = new Date().toISOString().split('T')[0];
+            const hace25 = new Date();
+            hace25.setFullYear(hace25.getFullYear() - 25);
+            const fechaMin = hace25.toISOString().split('T')[0];
+
+            document.getElementById('crear-fecha').max = hoy;
+            document.getElementById('crear-fecha').min = fechaMin;
+
+            reproducirSonido('click');
+        }
+
+        // CREAR ALUMNO
+        async function crearAlumno(event) {
+            event.preventDefault();
+
+            const nombre = document.getElementById('crear-nombre').value.trim();
+            const apellidos = document.getElementById('crear-apellidos').value.trim();
+            const fechaNacimiento = document.getElementById('crear-fecha').value;
+            const grupo = document.getElementById('crear-grupo').value;
+            const xp = parseInt(document.getElementById('crear-xp').value) || 0;
+            const salud = parseInt(document.getElementById('crear-hp').value) || 100;
+
+            // Validar edad
+            const edad = calcularEdad(fechaNacimiento);
+            if (edad < 10 || edad > 25) {
+                mostrarErrorModal('crear', 'La edad debe estar entre 10 y 25 años');
+                reproducirSonido('error');
+                return;
+            }
+
+            const btnCrear = document.getElementById('btn-crear');
+            btnCrear.disabled = true;
+            btnCrear.textContent = 'Creando...';
+
+            try {
+                const response = await fetch(`${API_URL}/alumnos`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nombre,
+                        apellidos,
+                        fechaNacimiento,
+                        grupo,
+                        xp,
+                        salud
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    reproducirSonido('success');
+                    mostrarNotificacion(`✅ ${nombre} ${apellidos} agregado correctamente`);
+                    cerrarModal('crear');
+                    await cargarAlumnos();
+
+                    // Highlight del nuevo alumno
+                    setTimeout(() => {
+                        const card = document.getElementById(`alumno-${data.data._id}`);
+                        if (card) {
+                            card.classList.add('nuevo-highlight');
+                            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            setTimeout(() => card.classList.remove('nuevo-highlight'), 6000);
+                        }
+                    }, 500);
+                } else {
+                    mostrarErrorModal('crear', data.mensaje || 'Error al crear el alumno');
+                    reproducirSonido('error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarErrorModal('crear', 'Error de conexión al servidor');
+                reproducirSonido('error');
+            } finally {
+                btnCrear.disabled = false;
+                btnCrear.textContent = '✓ Registrar Alumno';
+            }
+        }
+
+        // ABRIR MODAL EDITAR
+        async function abrirModalEditar(alumnoId) {
+            reproducirSonido('click');
+
+            try {
+                const response = await fetch(`${API_URL}/alumnos/${alumnoId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const alumno = data.data;
+
+                    document.getElementById('editar-id').value = alumno._id;
+                    document.getElementById('editar-nombre').value = alumno.nombre;
+                    document.getElementById('editar-apellidos').value = alumno.apellidos;
+                    document.getElementById('editar-fecha').value = alumno.fechaNacimiento.split('T')[0];
+                    document.getElementById('editar-grupo').value = alumno.grupo._id || alumno.grupo;
+                    document.getElementById('editar-xp').value = alumno.xp || 0;
+                    document.getElementById('editar-hp').value = alumno.salud || 100;
+
+                    grupoIdOriginal = alumno.grupo._id || alumno.grupo;
+
+                    document.getElementById('titulo-editar').textContent = `✏️ Editar Alumno: ${alumno.nombre} ${alumno.apellidos}`;
+                    document.getElementById('error-editar').classList.remove('visible');
+                    document.getElementById('advertencia-grupo').style.display = 'none';
+
+                    document.getElementById('modal-editar').classList.add('active');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error al cargar datos del alumno');
+            }
+        }
+
+        // VERIFICAR CAMBIO DE GRUPO
+        function verificarCambioGrupo() {
+            const grupoActual = document.getElementById('editar-grupo').value;
+            const advertencia = document.getElementById('advertencia-grupo');
+
+            if (grupoActual !== grupoIdOriginal) {
+                advertencia.style.display = 'block';
+            } else {
+                advertencia.style.display = 'none';
+            }
+        }
+
+        // ACTUALIZAR ALUMNO
+        async function actualizarAlumno(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('editar-id').value;
+            const nombre = document.getElementById('editar-nombre').value.trim();
+            const apellidos = document.getElementById('editar-apellidos').value.trim();
+            const fechaNacimiento = document.getElementById('editar-fecha').value;
+            const grupo = document.getElementById('editar-grupo').value;
+            const xp = parseInt(document.getElementById('editar-xp').value) || 0;
+            const salud = parseInt(document.getElementById('editar-hp').value) || 100;
+
+            // Validar edad
+            const edad = calcularEdad(fechaNacimiento);
+            if (edad < 10 || edad > 25) {
+                mostrarErrorModal('editar', 'La edad debe estar entre 10 y 25 años');
+                reproducirSonido('error');
+                return;
+            }
+
+            const btnEditar = document.getElementById('btn-editar');
+            btnEditar.disabled = true;
+            btnEditar.textContent = 'Guardando...';
+
+            try {
+                const response = await fetch(`${API_URL}/alumnos/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nombre,
+                        apellidos,
+                        fechaNacimiento,
+                        grupo,
+                        xp,
+                        salud
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    reproducirSonido('success');
+                    mostrarNotificacion('✅ Cambios guardados correctamente');
+                    cerrarModal('editar');
+                    cargarAlumnos();
+                } else {
+                    mostrarErrorModal('editar', data.mensaje || 'Error al actualizar el alumno');
+                    reproducirSonido('error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarErrorModal('editar', 'Error de conexión al servidor');
+                reproducirSonido('error');
+            } finally {
+                btnEditar.disabled = false;
+                btnEditar.textContent = '💾 Guardar Cambios';
+            }
+        }
+
+        // ABRIR MODAL ELIMINAR
+        function abrirModalEliminar(alumnoId, nombreCompleto) {
+            alumnoIdEliminar = alumnoId;
+            document.getElementById('mensaje-eliminar').textContent = `¿Confirmar desactivación de ${nombreCompleto}?`;
+            document.getElementById('confirmar-eliminar').checked = false;
+            document.getElementById('btn-eliminar').disabled = true;
+            document.getElementById('modal-eliminar').classList.add('active');
+            reproducirSonido('click');
+        }
+
+        // TOGGLE BOTON ELIMINAR
+        function toggleBotonEliminar() {
+            const checked = document.getElementById('confirmar-eliminar').checked;
+            document.getElementById('btn-eliminar').disabled = !checked;
+        }
+
+        // CONFIRMAR ELIMINAR
+        async function confirmarEliminar() {
+            const btnEliminar = document.getElementById('btn-eliminar');
+            btnEliminar.disabled = true;
+            btnEliminar.textContent = 'Desactivando...';
+
+            try {
+                const response = await fetch(`${API_URL}/alumnos/${alumnoIdEliminar}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    reproducirSonido('click');
+                    mostrarNotificacion('✅ Alumno desactivado correctamente');
+                    cerrarModal('eliminar');
+                    cargarAlumnos();
+                } else {
+                    mostrarError(data.mensaje || 'Error al desactivar el alumno');
+                    reproducirSonido('error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión al servidor');
+                reproducirSonido('error');
+            } finally {
+                btnEliminar.disabled = false;
+                btnEliminar.textContent = '🗑️ Desactivar';
+            }
+        }
+
+        // CERRAR MODAL
+        function cerrarModal(tipo) {
+            document.getElementById(`modal-${tipo}`).classList.remove('active');
+
+            // Limpiar formularios
+            if (tipo === 'crear') {
+                document.querySelector('#modal-crear form').reset();
+                document.getElementById('crear-xp').value = 0;
+                document.getElementById('crear-hp').value = 100;
+            }
+
+            reproducirSonido('click');
+        }
+
+        // MOSTRAR ERROR EN MODAL
+        function mostrarErrorModal(tipo, mensaje) {
+            const errorDiv = document.getElementById(`error-${tipo}`);
+            errorDiv.textContent = mensaje;
+            errorDiv.classList.add('visible');
+
+            setTimeout(() => {
+                errorDiv.classList.remove('visible');
+            }, 5000);
+        }
+
+        // MOSTRAR ERROR GENERAL
+        function mostrarError(mensaje) {
+            mostrarNotificacion('❌ ' + mensaje, 'error');
+        }
+
+        // MOSTRAR NOTIFICACIÓN
+        function mostrarNotificacion(mensaje, tipo = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${tipo}`;
+            notification.textContent = mensaje;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${tipo === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #dc2626)'};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 12px;
+                font-weight: 700;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                animation: slideIn 0.3s ease-out;
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Cerrar modales con ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.form-modal.active').forEach(modal => {
+                    const id = modal.id.replace('modal-', '');
+                    cerrarModal(id);
+                });
+            }
+        });
+
+        // INICIALIZAR
+        window.addEventListener('DOMContentLoaded', () => {
+            cargarGrupos();
+        });
+    </script>
+</body>
+</html>

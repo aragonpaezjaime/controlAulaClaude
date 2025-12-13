@@ -16,27 +16,48 @@ const {
 const datosEjemplo = {
   grupos: [
     {
-      grado: 1,
+      grado: 3,
       grupo: 'A',
       nivel: 'Secundaria',
+      materia: 'Robótica',
       horario: [
         { dia: 'Lunes', horaInicio: '08:00', horaFin: '09:00' },
-        { dia: 'Miércoles', horaInicio: '10:00', horaFin: '11:00' },
-        { dia: 'Viernes', horaInicio: '08:00', horaFin: '09:00' }
+        { dia: 'Miércoles', horaInicio: '10:00', horaFin: '11:00' }
       ],
-      cicloEscolar: '2025-2026',
-      aula: 'A-201'
+      cicloEscolar: '2025-2026'
     },
     {
-      grado: 5,
+      grado: 3,
       grupo: 'A',
-      nivel: 'Preparatoria',
+      nivel: 'Secundaria',
+      materia: 'Ciencias III (Química)',
       horario: [
-        { dia: 'Martes', horaInicio: '14:00', horaFin: '15:00' },
-        { dia: 'Jueves', horaInicio: '14:00', horaFin: '15:00' }
+        { dia: 'Martes', horaInicio: '09:00', horaFin: '10:00' },
+        { dia: 'Jueves', horaInicio: '09:00', horaFin: '10:00' }
       ],
-      cicloEscolar: '2025-2026',
-      aula: 'B-105'
+      cicloEscolar: '2025-2026'
+    },
+    {
+      grado: 2,
+      grupo: 'B',
+      nivel: 'Secundaria',
+      materia: 'Matemáticas II',
+      horario: [
+        { dia: 'Lunes', horaInicio: '10:00', horaFin: '11:00' },
+        { dia: 'Viernes', horaInicio: '08:00', horaFin: '09:00' }
+      ],
+      cicloEscolar: '2025-2026'
+    },
+    {
+      grado: 1,
+      grupo: 'C',
+      nivel: 'Secundaria',
+      materia: 'Tecnología',
+      horario: [
+        { dia: 'Miércoles', horaInicio: '11:00', horaFin: '12:00' },
+        { dia: 'Viernes', horaInicio: '10:00', horaFin: '11:00' }
+      ],
+      cicloEscolar: '2025-2026'
     }
   ],
   alumnos: [
