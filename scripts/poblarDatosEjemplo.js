@@ -64,24 +64,18 @@ const datosEjemplo = {
     {
       nombre: 'Juan Carlos',
       apellidos: 'Pérez García',
-      fechaNacimiento: new Date('2010-05-15'),
-      promedio: 85,
       xp: 150,
       salud: 90
     },
     {
       nombre: 'Ana María',
       apellidos: 'López Martínez',
-      fechaNacimiento: new Date('2010-08-22'),
-      promedio: 92,
       xp: 250,
       salud: 100
     },
     {
       nombre: 'Carlos Eduardo',
       apellidos: 'Ramírez Hernández',
-      fechaNacimiento: new Date('2010-03-10'),
-      promedio: 78,
       xp: 100,
       salud: 85
     }

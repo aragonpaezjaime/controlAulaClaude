@@ -46,7 +46,8 @@ app.get('/', (req, res) => {
       xp: '/api/xp',
       actividades: '/api/actividades',
       backup: '/api/backup',
-      importar: '/api/importar'
+      importar: '/api/importar',
+      insignias: '/api/insignias'
     }
   });
 });
@@ -60,6 +61,7 @@ const xpRoutes = require('./routes/xpRoutes');
 const actividadRoutes = require('./routes/actividadRoutes');
 const backupRoutes = require('./routes/backupRoutes');
 const importarRoutes = require('./routes/importarRoutes');
+const insigniaRoutes = require('./routes/insigniaRoutes');
 
 // Montar las rutas en la aplicación
 app.use('/api/grupos', grupoRoutes);
@@ -70,6 +72,7 @@ app.use('/api/xp', xpRoutes);
 app.use('/api/actividades', actividadRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/importar', importarRoutes);
+app.use('/api/insignias', insigniaRoutes);
 
 // ============================================
 // MANEJO DE ERRORES

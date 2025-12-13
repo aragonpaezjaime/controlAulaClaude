@@ -17,25 +17,11 @@ const alumnoSchema = new mongoose.Schema({
     trim: true
   },
 
-  // Fecha de nacimiento
-  fechaNacimiento: {
-    type: Date,
-    required: [true, 'La fecha de nacimiento es obligatoria']
-  },
-
   // Referencia al grupo al que pertenece el alumno
   grupo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Grupo',
     required: [true, 'El grupo es obligatorio']
-  },
-
-  // Promedio académico del alumno
-  promedio: {
-    type: Number,
-    default: 0,
-    min: [0, 'El promedio no puede ser negativo'],
-    max: [100, 'El promedio no puede ser mayor a 100']
   },
 
   // Puntos de experiencia (XP) - Sistema de gamificación
@@ -51,6 +37,61 @@ const alumnoSchema = new mongoose.Schema({
     default: 100,
     min: [0, 'La salud no puede ser negativa'],
     max: [100, 'La salud no puede ser mayor a 100']
+  },
+
+  // Avatar seleccionado por el alumno (seed para RoboHash o identificador)
+  avatar: {
+    type: String,
+    default: function() {
+      // Genera un seed único basado en el nombre del alumno
+      // Se puede cambiar después por el alumno
+      return `${this.nombre || 'alumno'}${Date.now()}`;
+    },
+    trim: true
+  },
+
+  // Nombre preferido (palabra específica del nombre completo que prefiere)
+  // Si es null, se usa el primer nombre por defecto
+  nombrePreferido: {
+    type: String,
+    trim: true,
+    default: null
+  },
+
+  // Array de insignias obtenidas por el alumno
+  insignias: [{
+    insigniaId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Insignia'
+    },
+    fechaObtencion: {
+      type: Date,
+      default: Date.now
+    },
+    otorgadoPor: {
+      type: String,
+      default: 'Profesor'
+    }
+  }],
+
+  // Configuración de personalización del alumno
+  configuracion: {
+    // Preferencias de notificaciones (para uso futuro)
+    notificacionesPush: {
+      type: Boolean,
+      default: true
+    },
+    // Tema oscuro en portal del alumno (para uso futuro)
+    temaOscuro: {
+      type: Boolean,
+      default: false
+    },
+    // Idioma preferido (para uso futuro)
+    idioma: {
+      type: String,
+      enum: ['es', 'en'],
+      default: 'es'
+    }
   },
 
   // Indicador si el alumno está activo (inscrito)
@@ -70,23 +111,6 @@ alumnoSchema.virtual('nombreCompleto').get(function() {
   return `${this.nombre} ${this.apellidos}`;
 });
 
-// Campo virtual: Calcula la edad del alumno
-alumnoSchema.virtual('edad').get(function() {
-  if (!this.fechaNacimiento) return null;
-
-  const hoy = new Date();
-  const nacimiento = new Date(this.fechaNacimiento);
-  let edad = hoy.getFullYear() - nacimiento.getFullYear();
-  const mes = hoy.getMonth() - nacimiento.getMonth();
-
-  // Ajusta la edad si aún no ha cumplido años este año
-  if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-    edad--;
-  }
-
-  return edad;
-});
-
 // Relación virtual: Obtiene todos los eventos del alumno
 // No se guarda en BD, se calcula cuando se consulta
 alumnoSchema.virtual('eventos', {
@@ -98,6 +122,52 @@ alumnoSchema.virtual('eventos', {
 // Método de instancia: Genera el nombre para mostrar con XP y HP
 alumnoSchema.methods.obtenerNombreParaLista = function() {
   return `${this.nombreCompleto} - XP: ${this.xp} - ♥️: ${this.salud}`;
+};
+
+// ============================================
+// MÉTODOS PARA GESTIÓN DE NOMBRE PREFERIDO
+// ============================================
+
+// Método de instancia: Obtiene el nombre preferido del alumno
+// Si no tiene nombrePreferido configurado, retorna el primer nombre
+alumnoSchema.methods.obtenerNombrePreferido = function() {
+  if (this.nombrePreferido && this.nombrePreferido.trim().length > 0) {
+    return this.nombrePreferido;
+  }
+  // Por defecto, retorna el primer nombre
+  return this.nombre.split(' ')[0];
+};
+
+// Método de instancia: Retorna el nombre completo dividido en palabras
+// con indicador de cuál es la palabra preferida
+// Útil para el frontend que permite seleccionar el nombre preferido
+alumnoSchema.methods.obtenerNombreConPreferencia = function() {
+  const nombreCompleto = this.nombreCompleto;
+  const preferido = this.obtenerNombrePreferido();
+
+  // Divide el nombre completo en palabras
+  const palabras = nombreCompleto.split(' ');
+
+  // Retorna array de objetos con cada palabra y si es la preferida
+  return palabras.map(palabra => ({
+    texto: palabra,
+    esPreferido: palabra.toLowerCase() === preferido.toLowerCase()
+  }));
+};
+
+// Método de instancia: Establece el nombre preferido
+// Valida que la palabra exista en el nombre completo
+alumnoSchema.methods.establecerNombrePreferido = function(palabraPreferida) {
+  const nombreCompleto = this.nombreCompleto.toLowerCase();
+  const palabraBuscada = palabraPreferida.toLowerCase().trim();
+
+  // Verifica que la palabra exista en el nombre completo
+  if (nombreCompleto.includes(palabraBuscada)) {
+    this.nombrePreferido = palabraPreferida.trim();
+    return true;
+  }
+
+  return false;
 };
 
 // ============================================

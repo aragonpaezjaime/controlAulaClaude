@@ -58,10 +58,25 @@ const ajusteSchema = new mongoose.Schema({
     }
   },
 
-  // Observaciones adicionales
+  // Observaciones adicionales (uso interno del profesor)
   observaciones: {
     type: String,
     trim: true
+  },
+
+  // Comentario visible para el alumno en su portal
+  // Ejemplo: "Examen Parcial 1", "Buen trabajo en el proyecto", "Actividad Plickers"
+  comentarioAlumno: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'El comentario no puede exceder 500 caracteres']
+  },
+
+  // Indica si este ajuste es visible en el portal del alumno
+  // Por defecto true, se puede ocultar para ajustes administrativos
+  visibleParaAlumno: {
+    type: Boolean,
+    default: true
   },
 
   // Valores antes y después del ajuste (para auditoría)

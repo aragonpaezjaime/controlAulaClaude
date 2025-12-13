@@ -42,11 +42,70 @@
                 <button class="back-button" onclick="gestionarAlumnos()" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-color: #3b82f6;">
                     👥 Gestionar Alumnos
                 </button>
+                <button class="back-button" onclick="window.location.href='/gestion-insignias.html' + window.location.search" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: #f59e0b;">
+                    🏆 Gestionar Insignias
+                </button>
             </div>
         </div>
 
         <!-- Input file oculto para importar CSV -->
         <input type="file" id="input-csv-plickers" accept=".csv" style="display: none;" onchange="procesarArchivoPlickers(event)">
+
+        <!-- Modal de Importación Plickers -->
+        <div id="modal-plickers" class="modal-overlay" style="display: none;">
+            <div class="modal-content" style="max-width: 500px;">
+                <h2 style="margin-bottom: 20px; color: var(--accent-gold); display: flex; align-items: center; gap: 10px;">
+                    📂 Importar Calificaciones Plickers
+                </h2>
+
+                <form id="form-plickers" onsubmit="confirmarImportarPlickers(event)">
+                    <div style="background: var(--card-bg); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--accent-purple);">
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                            💡 <strong>Instrucciones:</strong><br>
+                            1. Indica cuántos puntos vale la actividad<br>
+                            2. Agrega un comentario (opcional)<br>
+                            3. Selecciona tu archivo CSV de Plickers
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label for="plickers-puntos" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+                            🎯 Puntos Totales de la Actividad *
+                        </label>
+                        <input type="number" id="plickers-puntos"
+                               min="1" max="10000" step="1"
+                               placeholder="Ej: 20"
+                               required
+                               style="width: 100%; padding: 12px; background: var(--input-bg); border: 2px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 1rem;">
+                        <small style="color: var(--text-secondary); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            Los porcentajes del CSV se multiplicarán por este valor
+                        </small>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label for="plickers-comentario" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+                            💬 Comentario para Alumnos (opcional)
+                        </label>
+                        <input type="text" id="plickers-comentario"
+                               maxlength="500"
+                               placeholder="Ej: Examen Parcial 1, Quiz de Robótica, etc."
+                               style="width: 100%; padding: 12px; background: var(--input-bg); border: 2px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 1rem;">
+                        <small style="color: var(--text-secondary); font-size: 0.85rem; display: block; margin-top: 5px;">
+                            Este comentario aparecerá en el historial de los alumnos
+                        </small>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" onclick="cerrarModalPlickers()" class="btn-secondary" style="padding: 12px 24px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 8px; color: var(--text-primary); cursor: pointer; font-weight: 600;">
+                            ❌ Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary" style="padding: 12px 24px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-purple-dark)); border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600;">
+                            📁 Seleccionar Archivo CSV
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <div id="loading" class="loading">
             <div class="spinner"></div>
@@ -1028,31 +1087,57 @@
         // IMPORTACIÓN DE PLICKERS 📂
         // ============================================
 
-        // Variable global para almacenar puntos de la actividad
+        // Variables globales para importación Plickers
         let puntosTotalesActividad = null;
+        let comentarioActividad = null;
 
-        // Abrir selector de archivo
+        // Abrir modal de importación Plickers
         function abrirImportarPlickers() {
-            // Primero pedir los puntos totales de la actividad
-            const puntos = prompt('¿Cuántos puntos vale esta actividad de Plickers?\n\nEjemplo: Si vale 20 puntos, escribe 20', '20');
+            // Limpiar formulario
+            document.getElementById('plickers-puntos').value = '';
+            document.getElementById('plickers-comentario').value = '';
 
-            if (puntos === null) {
-                // Usuario canceló
-                return;
-            }
+            // Mostrar modal
+            document.getElementById('modal-plickers').style.display = 'flex';
 
-            const puntosNum = parseInt(puntos, 10);
+            // Focus en el campo de puntos
+            setTimeout(() => {
+                document.getElementById('plickers-puntos').focus();
+            }, 100);
 
-            if (isNaN(puntosNum) || puntosNum <= 0 || puntosNum > 10000) {
+            reproducirSonido('click');
+        }
+
+        // Cerrar modal de Plickers
+        function cerrarModalPlickers() {
+            document.getElementById('modal-plickers').style.display = 'none';
+            reproducirSonido('click');
+        }
+
+        // Confirmar y abrir selector de archivo
+        function confirmarImportarPlickers(event) {
+            event.preventDefault();
+
+            const puntos = parseInt(document.getElementById('plickers-puntos').value, 10);
+            const comentario = document.getElementById('plickers-comentario').value.trim();
+
+            // Validar puntos
+            if (isNaN(puntos) || puntos <= 0 || puntos > 10000) {
                 mostrarError('Por favor ingresa un número válido entre 1 y 10,000');
                 return;
             }
 
-            // Guardar los puntos totales
-            puntosTotalesActividad = puntosNum;
+            // Guardar datos temporalmente
+            puntosTotalesActividad = puntos;
+            comentarioActividad = comentario || null;
 
-            // Ahora sí abrir el selector de archivo
+            // Cerrar modal
+            cerrarModalPlickers();
+
+            // Abrir selector de archivo inmediatamente
             document.getElementById('input-csv-plickers').click();
+
+            reproducirSonido('success');
         }
 
         // Procesar archivo CSV seleccionado
@@ -1082,8 +1167,17 @@
                 formData.append('archivo', archivo);
                 formData.append('puntosTotales', puntosTotalesActividad);
 
+                // Agregar comentario si existe
+                if (comentarioActividad) {
+                    formData.append('comentario', comentarioActividad);
+                }
+
                 // Mostrar indicador de carga
-                mostrarExito(`⏳ Procesando archivo CSV... (Actividad: ${puntosTotalesActividad} puntos)`);
+                let mensajeCarga = `⏳ Procesando archivo CSV... (Actividad: ${puntosTotalesActividad} puntos)`;
+                if (comentarioActividad) {
+                    mensajeCarga += `\n📝 ${comentarioActividad}`;
+                }
+                mostrarExito(mensajeCarga);
 
                 // Enviar al servidor
                 const response = await fetch(`${API_URL}/importar/plickers`, {
@@ -1097,6 +1191,12 @@
                     // Mostrar resumen detallado
                     let mensaje = `✅ Importación completada:\n\n`;
                     mensaje += `🎯 Actividad: ${data.datos.puntosTotales} puntos totales\n`;
+
+                    // Mostrar comentario si existe
+                    if (comentarioActividad) {
+                        mensaje += `💬 Comentario: "${comentarioActividad}"\n`;
+                    }
+
                     mensaje += `📊 Procesados: ${data.datos.procesados}\n`;
                     mensaje += `✓ Actualizados: ${data.datos.actualizados}\n`;
                     mensaje += `✗ Errores: ${data.datos.errores}\n`;
@@ -1122,8 +1222,9 @@
             } finally {
                 // Limpiar el input file para permitir seleccionar el mismo archivo de nuevo
                 event.target.value = '';
-                // Resetear puntos totales
+                // Resetear variables
                 puntosTotalesActividad = null;
+                comentarioActividad = null;
             }
         }
 

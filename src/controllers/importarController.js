@@ -26,7 +26,13 @@ exports.importarPlickers = async (req, res) => {
             });
         }
 
+        // Capturar comentario opcional para los alumnos
+        const comentario = req.body.comentario ? req.body.comentario.trim() : null;
+
         console.log(`📊 Importando Plickers - Actividad vale: ${puntosTotales} puntos`);
+        if (comentario) {
+            console.log(`💬 Comentario: "${comentario}"`);
+        }
 
         const filePath = req.file.path;
         const resultados = {
@@ -153,6 +159,8 @@ exports.importarPlickers = async (req, res) => {
                     cantidad: puntosXP,
                     motivo: 'Plickers',
                     observaciones: `Importación automática desde Plickers. Score: ${scoreRaw} de actividad de ${puntosTotales} puntos`,
+                    comentarioAlumno: comentario || `Actividad Plickers: ${scoreRaw}`,
+                    visibleParaAlumno: true,
                     valorAnterior: xpAnterior,
                     valorDespues: alumnoEncontrado.xp,
                     fecha: new Date()

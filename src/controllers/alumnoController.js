@@ -10,8 +10,6 @@ const crearAlumno = async (req, res) => {
       nombre,
       apellidos,
       grupo,
-      fechaNacimiento,
-      promedio,
       xp,
       salud,
     } = req.body;
@@ -28,8 +26,6 @@ const crearAlumno = async (req, res) => {
       nombre,
       apellidos,
       grupo,
-      fechaNacimiento,
-      promedio: promedio || 0,
       xp: xp || 0,
       salud: salud || 100,
     });

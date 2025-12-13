@@ -515,18 +515,11 @@
                     <input type="text" id="crear-apellidos" required pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" minlength="2" maxlength="50" placeholder="Apellidos del alumno">
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="crear-fecha">Fecha de Nacimiento *</label>
-                        <input type="date" id="crear-fecha" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="crear-grupo">Grupo *</label>
-                        <select id="crear-grupo" required>
-                            <option value="">Seleccionar...</option>
-                        </select>
-                    </div>
+                <div class="form-group">
+                    <label for="crear-grupo">Grupo *</label>
+                    <select id="crear-grupo" required>
+                        <option value="">Seleccionar...</option>
+                    </select>
                 </div>
 
                 <div class="form-row">
@@ -569,18 +562,11 @@
                     <input type="text" id="editar-apellidos" required pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" minlength="2" maxlength="50">
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="editar-fecha">Fecha de Nacimiento *</label>
-                        <input type="date" id="editar-fecha" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="editar-grupo">Grupo *</label>
-                        <select id="editar-grupo" required onchange="verificarCambioGrupo()">
-                            <option value="">Seleccionar...</option>
-                        </select>
-                    </div>
+                <div class="form-group">
+                    <label for="editar-grupo">Grupo *</label>
+                    <select id="editar-grupo" required onchange="verificarCambioGrupo()">
+                        <option value="">Seleccionar...</option>
+                    </select>
                 </div>
 
                 <div id="advertencia-grupo" class="advertencia-box" style="display: none;">
@@ -751,7 +737,6 @@
             const html = `
                 <div class="alumnos-grid">
                     ${alumnosFiltrados.map(alumno => {
-                        const edad = calcularEdad(alumno.fechaNacimiento);
                         const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alumno.nombre + ' ' + alumno.apellidos)}`;
 
                         return `
@@ -769,10 +754,6 @@
                                         <div class="stat-mini">
                                             <span>❤️ HP:</span>
                                             <span class="valor">${alumno.salud || 100}</span>
-                                        </div>
-                                        <div class="stat-mini">
-                                            <span>🎂 Edad:</span>
-                                            <span class="valor">${edad} años</span>
                                         </div>
                                         ${!alumno.activo ? '<div class="stat-mini"><span style="color: #f87171;">⚠️ INACTIVO</span></div>' : ''}
                                     </div>
@@ -792,20 +773,6 @@
             `;
 
             container.innerHTML = html;
-        }
-
-        // CALCULAR EDAD
-        function calcularEdad(fechaNacimiento) {
-            const hoy = new Date();
-            const nacimiento = new Date(fechaNacimiento);
-            let edad = hoy.getFullYear() - nacimiento.getFullYear();
-            const mes = hoy.getMonth() - nacimiento.getMonth();
-
-            if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-                edad--;
-            }
-
-            return edad;
         }
 
         // ACTUALIZAR ESTADÍSTICAS
@@ -848,15 +815,6 @@
             document.getElementById('crear-grupo').value = grupoIdActual;
             document.getElementById('error-crear').classList.remove('visible');
 
-            // Establecer fecha máxima (hoy) y mínima (hace 25 años)
-            const hoy = new Date().toISOString().split('T')[0];
-            const hace25 = new Date();
-            hace25.setFullYear(hace25.getFullYear() - 25);
-            const fechaMin = hace25.toISOString().split('T')[0];
-
-            document.getElementById('crear-fecha').max = hoy;
-            document.getElementById('crear-fecha').min = fechaMin;
-
             reproducirSonido('click');
         }
 
@@ -866,18 +824,9 @@
 
             const nombre = document.getElementById('crear-nombre').value.trim();
             const apellidos = document.getElementById('crear-apellidos').value.trim();
-            const fechaNacimiento = document.getElementById('crear-fecha').value;
             const grupo = document.getElementById('crear-grupo').value;
             const xp = parseInt(document.getElementById('crear-xp').value) || 0;
             const salud = parseInt(document.getElementById('crear-hp').value) || 100;
-
-            // Validar edad
-            const edad = calcularEdad(fechaNacimiento);
-            if (edad < 10 || edad > 25) {
-                mostrarErrorModal('crear', 'La edad debe estar entre 10 y 25 años');
-                reproducirSonido('error');
-                return;
-            }
 
             const btnCrear = document.getElementById('btn-crear');
             btnCrear.disabled = true;
@@ -892,7 +841,6 @@
                     body: JSON.stringify({
                         nombre,
                         apellidos,
-                        fechaNacimiento,
                         grupo,
                         xp,
                         salud
@@ -944,7 +892,6 @@
                     document.getElementById('editar-id').value = alumno._id;
                     document.getElementById('editar-nombre').value = alumno.nombre;
                     document.getElementById('editar-apellidos').value = alumno.apellidos;
-                    document.getElementById('editar-fecha').value = alumno.fechaNacimiento.split('T')[0];
                     document.getElementById('editar-grupo').value = alumno.grupo._id || alumno.grupo;
                     document.getElementById('editar-xp').value = alumno.xp || 0;
                     document.getElementById('editar-hp').value = alumno.salud || 100;
@@ -982,18 +929,9 @@
             const id = document.getElementById('editar-id').value;
             const nombre = document.getElementById('editar-nombre').value.trim();
             const apellidos = document.getElementById('editar-apellidos').value.trim();
-            const fechaNacimiento = document.getElementById('editar-fecha').value;
             const grupo = document.getElementById('editar-grupo').value;
             const xp = parseInt(document.getElementById('editar-xp').value) || 0;
             const salud = parseInt(document.getElementById('editar-hp').value) || 100;
-
-            // Validar edad
-            const edad = calcularEdad(fechaNacimiento);
-            if (edad < 10 || edad > 25) {
-                mostrarErrorModal('editar', 'La edad debe estar entre 10 y 25 años');
-                reproducirSonido('error');
-                return;
-            }
 
             const btnEditar = document.getElementById('btn-editar');
             btnEditar.disabled = true;
@@ -1008,7 +946,6 @@
                     body: JSON.stringify({
                         nombre,
                         apellidos,
-                        fechaNacimiento,
                         grupo,
                         xp,
                         salud

@@ -133,9 +133,7 @@ async function importarAlumnos(rutaArchivo) {
         const alumno = new Alumno({
           nombre: fila.nombre,
           apellidos: fila.apellidos,
-          fechaNacimiento: fila.fechaNacimiento ? new Date(fila.fechaNacimiento) : undefined,
           grupo: grupo._id,
-          promedio: parseFloat(fila.promedio) || 0,
           xp: parseInt(fila.xp) || 0,
           salud: parseInt(fila.salud) || 100
         });
