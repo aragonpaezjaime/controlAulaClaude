@@ -41,6 +41,8 @@ const ajustarXP = async (req, res) => {
       cantidad,
       motivo,
       observaciones,
+      comentarioAlumno: observaciones, // Las observaciones se muestran al alumno
+      visibleParaAlumno: true,
       valorAnterior,
       valorDespues: nuevoXP
     });
@@ -107,6 +109,8 @@ const ajustarHP = async (req, res) => {
       cantidad,
       motivo,
       observaciones,
+      comentarioAlumno: observaciones, // Las observaciones se muestran al alumno
+      visibleParaAlumno: true,
       valorAnterior,
       valorDespues: nuevoHP
     });
@@ -253,12 +257,15 @@ const ajustarXPGrupal = async (req, res) => {
       await alumno.save();
 
       // Registrar ajuste
+      const comentario = observaciones || `Ajuste grupal: ${motivo}`;
       const ajuste = await Ajuste.create({
         alumno: alumno._id,
         tipo: 'xp',
         cantidad,
         motivo,
-        observaciones: observaciones || `Ajuste grupal: ${motivo}`,
+        observaciones: comentario,
+        comentarioAlumno: comentario, // Las observaciones se muestran al alumno
+        visibleParaAlumno: true,
         valorAnterior,
         valorDespues: nuevoXP
       });
