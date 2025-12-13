@@ -224,8 +224,9 @@ const obtenerAlumnosDelGrupo = async (req, res) => {
     // Importar modelo Alumno aquí para evitar dependencias circulares
     const Alumno = require('../models/Alumno');
 
-    // Buscar alumnos del grupo
+    // Buscar alumnos del grupo y popular insignias
     const alumnos = await Alumno.find({ grupo: id, activo: true })
+      .populate('insignias.insigniaId')
       .sort({ apellidos: 1, nombre: 1 });
 
     res.status(200).json({
@@ -281,6 +282,79 @@ const incrementarSesiones = async (req, res) => {
   }
 };
 
+// ============================================
+// DUPLICAR UN GRUPO
+// ============================================
+const duplicarGrupo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nuevoIdentificador } = req.body;
+
+    // Validar que se proporcione el nuevo identificador
+    if (!nuevoIdentificador) {
+      return res.status(400).json({
+        success: false,
+        mensaje: 'Debe proporcionar un nuevo identificador para el grupo duplicado'
+      });
+    }
+
+    // Buscar grupo original
+    const grupoOriginal = await Grupo.findById(id);
+
+    if (!grupoOriginal) {
+      return res.status(404).json({
+        success: false,
+        mensaje: 'Grupo no encontrado'
+      });
+    }
+
+    // Crear copia del grupo con nuevo identificador
+    const grupoDuplicado = new Grupo({
+      grado: grupoOriginal.grado,
+      grupo: nuevoIdentificador.toUpperCase(),
+      nivel: grupoOriginal.nivel,
+      materia: grupoOriginal.materia,
+      horario: grupoOriginal.horario,
+      cicloEscolar: grupoOriginal.cicloEscolar,
+      activo: true,
+      sesionesImpartidas: 0
+    });
+
+    // Guardar el nuevo grupo
+    const grupoGuardado = await grupoDuplicado.save();
+
+    res.status(201).json({
+      success: true,
+      mensaje: 'Grupo duplicado exitosamente',
+      data: grupoGuardado
+    });
+
+  } catch (error) {
+    // Error de validación
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        mensaje: 'Error de validación',
+        errores: Object.values(error.errors).map(err => err.message)
+      });
+    }
+
+    // Error de duplicado
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        mensaje: 'Ya existe un grupo con ese identificador en el mismo ciclo y nivel'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      mensaje: 'Error al duplicar el grupo',
+      error: error.message
+    });
+  }
+};
+
 // Exportar todas las funciones del controlador
 module.exports = {
   crearGrupo,
@@ -289,5 +363,6 @@ module.exports = {
   actualizarGrupo,
   eliminarGrupo,
   obtenerAlumnosDelGrupo,
-  incrementarSesiones
+  incrementarSesiones,
+  duplicarGrupo
 };

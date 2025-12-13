@@ -15,9 +15,14 @@
                 🎓 Control de Aula
             </h1>
             <p>Selecciona un grupo para comenzar</p>
-            <button onclick="exportarPuntos()" class="btn-backup" style="position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
-                💾 Respaldar Puntos XP/HP
-            </button>
+            <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 10px;">
+                <button onclick="window.location.href='/admin-grupos.html'" class="btn-backup" style="background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark)); color: #1f2937; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3); transition: all 0.3s ease;">
+                    ⚙️ Administrar Grupos
+                </button>
+                <button onclick="exportarPuntos()" class="btn-backup" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                    💾 Respaldar Puntos XP/HP
+                </button>
+            </div>
         </div>
 
         <div id="loading" class="loading">
