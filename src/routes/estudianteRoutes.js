@@ -29,4 +29,11 @@ router.get('/perfil/:alumnoId', estudianteController.obtenerPerfil);
  */
 router.get('/ranking/:grupoId', estudianteController.obtenerRanking);
 
+/**
+ * GET /api/estudiante/historial/:alumnoId
+ * Obtiene el historial de ajustes XP/HP del estudiante
+ * Query params opcionales: ?tipo=xp&desde=YYYY-MM-DD&hasta=YYYY-MM-DD&limite=50
+ */
+router.get('/historial/:alumnoId', estudianteController.obtenerHistorial);
+
 module.exports = router;

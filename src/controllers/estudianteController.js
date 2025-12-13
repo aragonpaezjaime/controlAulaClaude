@@ -1,6 +1,7 @@
 const Alumno = require('../models/Alumno');
 const Grupo = require('../models/Grupo');
 const Insignia = require('../models/Insignia');
+const Ajuste = require('../models/Ajuste');
 
 // ============================================
 // AUTENTICACIÓN Y PERFIL DEL ESTUDIANTE
@@ -278,3 +279,157 @@ exports.obtenerRanking = async (req, res) => {
     });
   }
 };
+
+// ============================================
+// HISTORIAL DE AJUSTES DEL ESTUDIANTE
+// ============================================
+
+/**
+ * Obtener historial de ajustes XP/HP del estudiante
+ * GET /api/estudiante/historial/:alumnoId
+ * Query params opcionales: ?tipo=xp&desde=YYYY-MM-DD&hasta=YYYY-MM-DD&limite=50
+ */
+exports.obtenerHistorial = async (req, res) => {
+  try {
+    const { alumnoId } = req.params;
+    const { tipo, desde, hasta, limite = 50 } = req.query;
+
+    // Verificar que el alumno existe
+    const alumno = await Alumno.findById(alumnoId);
+    if (!alumno || !alumno.activo) {
+      return res.status(404).json({
+        success: false,
+        mensaje: 'Alumno no encontrado'
+      });
+    }
+
+    // Construir filtros
+    const filtros = {
+      alumno: alumnoId,
+      visibleParaAlumno: true // Solo mostrar ajustes visibles para el alumno
+    };
+
+    // Filtro por tipo (xp o hp)
+    if (tipo && ['xp', 'hp'].includes(tipo.toLowerCase())) {
+      filtros.tipo = tipo.toLowerCase();
+    }
+
+    // Filtro por rango de fechas
+    if (desde || hasta) {
+      filtros.fecha = {};
+      if (desde) {
+        filtros.fecha.$gte = new Date(desde);
+      }
+      if (hasta) {
+        // Agregar un día para incluir todo el día "hasta"
+        const fechaHasta = new Date(hasta);
+        fechaHasta.setDate(fechaHasta.getDate() + 1);
+        filtros.fecha.$lt = fechaHasta;
+      }
+    }
+
+    // Obtener ajustes con los filtros
+    const ajustes = await Ajuste.find(filtros)
+      .sort({ fecha: -1 })
+      .limit(parseInt(limite))
+      .lean();
+
+    // Obtener estadísticas solo de ajustes visibles
+    const estadisticas = await calcularEstadisticas(alumnoId);
+
+    // Formatear datos para el frontend
+    const historial = ajustes.map(ajuste => ({
+      id: ajuste._id,
+      tipo: ajuste.tipo,
+      cantidad: ajuste.cantidad,
+      motivo: ajuste.motivo,
+      comentario: ajuste.comentarioAlumno || ajuste.motivo,
+      valorAnterior: ajuste.valorAnterior,
+      valorDespues: ajuste.valorDespues,
+      fecha: ajuste.fecha,
+      esPositivo: ajuste.cantidad > 0
+    }));
+
+    res.json({
+      success: true,
+      alumno: {
+        id: alumno._id,
+        nombreCompleto: alumno.nombreCompleto
+      },
+      historial,
+      estadisticas,
+      totalRegistros: historial.length,
+      filtrosAplicados: {
+        tipo: tipo || 'todos',
+        desde: desde || null,
+        hasta: hasta || null
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al obtener historial:', error);
+    res.status(500).json({
+      success: false,
+      mensaje: 'Error al obtener el historial',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Función auxiliar para calcular estadísticas de ajustes
+ */
+async function calcularEstadisticas(alumnoId) {
+  const ajustes = await Ajuste.find({
+    alumno: alumnoId,
+    visibleParaAlumno: true
+  }).lean();
+
+  const stats = {
+    totalAjustes: ajustes.length,
+    xp: {
+      ganado: 0,
+      perdido: 0,
+      neto: 0
+    },
+    hp: {
+      ganado: 0,
+      perdido: 0,
+      neto: 0
+    },
+    motivoMasFrecuente: null
+  };
+
+  // Calcular estadísticas de XP y HP
+  ajustes.forEach(ajuste => {
+    if (ajuste.tipo === 'xp') {
+      if (ajuste.cantidad > 0) {
+        stats.xp.ganado += ajuste.cantidad;
+      } else {
+        stats.xp.perdido += Math.abs(ajuste.cantidad);
+      }
+      stats.xp.neto += ajuste.cantidad;
+    } else if (ajuste.tipo === 'hp') {
+      if (ajuste.cantidad > 0) {
+        stats.hp.ganado += ajuste.cantidad;
+      } else {
+        stats.hp.perdido += Math.abs(ajuste.cantidad);
+      }
+      stats.hp.neto += ajuste.cantidad;
+    }
+  });
+
+  // Encontrar motivo más frecuente
+  if (ajustes.length > 0) {
+    const motivosCount = {};
+    ajustes.forEach(ajuste => {
+      motivosCount[ajuste.motivo] = (motivosCount[ajuste.motivo] || 0) + 1;
+    });
+
+    stats.motivoMasFrecuente = Object.keys(motivosCount).reduce((a, b) =>
+      motivosCount[a] > motivosCount[b] ? a : b
+    );
+  }
+
+  return stats;
+}

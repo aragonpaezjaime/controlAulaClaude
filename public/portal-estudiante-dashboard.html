@@ -347,9 +347,14 @@
                 <h1>🎓 Portal del Estudiante</h1>
                 <p id="grupoInfo">Cargando...</p>
             </div>
-            <button class="btn-logout" onclick="cerrarSesion()">
-                🚪 Cerrar Sesión
-            </button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="/portal-estudiante-historial.html" class="btn-logout" style="text-decoration: none; background: linear-gradient(135deg, #10b981, #059669);">
+                    📜 Mi Historial
+                </a>
+                <button class="btn-logout" onclick="cerrarSesion()">
+                    🚪 Cerrar Sesión
+                </button>
+            </div>
         </div>
 
         <!-- Tarjeta Personal -->
