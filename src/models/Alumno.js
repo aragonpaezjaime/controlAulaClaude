@@ -24,6 +24,15 @@ const alumnoSchema = new mongoose.Schema({
     required: [true, 'El grupo es obligatorio']
   },
 
+  // Clave de zipGrade para autenticación del estudiante
+  // Esta clave es única por grupo y permite el acceso al portal del estudiante
+  claveZipGrade: {
+    type: String,
+    trim: true,
+    sparse: true, // Permite múltiples valores null/undefined
+    uppercase: true // Normaliza a mayúsculas para consistencia
+  },
+
   // Puntos de experiencia (XP) - Sistema de gamificación
   xp: {
     type: Number,
@@ -208,6 +217,10 @@ alumnoSchema.index({
   nombre: 'text',
   apellidos: 'text'
 });
+
+// Índice compuesto para garantizar que claveZipGrade sea única por grupo
+// El sparse:true permite que alumnos sin clave puedan existir sin conflicto
+alumnoSchema.index({ grupo: 1, claveZipGrade: 1 }, { unique: true, sparse: true });
 
 // Exportar el modelo
 module.exports = mongoose.model('Alumno', alumnoSchema);

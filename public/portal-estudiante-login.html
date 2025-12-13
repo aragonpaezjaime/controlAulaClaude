@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal del Estudiante - Login</title>
+    <link rel="icon" type="image/svg+xml" href="/images/logo-escuela.svg">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 100%;
+            padding: 40px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+        }
+
+        .login-header h1 {
+            color: #1f2937;
+            font-size: 28px;
+            margin: 0 0 10px 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-header p {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #dc2626;
+        }
+
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .info-text {
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+
+            .login-header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <img src="/images/logo-escuela.svg" alt="Logo Escuela">
+            <h1>🎓 Portal del Estudiante</h1>
+            <p>Secundaria Técnica #50</p>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="claveZipGrade">
+                    🔑 Clave de Acceso (zipGrade)
+                </label>
+                <input
+                    type="text"
+                    id="claveZipGrade"
+                    name="claveZipGrade"
+                    placeholder="Ingresa tu clave"
+                    autocomplete="off"
+                    required
+                    autofocus
+                >
+            </div>
+
+            <button type="submit" class="btn-login" id="btnLogin">
+                Iniciar Sesión
+            </button>
+        </form>
+
+        <div class="info-text">
+            💡 Si no conoces tu clave de acceso, solicítala a tu profesor
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        // Verificar si ya hay sesión activa
+        window.addEventListener('DOMContentLoaded', () => {
+            const sesion = localStorage.getItem('estudianteSesion');
+            if (sesion) {
+                try {
+                    const datos = JSON.parse(sesion);
+                    // Si hay sesión válida, redirigir al dashboard
+                    window.location.href = '/portal-estudiante-dashboard.html';
+                } catch (error) {
+                    // Si hay error al parsear, limpiar sesión
+                    localStorage.removeItem('estudianteSesion');
+                }
+            }
+        });
+
+        // Manejar el formulario de login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const claveInput = document.getElementById('claveZipGrade');
+            const clave = claveInput.value.trim();
+            const btnLogin = document.getElementById('btnLogin');
+            const alertDiv = document.getElementById('alert');
+
+            // Validar que no esté vacío
+            if (!clave) {
+                mostrarAlerta('Por favor ingresa tu clave de acceso', 'error');
+                return;
+            }
+
+            // Deshabilitar botón y mostrar loading
+            btnLogin.disabled = true;
+            btnLogin.innerHTML = 'Verificando <span class="loading-spinner"></span>';
+            alertDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_URL}/estudiante/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ claveZipGrade: clave })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Guardar datos de sesión en localStorage
+                    localStorage.setItem('estudianteSesion', JSON.stringify(data.alumno));
+
+                    // Mostrar mensaje de éxito
+                    mostrarAlerta(`¡Bienvenido ${data.alumno.nombrePreferido}! 🎉`, 'success');
+
+                    // Redirigir al dashboard después de 1 segundo
+                    setTimeout(() => {
+                        window.location.href = '/portal-estudiante-dashboard.html';
+                    }, 1000);
+                } else {
+                    // Mostrar error
+                    mostrarAlerta(data.mensaje || 'Clave incorrecta', 'error');
+                    btnLogin.disabled = false;
+                    btnLogin.textContent = 'Iniciar Sesión';
+                    claveInput.value = '';
+                    claveInput.focus();
+                }
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                mostrarAlerta('Error de conexión con el servidor', 'error');
+                btnLogin.disabled = false;
+                btnLogin.textContent = 'Iniciar Sesión';
+            }
+        });
+
+        // Función para mostrar alertas
+        function mostrarAlerta(mensaje, tipo) {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.textContent = mensaje;
+            alertDiv.className = `alert ${tipo}`;
+            alertDiv.style.display = 'block';
+
+            // Auto-ocultar después de 5 segundos si es error
+            if (tipo === 'error') {
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal del Estudiante - Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="/images/logo-escuela.svg">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header del Dashboard */
+        .dashboard-header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-info h1 {
+            margin: 0 0 5px 0;
+            color: #1f2937;
+            font-size: 24px;
+        }
+
+        .header-info p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.5);
+        }
+
+        /* Tarjeta Personal del Estudiante */
+        .personal-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            color: white;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .personal-content {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .avatar-container {
+            position: relative;
+        }
+
+        .avatar-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            background: white;
+            padding: 5px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .insignia-badge {
+            position: absolute;
+            bottom: -10px;
+            right: -10px;
+            background: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .personal-info {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .personal-info h2 {
+            margin: 0 0 15px 0;
+            font-size: 32px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Sección de Ranking */
+        .ranking-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .ranking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .ranking-header h2 {
+            margin: 0;
+            color: #1f2937;
+            font-size: 28px;
+        }
+
+        .ranking-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 12px;
+            background: #f9fafb;
+            transition: all 0.3s ease;
+            gap: 15px;
+        }
+
+        .ranking-item:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+
+        .ranking-item.highlight {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+            }
+            50% {
+                box-shadow: 0 6px 25px rgba(245, 158, 11, 0.5);
+            }
+        }
+
+        .ranking-position {
+            font-size: 24px;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .ranking-position.top1 { color: #f59e0b; text-shadow: 0 2px 5px rgba(245, 158, 11, 0.3); }
+        .ranking-position.top2 { color: #94a3b8; }
+        .ranking-position.top3 { color: #cd7f32; }
+
+        .ranking-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #e5e7eb;
+            background: white;
+        }
+
+        .ranking-item.highlight .ranking-avatar {
+            border-color: #f59e0b;
+        }
+
+        .ranking-name {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .ranking-name h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            color: #1f2937;
+        }
+
+        .ranking-name .insignia-name {
+            font-size: 12px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .ranking-stats-values {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .stat-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 70px;
+        }
+
+        .stat-badge-label {
+            font-size: 11px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-badge-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 15px;
+            }
+
+            .personal-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .avatar-container {
+                margin: 0 auto;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .ranking-item {
+                flex-wrap: wrap;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .ranking-stats-values {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .ranking-name {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-info">
+                <h1>🎓 Portal del Estudiante</h1>
+                <p id="grupoInfo">Cargando...</p>
+            </div>
+            <button class="btn-logout" onclick="cerrarSesion()">
+                🚪 Cerrar Sesión
+            </button>
+        </div>
+
+        <!-- Tarjeta Personal -->
+        <div class="personal-card" id="personalCard" style="display: none;">
+            <div class="personal-content">
+                <div class="avatar-container">
+                    <img id="personalAvatar" class="avatar-img" src="" alt="Avatar">
+                    <div class="insignia-badge" id="personalInsignia">🏆</div>
+                </div>
+                <div class="personal-info">
+                    <h2 id="personalNombre">Estudiante</h2>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">⭐ XP</div>
+                            <div class="stat-value" id="personalXP">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">❤️ HP</div>
+                            <div class="stat-value" id="personalHP">100</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">📊 Posición</div>
+                            <div class="stat-value" id="personalPosicion">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Ranking -->
+        <div class="ranking-section">
+            <div class="ranking-header">
+                <h2>🏆 Ranking del Grupo</h2>
+                <div class="ranking-stats">
+                    <span>👥 <span id="totalAlumnos">0</span> estudiantes</span>
+                    <span>⭐ Promedio: <span id="xpPromedio">0</span> XP</span>
+                </div>
+            </div>
+
+            <div id="loadingRanking" class="loading">
+                <div class="spinner"></div>
+                <p>Cargando ranking...</p>
+            </div>
+
+            <div id="rankingList" class="ranking-list" style="display: none;">
+                <!-- El ranking se cargará aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        let sesion = null;
+
+        // Verificar sesión al cargar
+        window.addEventListener('DOMContentLoaded', async () => {
+            const sesionData = localStorage.getItem('estudianteSesion');
+
+            if (!sesionData) {
+                // No hay sesión, redirigir al login
+                window.location.href = '/portal-estudiante-login.html';
+                return;
+            }
+
+            try {
+                sesion = JSON.parse(sesionData);
+                cargarDashboard();
+            } catch (error) {
+                console.error('Error al parsear sesión:', error);
+                localStorage.removeItem('estudianteSesion');
+                window.location.href = '/portal-estudiante-login.html';
+            }
+        });
+
+        // Cargar datos del dashboard
+        async function cargarDashboard() {
+            // Mostrar información del grupo
+            document.getElementById('grupoInfo').textContent =
+                `${sesion.grupo.nombre} - ${sesion.grupo.materia} (${sesion.grupo.ciclo})`;
+
+            // Mostrar tarjeta personal
+            mostrarTarjetaPersonal();
+
+            // Cargar ranking
+            await cargarRanking();
+        }
+
+        // Mostrar tarjeta personal del estudiante
+        function mostrarTarjetaPersonal() {
+            const card = document.getElementById('personalCard');
+            const avatar = document.getElementById('personalAvatar');
+            const nombre = document.getElementById('personalNombre');
+            const xp = document.getElementById('personalXP');
+            const hp = document.getElementById('personalHP');
+            const insignia = document.getElementById('personalInsignia');
+
+            // Avatar
+            avatar.src = `https://robohash.org/${sesion.avatar}?set=set1&size=150x150`;
+            avatar.alt = sesion.nombreCompleto;
+
+            // Nombre
+            nombre.textContent = sesion.nombrePreferido || sesion.nombre;
+
+            // Stats
+            xp.textContent = sesion.xp.toLocaleString();
+            hp.textContent = sesion.salud;
+
+            // Insignia
+            if (sesion.insigniaActual) {
+                insignia.textContent = sesion.insigniaActual.icono;
+                insignia.title = sesion.insigniaActual.nombre;
+            }
+
+            card.style.display = 'block';
+        }
+
+        // Cargar ranking del grupo
+        async function cargarRanking() {
+            try {
+                const response = await fetch(`${API_URL}/estudiante/ranking/${sesion.grupo.id}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarRanking(data.ranking, data.estadisticas);
+                } else {
+                    mostrarError('Error al cargar el ranking');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión');
+            }
+        }
+
+        // Mostrar ranking
+        function mostrarRanking(ranking, estadisticas) {
+            const loadingDiv = document.getElementById('loadingRanking');
+            const rankingList = document.getElementById('rankingList');
+
+            // Actualizar estadísticas del header
+            document.getElementById('totalAlumnos').textContent = estadisticas.totalAlumnos;
+            document.getElementById('xpPromedio').textContent = estadisticas.xpPromedio.toLocaleString();
+
+            // Generar HTML del ranking
+            rankingList.innerHTML = ranking.map(alumno => {
+                const esUsuario = alumno.id === sesion.id;
+                const positionClass = alumno.posicion === 1 ? 'top1' :
+                                     alumno.posicion === 2 ? 'top2' :
+                                     alumno.posicion === 3 ? 'top3' : '';
+
+                // Medallas para top 3
+                const medalla = alumno.posicion === 1 ? '🥇' :
+                               alumno.posicion === 2 ? '🥈' :
+                               alumno.posicion === 3 ? '🥉' :
+                               `#${alumno.posicion}`;
+
+                return `
+                    <div class="ranking-item ${esUsuario ? 'highlight' : ''}">
+                        <div class="ranking-position ${positionClass}">
+                            ${medalla}
+                        </div>
+                        <img
+                            class="ranking-avatar"
+                            src="https://robohash.org/${alumno.avatar}?set=set1&size=80x80"
+                            alt="${alumno.nombreCompleto}"
+                        >
+                        <div class="ranking-name">
+                            <h3>${alumno.nombreCompleto} ${esUsuario ? '(Tú)' : ''}</h3>
+                            ${alumno.insignia ? `
+                                <div class="insignia-name">
+                                    ${alumno.insignia.icono} ${alumno.insignia.nombre}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="ranking-stats-values">
+                            <div class="stat-badge">
+                                <div class="stat-badge-label">XP</div>
+                                <div class="stat-badge-value">${alumno.xp.toLocaleString()}</div>
+                            </div>
+                            <div class="stat-badge">
+                                <div class="stat-badge-label">HP</div>
+                                <div class="stat-badge-value">${alumno.salud}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Actualizar posición personal
+            const miPosicion = ranking.find(a => a.id === sesion.id);
+            if (miPosicion) {
+                document.getElementById('personalPosicion').textContent =
+                    miPosicion.posicion === 1 ? '🥇' :
+                    miPosicion.posicion === 2 ? '🥈' :
+                    miPosicion.posicion === 3 ? '🥉' :
+                    `#${miPosicion.posicion}`;
+            }
+
+            // Mostrar ranking y ocultar loading
+            loadingDiv.style.display = 'none';
+            rankingList.style.display = 'flex';
+
+            // Scroll automático a la posición del estudiante si no está en top 3
+            if (miPosicion && miPosicion.posicion > 3) {
+                setTimeout(() => {
+                    const highlightedItem = document.querySelector('.ranking-item.highlight');
+                    if (highlightedItem) {
+                        highlightedItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 500);
+            }
+        }
+
+        // Cerrar sesión
+        function cerrarSesion() {
+            if (confirm('¿Seguro que quieres cerrar sesión?')) {
+                localStorage.removeItem('estudianteSesion');
+                window.location.href = '/portal-estudiante-login.html';
+            }
+        }
+
+        // Mostrar error
+        function mostrarError(mensaje) {
+            const loadingDiv = document.getElementById('loadingRanking');
+            loadingDiv.innerHTML = `
+                <p style="color: #ef4444; font-weight: 600;">❌ ${mensaje}</p>
+                <button onclick="cargarRanking()"
+                        style="background: linear-gradient(135deg, #667eea, #764ba2);
+                               color: white; border: none; padding: 10px 20px;
+                               border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    🔄 Reintentar
+                </button>
+            `;
+        }
+    </script>
+</body>
+</html>
