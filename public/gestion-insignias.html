@@ -3,353 +3,354 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏆 Gestión de Insignias</title>
+    <title>🏆 Asignación de Insignias</title>
     <link rel="icon" type="image/svg+xml" href="/images/logo-escuela.svg">
     <link rel="stylesheet" href="/css/styles.css">
     <style>
-        .insignias-grid {
+        .alumnos-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             margin-top: 30px;
         }
 
-        .insignia-card {
+        .alumno-item {
             background: var(--card-bg);
             border: 2px solid var(--border-color);
             border-radius: 15px;
             padding: 20px;
+            cursor: pointer;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .insignia-card:hover {
-            transform: translateY(-5px);
+        .alumno-item:hover {
+            transform: translateY(-3px);
             box-shadow: var(--shadow-elevated);
             border-color: var(--accent-gold);
         }
 
-        .insignia-icon {
-            font-size: 4rem;
-            text-align: center;
-            margin-bottom: 15px;
-            filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.3));
+        .alumno-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
-        .insignia-nombre {
-            font-size: 1.2rem;
+        .alumno-avatar img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .alumno-info {
+            flex: 1;
+        }
+
+        .alumno-nombre {
+            font-size: 1.1rem;
             font-weight: 700;
-            text-align: center;
-            margin-bottom: 8px;
             color: var(--text-primary);
+            margin-bottom: 5px;
         }
 
-        .insignia-descripcion {
+        .alumno-xp {
             font-size: 0.9rem;
             color: var(--text-secondary);
-            text-align: center;
-            margin-bottom: 15px;
-            line-height: 1.4;
         }
 
-        .insignia-badges {
+        .alumno-insignia {
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+        }
+
+        .alumno-insignia img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.5));
+        }
+
+        .sin-insignia {
+            width: 50px;
+            height: 50px;
             display: flex;
-            gap: 8px;
+            align-items: center;
             justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
+            font-size: 2rem;
+            color: var(--text-muted);
+            opacity: 0.3;
         }
 
-        .badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .badge-categoria {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white;
-        }
-
-        .badge-rareza-comun {
-            background: linear-gradient(135deg, #9ca3af, #6b7280);
-            color: white;
-        }
-
-        .badge-rareza-rara {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white;
-        }
-
-        .badge-rareza-epica {
-            background: linear-gradient(135deg, #a855f7, #9333ea);
-            color: white;
-        }
-
-        .badge-rareza-legendaria {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-        }
-
-        .insignia-actions {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        .btn-icon {
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .btn-edit {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white;
-        }
-
-        .btn-delete {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-        }
-
-        .btn-assign {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-        }
-
-        .modal-overlay {
+        /* Modal de asignación */
+        .modal {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.8);
             z-index: 1000;
-            justify-content: center;
             align-items: center;
-            animation: fadeIn 0.3s;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
         }
 
         .modal-content {
             background: var(--card-bg);
-            border: 2px solid var(--border-color);
             border-radius: 20px;
             padding: 30px;
             max-width: 600px;
-            width: 90%;
+            width: 100%;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: var(--shadow-elevated);
         }
 
-        .form-group {
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .modal-titulo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-alumno {
+            font-size: 1rem;
+            color: var(--text-secondary);
             margin-bottom: 20px;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--text-primary);
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            background: var(--input-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 1rem;
+        .btn-close:hover {
+            color: var(--error-color);
+            transform: rotate(90deg);
         }
 
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .form-row {
+        .insignias-opciones {
             display: grid;
-            grid-template-columns: 1fr 1fr;
             gap: 15px;
+            margin-bottom: 20px;
         }
 
-        .color-preview {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 2px solid var(--border-color);
-            margin-top: 8px;
-        }
-
-        .stats-bar {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 30px;
+        .insignia-opcion {
             display: flex;
-            justify-content: space-around;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .insignia-opcion:hover {
+            border-color: var(--accent-gold);
+            background: var(--card-bg);
+            transform: translateX(5px);
+        }
+
+        .insignia-opcion.selected {
+            border-color: var(--accent-gold);
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15));
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+        }
+
+        .insignia-opcion-imagen {
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+        }
+
+        .insignia-opcion-imagen img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .insignia-opcion-info {
+            flex: 1;
+        }
+
+        .insignia-opcion-nombre {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .insignia-opcion-privilegios {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .insignia-opcion-nivel {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-asignar {
+            flex: 1;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-asignar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(251, 191, 36, 0.4);
+        }
+
+        .btn-asignar:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-quitar {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, var(--error-color), #dc2626);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-quitar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-quitar:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-header {
+            display: flex;
             gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            border: 2px solid var(--border-color);
         }
 
         .stat-item {
+            flex: 1;
             text-align: center;
         }
 
-        .stat-value {
+        .stat-numero {
             font-size: 2rem;
-            font-weight: 700;
+            font-weight: 900;
             color: var(--accent-gold);
+            display: block;
         }
 
         .stat-label {
             font-size: 0.9rem;
             color: var(--text-secondary);
-            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>
-                <img src="/images/logo-escuela.svg" alt="Logo Escuela" class="logo-escuela">
-                🏆 Gestión de Insignias
-            </h1>
-            <p>Crear y asignar insignias a los alumnos</p>
-            <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
-                <button class="back-button" onclick="window.location.href='/dashboard.html' + window.location.search">← Volver al Dashboard</button>
-                <button class="back-button" onclick="abrirModalCrear()" style="background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark)); color: #1f2937; border-color: var(--accent-gold);">
-                    ➕ Crear Insignia
-                </button>
-            </div>
+            <h1>🏆 Asignación de Insignias</h1>
+            <p class="subtitle" id="grupo-nombre">Cargando grupo...</p>
         </div>
+
+        <button class="back-button" onclick="volverDashboard()">← Volver al Dashboard</button>
 
         <!-- Estadísticas -->
-        <div class="stats-bar">
+        <div class="stats-header">
             <div class="stat-item">
-                <div class="stat-value" id="total-insignias">0</div>
-                <div class="stat-label">Total Insignias</div>
+                <span class="stat-numero" id="total-alumnos">0</span>
+                <span class="stat-label">Total Alumnos</span>
             </div>
             <div class="stat-item">
-                <div class="stat-value" id="insignias-activas">0</div>
-                <div class="stat-label">Activas</div>
+                <span class="stat-numero" id="con-insignia">0</span>
+                <span class="stat-label">Con Insignia</span>
             </div>
             <div class="stat-item">
-                <div class="stat-value" id="insignias-legendarias">0</div>
-                <div class="stat-label">Legendarias</div>
+                <span class="stat-numero" id="sin-insignia">0</span>
+                <span class="stat-label">Sin Insignia</span>
             </div>
         </div>
 
-        <div id="loading" class="loading" style="display: none;">
+        <!-- Loading -->
+        <div id="loading" class="loading">
             <div class="spinner"></div>
-            <p>Cargando insignias...</p>
+            <p>Cargando alumnos...</p>
         </div>
 
-        <div id="empty-state" style="display: none; text-align: center; padding: 60px 20px;">
-            <div style="font-size: 5rem; margin-bottom: 20px;">🏆</div>
-            <h2>No hay insignias creadas</h2>
-            <p style="color: var(--text-secondary); margin: 20px 0;">Crea tu primera insignia para empezar a premiar a tus alumnos</p>
-            <button class="back-button" onclick="abrirModalCrear()" style="background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark)); color: #1f2937;">
-                ➕ Crear Primera Insignia
-            </button>
-        </div>
-
-        <div id="insignias-container" class="insignias-grid">
-            <!-- Las insignias se cargarán aquí -->
-        </div>
+        <!-- Grid de alumnos -->
+        <div id="alumnos-container" class="alumnos-grid"></div>
     </div>
 
-    <!-- Modal Crear/Editar Insignia -->
-    <div id="modal-insignia" class="modal-overlay">
+    <!-- Modal de asignación -->
+    <div id="modal-asignar" class="modal">
         <div class="modal-content">
-            <h2 id="modal-titulo">➕ Crear Nueva Insignia</h2>
-            <form id="form-insignia" onsubmit="guardarInsignia(event)">
-                <input type="hidden" id="insignia-id">
-
-                <div class="form-group">
-                    <label for="insignia-nombre">Nombre *</label>
-                    <input type="text" id="insignia-nombre" required maxlength="50" placeholder="Ej: Asistencia Perfecta">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-titulo">Asignar Insignia</div>
+                    <div class="modal-alumno" id="modal-alumno-nombre"></div>
                 </div>
-
-                <div class="form-group">
-                    <label for="insignia-descripcion">Descripción *</label>
-                    <textarea id="insignia-descripcion" required maxlength="200" placeholder="Cómo se obtiene esta insignia..."></textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="insignia-icono">Icono (Emoji)</label>
-                        <input type="text" id="insignia-icono" maxlength="10" placeholder="🏆" value="🏆">
-                    </div>
-                    <div class="form-group">
-                        <label for="insignia-color">Color</label>
-                        <input type="color" id="insignia-color" value="#FFD700">
-                        <div id="color-preview" class="color-preview" style="background: #FFD700;"></div>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="insignia-categoria">Categoría</label>
-                        <select id="insignia-categoria">
-                            <option value="asistencia">Asistencia</option>
-                            <option value="academico">Académico</option>
-                            <option value="conducta">Conducta</option>
-                            <option value="especial" selected>Especial</option>
-                            <option value="evento">Evento</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="insignia-rareza">Rareza</label>
-                        <select id="insignia-rareza">
-                            <option value="comun" selected>Común</option>
-                            <option value="rara">Rara</option>
-                            <option value="epica">Épica</option>
-                            <option value="legendaria">Legendaria</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 30px;">
-                    <button type="button" onclick="cerrarModal()" class="back-button">Cancelar</button>
-                    <button type="submit" class="back-button" style="background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark)); color: #1f2937;">
-                        💾 Guardar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Asignar Insignia -->
-    <div id="modal-asignar" class="modal-overlay">
-        <div class="modal-content">
-            <h2>🎖️ Asignar Insignia a Alumno</h2>
-            <div id="asignar-info" style="background: var(--input-bg); padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
-                <!-- Info de la insignia seleccionada -->
+                <button class="btn-close" onclick="cerrarModal()">✕</button>
             </div>
-            <div class="form-group">
-                <label for="select-alumno">Seleccionar Alumno</label>
-                <select id="select-alumno" style="width: 100%; padding: 12px; background: var(--input-bg); border: 2px solid var(--border-color); border-radius: 8px;">
-                    <option value="">Cargando alumnos...</option>
-                </select>
+
+            <div id="insignias-opciones" class="insignias-opciones">
+                <!-- Se llenarán dinámicamente -->
             </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button onclick="cerrarModalAsignar()" class="back-button">Cancelar</button>
-                <button onclick="confirmarAsignarInsignia()" class="back-button" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
-                    ✓ Asignar
+
+            <div class="modal-actions">
+                <button class="btn-asignar" id="btn-asignar" onclick="asignarInsignia()" disabled>
+                    Asignar Insignia
+                </button>
+                <button class="btn-quitar" id="btn-quitar" onclick="quitarInsignia()" disabled>
+                    Quitar Insignia
                 </button>
             </div>
         </div>
@@ -357,251 +358,263 @@
 
     <script>
         const API_URL = 'http://localhost:3000/api';
-        let insigniasData = [];
-        let alumnosData = [];
+        let grupoId = null;
+        let alumnos = [];
+        let insigniasDisponibles = [];
+        let alumnoSeleccionado = null;
         let insigniaSeleccionada = null;
 
-        // Cargar insignias
-        async function cargarInsignias() {
-            document.getElementById('loading').style.display = 'flex';
+        // Obtener grupo de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        grupoId = urlParams.get('grupo');
 
+        if (!grupoId) {
+            alert('No se especificó un grupo');
+            window.location.href = '/';
+        }
+
+        // Cargar datos al iniciar
+        window.addEventListener('DOMContentLoaded', async () => {
+            await cargarInsignias();
+            await cargarAlumnos();
+        });
+
+        // Cargar insignias de niveles
+        async function cargarInsignias() {
             try {
-                const response = await fetch(`${API_URL}/insignias`);
+                const response = await fetch(`${API_URL}/insignias/activas`);
                 const data = await response.json();
 
                 if (data.success) {
-                    insigniasData = data.data;
-                    renderizarInsignias();
-                    actualizarEstadisticas();
+                    // Filtrar solo las insignias con nivel (las 6 de niveles)
+                    insigniasDisponibles = data.data
+                        .filter(i => i.nivel !== null)
+                        .sort((a, b) => a.nivel - b.nivel);
                 }
             } catch (error) {
                 console.error('Error al cargar insignias:', error);
-                alert('Error al cargar las insignias');
-            } finally {
-                document.getElementById('loading').style.display = 'none';
             }
         }
 
-        // Renderizar insignias
-        function renderizarInsignias() {
-            const container = document.getElementById('insignias-container');
-            const emptyState = document.getElementById('empty-state');
+        // Cargar alumnos del grupo
+        async function cargarAlumnos() {
+            try {
+                const response = await fetch(`${API_URL}/grupos/${grupoId}/alumnos`);
+                const data = await response.json();
 
-            if (insigniasData.length === 0) {
-                container.style.display = 'none';
-                emptyState.style.display = 'block';
-                return;
+                if (data.success) {
+                    alumnos = data.data;
+                    document.getElementById('grupo-nombre').textContent = data.grupo;
+                    mostrarAlumnos();
+                    actualizarEstadisticas();
+                }
+
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error al cargar alumnos:', error);
+                document.getElementById('loading').innerHTML = '<p>Error al cargar alumnos</p>';
             }
+        }
 
-            container.style.display = 'grid';
-            emptyState.style.display = 'none';
+        // Mostrar lista de alumnos
+        function mostrarAlumnos() {
+            const container = document.getElementById('alumnos-container');
 
-            container.innerHTML = insigniasData.map(insignia => `
-                <div class="insignia-card">
-                    <div class="insignia-icon">${insignia.icono}</div>
-                    <div class="insignia-nombre">${insignia.nombre}</div>
-                    <div class="insignia-descripcion">${insignia.descripcion}</div>
-                    <div class="insignia-badges">
-                        <span class="badge badge-categoria">${insignia.categoria}</span>
-                        <span class="badge badge-rareza-${insignia.rareza}">${insignia.rareza}</span>
-                        ${insignia.activa ? '<span class="badge" style="background: #10b981; color: white;">ACTIVA</span>' : '<span class="badge" style="background: #6b7280; color: white;">INACTIVA</span>'}
+            container.innerHTML = alumnos.map(alumno => {
+                const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alumno.nombreCompleto)}`;
+
+                // Obtener la insignia de nivel (la que tiene nivel !== null)
+                const insigniaNivel = alumno.insignias && alumno.insignias.length > 0
+                    ? alumno.insignias.find(i => i.insigniaId && i.insigniaId.nivel !== null)
+                    : null;
+
+                const insigniaHTML = insigniaNivel && insigniaNivel.insigniaId
+                    ? `<div class="alumno-insignia">
+                        <img src="${insigniaNivel.insigniaId.imagen}" alt="${insigniaNivel.insigniaId.nombre}" title="${insigniaNivel.insigniaId.nombre}">
+                       </div>`
+                    : `<div class="sin-insignia">-</div>`;
+
+                return `
+                    <div class="alumno-item" onclick="abrirModalAsignar('${alumno._id}')">
+                        <div class="alumno-avatar">
+                            <img src="${avatarUrl}" alt="${alumno.nombreCompleto}">
+                        </div>
+                        <div class="alumno-info">
+                            <div class="alumno-nombre">${alumno.nombreCompleto}</div>
+                            <div class="alumno-xp">⚡ ${alumno.xp} XP</div>
+                        </div>
+                        ${insigniaHTML}
                     </div>
-                    <div class="insignia-actions">
-                        <button class="btn-icon btn-assign" onclick="abrirModalAsignar('${insignia._id}')">🎖️ Asignar</button>
-                        <button class="btn-icon btn-edit" onclick="editarInsignia('${insignia._id}')">✏️</button>
-                        <button class="btn-icon btn-delete" onclick="eliminarInsignia('${insignia._id}', '${insignia.nombre}')">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Actualizar estadísticas
         function actualizarEstadisticas() {
-            document.getElementById('total-insignias').textContent = insigniasData.length;
-            document.getElementById('insignias-activas').textContent = insigniasData.filter(i => i.activa).length;
-            document.getElementById('insignias-legendarias').textContent = insigniasData.filter(i => i.rareza === 'legendaria').length;
+            const totalAlumnos = alumnos.length;
+            const conInsignia = alumnos.filter(a =>
+                a.insignias && a.insignias.some(i => i.insigniaId && i.insigniaId.nivel !== null)
+            ).length;
+            const sinInsignia = totalAlumnos - conInsignia;
+
+            document.getElementById('total-alumnos').textContent = totalAlumnos;
+            document.getElementById('con-insignia').textContent = conInsignia;
+            document.getElementById('sin-insignia').textContent = sinInsignia;
         }
 
-        // Abrir modal crear
-        function abrirModalCrear() {
-            document.getElementById('modal-titulo').textContent = '➕ Crear Nueva Insignia';
-            document.getElementById('form-insignia').reset();
-            document.getElementById('insignia-id').value = '';
-            document.getElementById('insignia-icono').value = '🏆';
-            document.getElementById('insignia-color').value = '#FFD700';
-            document.getElementById('color-preview').style.background = '#FFD700';
-            document.getElementById('modal-insignia').style.display = 'flex';
-        }
+        // Abrir modal para asignar insignia
+        function abrirModalAsignar(alumnoId) {
+            alumnoSeleccionado = alumnos.find(a => a._id === alumnoId);
+            if (!alumnoSeleccionado) return;
 
-        // Editar insignia
-        function editarInsignia(id) {
-            const insignia = insigniasData.find(i => i._id === id);
-            if (!insignia) return;
+            document.getElementById('modal-alumno-nombre').textContent = alumnoSeleccionado.nombreCompleto;
 
-            document.getElementById('modal-titulo').textContent = '✏️ Editar Insignia';
-            document.getElementById('insignia-id').value = insignia._id;
-            document.getElementById('insignia-nombre').value = insignia.nombre;
-            document.getElementById('insignia-descripcion').value = insignia.descripcion;
-            document.getElementById('insignia-icono').value = insignia.icono;
-            document.getElementById('insignia-color').value = insignia.color;
-            document.getElementById('color-preview').style.background = insignia.color;
-            document.getElementById('insignia-categoria').value = insignia.categoria;
-            document.getElementById('insignia-rareza').value = insignia.rareza;
-            document.getElementById('modal-insignia').style.display = 'flex';
-        }
+            // Obtener insignia actual del alumno
+            const insigniaActual = alumnoSeleccionado.insignias && alumnoSeleccionado.insignias.length > 0
+                ? alumnoSeleccionado.insignias.find(i => i.insigniaId && i.insigniaId.nivel !== null)
+                : null;
 
-        // Guardar insignia
-        async function guardarInsignia(event) {
-            event.preventDefault();
+            // Renderizar opciones de insignias
+            const opcionesHTML = insigniasDisponibles.map(insignia => {
+                const esActual = insigniaActual && insigniaActual.insigniaId._id === insignia._id;
 
-            const id = document.getElementById('insignia-id').value;
-            const datos = {
-                nombre: document.getElementById('insignia-nombre').value,
-                descripcion: document.getElementById('insignia-descripcion').value,
-                icono: document.getElementById('insignia-icono').value,
-                color: document.getElementById('insignia-color').value,
-                categoria: document.getElementById('insignia-categoria').value,
-                rareza: document.getElementById('insignia-rareza').value
-            };
+                return `
+                    <div class="insignia-opcion ${esActual ? 'selected' : ''}"
+                         onclick="seleccionarInsignia('${insignia._id}')"
+                         data-insignia-id="${insignia._id}">
+                        <div class="insignia-opcion-imagen">
+                            <img src="${insignia.imagen}" alt="${insignia.nombre}">
+                        </div>
+                        <div class="insignia-opcion-info">
+                            <div class="insignia-opcion-nivel">Nivel ${insignia.nivel}</div>
+                            <div class="insignia-opcion-nombre">${insignia.nombre}</div>
+                            <div class="insignia-opcion-privilegios">
+                                ${insignia.privilegios.length} privilegio${insignia.privilegios.length !== 1 ? 's' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
-            try {
-                const url = id ? `${API_URL}/insignias/${id}` : `${API_URL}/insignias`;
-                const method = id ? 'PUT' : 'POST';
+            document.getElementById('insignias-opciones').innerHTML = opcionesHTML;
 
-                const response = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datos)
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert(data.mensaje);
-                    cerrarModal();
-                    await cargarInsignias();
-                } else {
-                    alert(data.mensaje || 'Error al guardar la insignia');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al guardar la insignia');
+            // Configurar botones
+            if (insigniaActual) {
+                insigniaSeleccionada = insigniaActual.insigniaId._id;
+                document.getElementById('btn-quitar').disabled = false;
+            } else {
+                insigniaSeleccionada = null;
+                document.getElementById('btn-quitar').disabled = true;
             }
+
+            document.getElementById('btn-asignar').disabled = true;
+            document.getElementById('modal-asignar').classList.add('active');
         }
 
-        // Eliminar insignia
-        async function eliminarInsignia(id, nombre) {
-            if (!confirm(`¿Eliminar la insignia "${nombre}"?`)) return;
+        // Seleccionar una insignia
+        function seleccionarInsignia(insigniaId) {
+            insigniaSeleccionada = insigniaId;
 
-            try {
-                const response = await fetch(`${API_URL}/insignias/${id}`, {
-                    method: 'DELETE'
-                });
+            // Actualizar UI
+            document.querySelectorAll('.insignia-opcion').forEach(opcion => {
+                opcion.classList.remove('selected');
+            });
 
-                const data = await response.json();
-
-                if (data.success) {
-                    alert(data.mensaje);
-                    await cargarInsignias();
-                } else {
-                    alert(data.mensaje || 'Error al eliminar la insignia');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al eliminar la insignia');
+            const opcionSeleccionada = document.querySelector(`[data-insignia-id="${insigniaId}"]`);
+            if (opcionSeleccionada) {
+                opcionSeleccionada.classList.add('selected');
             }
+
+            document.getElementById('btn-asignar').disabled = false;
         }
 
-        // Cargar alumnos
-        async function cargarAlumnos() {
-            try {
-                const response = await fetch(`${API_URL}/alumnos`);
-                const data = await response.json();
-
-                if (data.success) {
-                    alumnosData = data.data;
-                }
-            } catch (error) {
-                console.error('Error al cargar alumnos:', error);
-            }
-        }
-
-        // Abrir modal asignar
-        async function abrirModalAsignar(insigniaId) {
-            insigniaSeleccionada = insigniasData.find(i => i._id === insigniaId);
-            if (!insigniaSeleccionada) return;
-
-            document.getElementById('asignar-info').innerHTML = `
-                <div style="font-size: 3rem;">${insigniaSeleccionada.icono}</div>
-                <div style="font-size: 1.2rem; font-weight: 700; margin-top: 10px;">${insigniaSeleccionada.nombre}</div>
-                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 5px;">${insigniaSeleccionada.descripcion}</div>
-            `;
-
-            // Poblar select de alumnos
-            const select = document.getElementById('select-alumno');
-            select.innerHTML = '<option value="">-- Seleccionar alumno --</option>' +
-                alumnosData.map(alumno => `
-                    <option value="${alumno._id}">${alumno.nombre} ${alumno.apellidos} (${alumno.grupo?.nombre || 'Sin grupo'})</option>
-                `).join('');
-
-            document.getElementById('modal-asignar').style.display = 'flex';
-        }
-
-        // Confirmar asignar insignia
-        async function confirmarAsignarInsignia() {
-            const alumnoId = document.getElementById('select-alumno').value;
-
-            if (!alumnoId) {
-                alert('Por favor selecciona un alumno');
-                return;
-            }
+        // Asignar insignia al alumno
+        async function asignarInsignia() {
+            if (!alumnoSeleccionado || !insigniaSeleccionada) return;
 
             try {
                 const response = await fetch(`${API_URL}/insignias/asignar`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
-                        alumnoId: alumnoId,
-                        insigniaId: insigniaSeleccionada._id
+                        alumnoId: alumnoSeleccionado._id,
+                        insigniaId: insigniaSeleccionada
                     })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    alert(data.mensaje);
-                    cerrarModalAsignar();
+                    alert(`✅ Insignia asignada a ${alumnoSeleccionado.nombreCompleto}`);
+                    cerrarModal();
+                    await cargarAlumnos();
                 } else {
-                    alert(data.mensaje || 'Error al asignar insignia');
+                    alert(`❌ Error: ${data.mensaje}`);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error al asignar la insignia');
+                console.error('Error al asignar insignia:', error);
+                alert('❌ Error al asignar insignia');
             }
         }
 
-        // Cerrar modales
-        function cerrarModal() {
-            document.getElementById('modal-insignia').style.display = 'none';
+        // Quitar insignia del alumno
+        async function quitarInsignia() {
+            if (!alumnoSeleccionado) return;
+
+            // Obtener la insignia de nivel actual
+            const insigniaActual = alumnoSeleccionado.insignias.find(i =>
+                i.insigniaId && i.insigniaId.nivel !== null
+            );
+
+            if (!insigniaActual) {
+                alert('El alumno no tiene insignia de nivel');
+                return;
+            }
+
+            if (!confirm(`¿Quitar la insignia de ${alumnoSeleccionado.nombreCompleto}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/insignias/quitar`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        alumnoId: alumnoSeleccionado._id,
+                        insigniaId: insigniaActual.insigniaId._id
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`✅ Insignia removida de ${alumnoSeleccionado.nombreCompleto}`);
+                    cerrarModal();
+                    await cargarAlumnos();
+                } else {
+                    alert(`❌ Error: ${data.mensaje}`);
+                }
+            } catch (error) {
+                console.error('Error al quitar insignia:', error);
+                alert('❌ Error al quitar insignia');
+            }
         }
 
-        function cerrarModalAsignar() {
-            document.getElementById('modal-asignar').style.display = 'none';
+        // Cerrar modal
+        function cerrarModal() {
+            document.getElementById('modal-asignar').classList.remove('active');
+            alumnoSeleccionado = null;
             insigniaSeleccionada = null;
         }
 
-        // Preview de color
-        document.getElementById('insignia-color').addEventListener('input', (e) => {
-            document.getElementById('color-preview').style.background = e.target.value;
-        });
-
-        // Inicializar
-        async function inicializar() {
-            await cargarAlumnos();
-            await cargarInsignias();
+        // Volver al dashboard
+        function volverDashboard() {
+            window.location.href = `/dashboard.html?grupo=${grupoId}`;
         }
-
-        inicializar();
     </script>
 </body>
 </html>

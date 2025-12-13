@@ -32,12 +32,33 @@ const insigniaSchema = new mongoose.Schema({
     maxlength: [10, 'El icono no puede exceder 10 caracteres']
   },
 
+  // Imagen de la insignia (ruta al archivo)
+  imagen: {
+    type: String,
+    trim: true,
+    default: null
+  },
+
   // Color de la insignia (hex code)
   color: {
     type: String,
     default: '#FFD700', // Dorado por defecto
     match: [/^#[0-9A-F]{6}$/i, 'El color debe ser un código hexadecimal válido']
   },
+
+  // Nivel de la insignia (1-6, donde 1 es el más alto)
+  nivel: {
+    type: Number,
+    min: [1, 'El nivel mínimo es 1'],
+    max: [6, 'El nivel máximo es 6'],
+    default: null
+  },
+
+  // Privilegios asociados a esta insignia
+  privilegios: [{
+    type: String,
+    trim: true
+  }],
 
   // Categoría de la insignia
   categoria: {
