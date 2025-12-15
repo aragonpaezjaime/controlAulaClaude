@@ -658,13 +658,26 @@
                     tr.appendChild(td);
                 });
 
-                // Columnas de resumen
-                tr.innerHTML += `
-                    <td class="resumen-col">${alumno.resumen.presente}</td>
-                    <td class="resumen-col">${alumno.resumen.ausente}</td>
-                    <td class="resumen-col">${alumno.resumen.retardo}</td>
-                    <td class="resumen-col">${alumno.resumen.justificado}</td>
-                `;
+                // Columnas de resumen - USAR appendChild EN VEZ DE innerHTML +=
+                const tdPresente = document.createElement('td');
+                tdPresente.className = 'resumen-col';
+                tdPresente.textContent = alumno.resumen.presente;
+                tr.appendChild(tdPresente);
+
+                const tdAusente = document.createElement('td');
+                tdAusente.className = 'resumen-col';
+                tdAusente.textContent = alumno.resumen.ausente;
+                tr.appendChild(tdAusente);
+
+                const tdRetardo = document.createElement('td');
+                tdRetardo.className = 'resumen-col';
+                tdRetardo.textContent = alumno.resumen.retardo;
+                tr.appendChild(tdRetardo);
+
+                const tdJustificado = document.createElement('td');
+                tdJustificado.className = 'resumen-col';
+                tdJustificado.textContent = alumno.resumen.justificado;
+                tr.appendChild(tdJustificado);
 
                 body.appendChild(tr);
             });
