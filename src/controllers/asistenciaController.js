@@ -275,11 +275,15 @@ const obtenerTablaAsistencias = async (req, res) => {
 
       fechas.forEach((fecha) => {
         // Buscar TODAS las asistencias del alumno en esa fecha (puede haber múltiples)
-        const asistenciasDia = asistencias.filter(
-          (a) =>
+        // Comparar por fecha ISO en vez de timestamp para evitar problemas de zona horaria
+        const fechaISO = fecha.toISOString().split("T")[0];
+        const asistenciasDia = asistencias.filter((a) => {
+          const asistenciaFechaISO = new Date(a.fecha).toISOString().split("T")[0];
+          return (
             a.alumno.toString() === alumno._id.toString() &&
-            new Date(a.fecha).getTime() === fecha.getTime()
-        );
+            asistenciaFechaISO === fechaISO
+          );
+        });
 
         // Si hay múltiples asistencias en el día, incluir todas con su hora
         if (asistenciasDia.length > 0) {
