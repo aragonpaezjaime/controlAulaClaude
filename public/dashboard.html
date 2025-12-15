@@ -471,9 +471,16 @@
                             <div class="stat-box" onclick="verInsignias()" title="Ver sistema de insignias y privilegios" style="cursor: pointer; background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15)); border-color: rgba(251, 191, 36, 0.4);">
                                 <div class="stat-label">🏅 Insignia</div>
                                 <div class="stat-value level-value">
-                                    ${alumno.insignias && alumno.insignias.length > 0 && alumno.insignias[0].insigniaId ?
-                                        `<img src="${alumno.insignias[0].insigniaId.imagen}" alt="${alumno.insignias[0].insigniaId.nombre}" class="insignia-image" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.5));">` :
-                                        '-'}
+                                    ${(() => {
+                                        // Filtrar por insignia de nivel (nivel !== null)
+                                        const insigniaNivel = alumno.insignias && alumno.insignias.length > 0
+                                            ? alumno.insignias.find(i => i.insigniaId && i.insigniaId.nivel !== null)
+                                            : null;
+
+                                        return insigniaNivel && insigniaNivel.insigniaId
+                                            ? `<img src="${insigniaNivel.insigniaId.imagen}" alt="${insigniaNivel.insigniaId.nombre}" class="insignia-image" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.5));" title="${insigniaNivel.insigniaId.nombre}">`
+                                            : '-';
+                                    })()}
                                 </div>
                             </div>
                             <div class="stat-box xp-box" onclick="abrirModalAjusteXP('${alumno._id}', '${alumno.nombreCompleto.replace(/'/g, "\\'")}', ${alumno.xp}, ${alumno.salud})" title="Click para ajustar XP/HP">
