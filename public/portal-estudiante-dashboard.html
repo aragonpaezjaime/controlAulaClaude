@@ -6,6 +6,8 @@
     <title>Portal del Estudiante - Dashboard</title>
     <link rel="icon" type="image/svg+xml" href="/images/logo-escuela.svg">
     <link rel="stylesheet" href="/css/styles.css">
+    <!-- Chart.js para gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
@@ -302,6 +304,121 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Sección de Gráficas de Progreso */
+        .progreso-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .progreso-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .progreso-header h2 {
+            margin: 0;
+            color: #1f2937;
+            font-size: 28px;
+        }
+
+        .periodo-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .graficas-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .grafica-container {
+            background: #f9fafb;
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .grafica-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .grafica-canvas-wrapper {
+            position: relative;
+            height: 250px;
+        }
+
+        .estadisticas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .estadistica-card {
+            background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .estadistica-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .estadistica-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .estadistica-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .estadistica-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .estadistica-subtext {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+
+        .tendencia-positiva { color: #10b981; }
+        .tendencia-negativa { color: #ef4444; }
+        .tendencia-neutral { color: #6b7280; }
+
         /* Responsive */
         @media (max-width: 768px) {
             .dashboard-container {
@@ -384,6 +501,47 @@
             </div>
         </div>
 
+        <!-- Sección de Gráficas de Progreso -->
+        <div class="progreso-section" id="progresoSection" style="display: none;">
+            <div class="progreso-header">
+                <h2>📈 Mi Progreso del Trimestre</h2>
+                <div class="periodo-badge">
+                    <span>📅</span>
+                    <span id="periodoTexto">Últimos 90 días</span>
+                </div>
+            </div>
+
+            <!-- Gráficas de XP y HP -->
+            <div class="graficas-grid">
+                <!-- Gráfica de XP -->
+                <div class="grafica-container">
+                    <div class="grafica-title">
+                        <span>⚡</span>
+                        <span>Experiencia (XP)</span>
+                    </div>
+                    <div class="grafica-canvas-wrapper">
+                        <canvas id="graficaXP"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfica de HP -->
+                <div class="grafica-container">
+                    <div class="grafica-title">
+                        <span>❤️</span>
+                        <span>Salud (HP)</span>
+                    </div>
+                    <div class="grafica-canvas-wrapper">
+                        <canvas id="graficaHP"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas del Trimestre -->
+            <div class="estadisticas-grid" id="estadisticasGrid">
+                <!-- Las estadísticas se cargarán dinámicamente -->
+            </div>
+        </div>
+
         <!-- Sección de Ranking -->
         <div class="ranking-section">
             <div class="ranking-header">
@@ -437,6 +595,9 @@
 
             // Mostrar tarjeta personal
             mostrarTarjetaPersonal();
+
+            // Cargar gráficas de progreso
+            await cargarGraficasProgreso();
 
             // Cargar ranking
             await cargarRanking();
@@ -565,6 +726,304 @@
                     }
                 }, 500);
             }
+        }
+
+        // ============================================
+        // GRÁFICAS DE PROGRESO
+        // ============================================
+
+        let graficaXPInstance = null;
+        let graficaHPInstance = null;
+
+        // Cargar gráficas de progreso
+        async function cargarGraficasProgreso() {
+            try {
+                const response = await fetch(`${API_URL}/progreso/estudiante/${sesion.claveZipGrade}/completo?dias=90`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // Mostrar sección de progreso
+                    document.getElementById('progresoSection').style.display = 'block';
+
+                    // Crear gráficas
+                    crearGraficaXP(data.data.xp);
+                    crearGraficaHP(data.data.hp);
+
+                    // Mostrar estadísticas
+                    mostrarEstadisticas(data.data.estadisticas);
+                } else {
+                    console.warn('No se pudieron cargar las gráficas de progreso');
+                }
+            } catch (error) {
+                console.error('Error al cargar gráficas:', error);
+                // No mostrar la sección si hay error
+            }
+        }
+
+        // Crear gráfica de XP
+        function crearGraficaXP(datosXP) {
+            const ctx = document.getElementById('graficaXP').getContext('2d');
+
+            // Destruir gráfica anterior si existe
+            if (graficaXPInstance) {
+                graficaXPInstance.destroy();
+            }
+
+            // Extraer fechas y valores
+            const fechas = datosXP.map(d => {
+                const fecha = new Date(d.fecha);
+                return `${fecha.getDate()}/${fecha.getMonth() + 1}`;
+            });
+            const valores = datosXP.map(d => d.xp);
+
+            // Crear gradiente morado
+            const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.8)');
+            gradient.addColorStop(1, 'rgba(118, 75, 162, 0.2)');
+
+            graficaXPInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: fechas,
+                    datasets: [{
+                        label: 'XP',
+                        data: valores,
+                        borderColor: '#667eea',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: function(context) {
+                                    return `XP: ${context.parsed.y.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Crear gráfica de HP
+        function crearGraficaHP(datosHP) {
+            const ctx = document.getElementById('graficaHP').getContext('2d');
+
+            // Destruir gráfica anterior si existe
+            if (graficaHPInstance) {
+                graficaHPInstance.destroy();
+            }
+
+            // Extraer fechas y valores
+            const fechas = datosHP.map(d => {
+                const fecha = new Date(d.fecha);
+                return `${fecha.getDate()}/${fecha.getMonth() + 1}`;
+            });
+            const valores = datosHP.map(d => d.hp);
+
+            // Determinar color según HP promedio
+            const hpPromedio = valores.reduce((a, b) => a + b, 0) / valores.length;
+            let colorLinea, colorGradiente1, colorGradiente2;
+
+            if (hpPromedio > 70) {
+                colorLinea = '#10b981';
+                colorGradiente1 = 'rgba(16, 185, 129, 0.6)';
+                colorGradiente2 = 'rgba(16, 185, 129, 0.1)';
+            } else if (hpPromedio > 40) {
+                colorLinea = '#f59e0b';
+                colorGradiente1 = 'rgba(245, 158, 11, 0.6)';
+                colorGradiente2 = 'rgba(245, 158, 11, 0.1)';
+            } else {
+                colorLinea = '#ef4444';
+                colorGradiente1 = 'rgba(239, 68, 68, 0.6)';
+                colorGradiente2 = 'rgba(239, 68, 68, 0.1)';
+            }
+
+            // Crear gradiente
+            const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+            gradient.addColorStop(0, colorGradiente1);
+            gradient.addColorStop(1, colorGradiente2);
+
+            graficaHPInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: fechas,
+                    datasets: [{
+                        label: 'HP',
+                        data: valores,
+                        borderColor: colorLinea,
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: colorLinea,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: function(context) {
+                                    return `HP: ${context.parsed.y}/100`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value;
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Mostrar estadísticas del trimestre
+        function mostrarEstadisticas(stats) {
+            const grid = document.getElementById('estadisticasGrid');
+
+            // Determinar tendencia
+            let tendenciaIcon = '';
+            let tendenciaClass = '';
+            let tendenciaTexto = '';
+
+            if (stats.tendencia === 'subiendo') {
+                tendenciaIcon = '📈';
+                tendenciaClass = 'tendencia-positiva';
+                tendenciaTexto = 'Subiendo';
+            } else if (stats.tendencia === 'bajando') {
+                tendenciaIcon = '📉';
+                tendenciaClass = 'tendencia-negativa';
+                tendenciaTexto = 'Bajando';
+            } else {
+                tendenciaIcon = '➡️';
+                tendenciaClass = 'tendencia-neutral';
+                tendenciaTexto = 'Estable';
+            }
+
+            // Cambio en ranking
+            let rankingIcon = '🎯';
+            let rankingClass = 'tendencia-neutral';
+            let rankingTexto = 'Sin cambio';
+
+            if (stats.cambioRanking > 0) {
+                rankingIcon = '🚀';
+                rankingClass = 'tendencia-positiva';
+                rankingTexto = `Subiste ${stats.cambioRanking}`;
+            } else if (stats.cambioRanking < 0) {
+                rankingIcon = '📉';
+                rankingClass = 'tendencia-negativa';
+                rankingTexto = `Bajaste ${Math.abs(stats.cambioRanking)}`;
+            }
+
+            grid.innerHTML = `
+                <!-- Racha -->
+                <div class="estadistica-card">
+                    <div class="estadistica-icon">🔥</div>
+                    <div class="estadistica-label">Mejor Racha</div>
+                    <div class="estadistica-value">${stats.mejorRacha}</div>
+                    <div class="estadistica-subtext">días consecutivos</div>
+                </div>
+
+                <!-- Tendencia -->
+                <div class="estadistica-card">
+                    <div class="estadistica-icon">${tendenciaIcon}</div>
+                    <div class="estadistica-label">Tendencia</div>
+                    <div class="estadistica-value ${tendenciaClass}">${tendenciaTexto}</div>
+                    <div class="estadistica-subtext">del periodo</div>
+                </div>
+
+                <!-- XP Ganado -->
+                <div class="estadistica-card">
+                    <div class="estadistica-icon">⚡</div>
+                    <div class="estadistica-label">XP Ganado</div>
+                    <div class="estadistica-value tendencia-positiva">+${stats.xpGanado.toLocaleString()}</div>
+                    <div class="estadistica-subtext">en el trimestre</div>
+                </div>
+
+                <!-- Ranking -->
+                <div class="estadistica-card">
+                    <div class="estadistica-icon">${rankingIcon}</div>
+                    <div class="estadistica-label">Ranking</div>
+                    <div class="estadistica-value ${rankingClass}">${rankingTexto}</div>
+                    <div class="estadistica-subtext">#${stats.posicionInicial || '-'} → #${stats.posicionActual || '-'}</div>
+                </div>
+            `;
         }
 
         // Cerrar sesión
