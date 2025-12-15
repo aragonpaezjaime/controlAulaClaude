@@ -1,27 +1,21 @@
 /**
- * Script para poblar snapshots históricos
+ * Script OPTIMIZADO para poblar snapshots históricos
  *
- * Este script genera snapshots diarios para los últimos 90 días
- * basándose en el historial de ajustes de XP/HP de cada alumno.
+ * Genera snapshots diarios para los últimos 90 días de forma eficiente
+ * procesando por DÍA en vez de por alumno (mucho más rápido)
  *
- * Uso:
- *   node scripts/poblarSnapshotsHistoricos.js
- *
- * IMPORTANTE: Solo ejecutar una vez al inicio del sistema de gráficas
- * Después usar guardarSnapshotsDiarios.js para mantenimiento diario
+ * Uso: node scripts/poblarSnapshotsHistoricos.js
  */
 
 require('dotenv').config();
 const mongoose = require('mongoose');
 const Alumno = require('../src/models/Alumno');
+const Grupo = require('../src/models/Grupo');
 const Ajuste = require('../src/models/Ajuste');
 const ProgresoSnapshot = require('../src/models/ProgresoSnapshot');
 
-// Configuración
-const DIAS_HISTORICOS = 90; // 3 meses
-const BATCH_SIZE = 50; // Procesar alumnos en lotes
+const DIAS_HISTORICOS = 90;
 
-// Colores para consola
 const colores = {
   reset: '\x1b[0m',
   verde: '\x1b[32m',
@@ -35,128 +29,118 @@ function log(mensaje, color = 'reset') {
   console.log(`${colores[color]}${mensaje}${colores.reset}`);
 }
 
-// Conectar a MongoDB
 async function conectarDB() {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
     log('✅ Conectado a MongoDB', 'verde');
   } catch (error) {
-    log(`❌ Error al conectar a MongoDB: ${error.message}`, 'rojo');
+    log(`❌ Error: ${error.message}`, 'rojo');
     process.exit(1);
   }
 }
 
-// Calcular XP/HP en una fecha específica basándose en ajustes
-async function calcularEstadoEnFecha(alumno, fecha) {
-  // Obtener todos los ajustes HASTA esa fecha
-  const ajustesHastaFecha = await Ajuste.find({
-    alumno: alumno._id,
+// OPTIMIZADO: Calcular estados de TODOS los alumnos en una fecha
+async function calcularEstadosEnFecha(alumnos, fecha) {
+  const alumnoIds = alumnos.map(a => a._id);
+
+  // Obtener TODOS los ajustes hasta esa fecha en UNA query
+  const ajustes = await Ajuste.find({
+    alumno: { $in: alumnoIds },
     fecha: { $lte: fecha }
-  }).sort({ fecha: 1 }).lean();
+  }).sort({ fecha: 1, createdAt: 1 }).lean();
 
-  // Reconstruir XP y HP acumulativo
-  let xpAcumulado = 0;
-  let hpAcumulado = 100; // Todos inician con 100 HP
-
-  for (const ajuste of ajustesHastaFecha) {
-    if (ajuste.tipo === 'xp') {
-      xpAcumulado += ajuste.cantidad;
-    } else if (ajuste.tipo === 'hp') {
-      hpAcumulado += ajuste.cantidad;
-    }
-  }
-
-  // Asegurar límites
-  xpAcumulado = Math.max(0, xpAcumulado);
-  hpAcumulado = Math.max(0, Math.min(100, hpAcumulado));
-
-  return {
-    xp: xpAcumulado,
-    hp: hpAcumulado
-  };
-}
-
-// Calcular posición en ranking para una fecha
-async function calcularRanking(grupoId, fecha) {
-  // Obtener todos los alumnos del grupo
-  const alumnosGrupo = await Alumno.find({ grupo: grupoId, activo: true }).lean();
-
-  // Calcular XP de cada alumno en esa fecha
-  const alumnosConXP = [];
-
-  for (const alumno of alumnosGrupo) {
-    const estado = await calcularEstadoEnFecha(alumno, fecha);
-    alumnosConXP.push({
-      alumnoId: alumno._id,
-      xp: estado.xp,
-      hp: estado.hp
-    });
-  }
-
-  // Ordenar por XP descendente
-  alumnosConXP.sort((a, b) => b.xp - a.xp);
-
-  // Crear mapa de posiciones
-  const posiciones = {};
-  alumnosConXP.forEach((alumno, index) => {
-    posiciones[alumno.alumnoId.toString()] = index + 1;
+  // Agrupar ajustes por alumno
+  const ajustesPorAlumno = {};
+  alumnoIds.forEach(id => {
+    ajustesPorAlumno[id.toString()] = [];
   });
 
-  // Calcular promedios
-  const promedioXP = alumnosConXP.reduce((sum, a) => sum + a.xp, 0) / alumnosConXP.length;
-  const promedioHP = alumnosConXP.reduce((sum, a) => sum + a.hp, 0) / alumnosConXP.length;
+  ajustes.forEach(ajuste => {
+    const key = ajuste.alumno.toString();
+    if (ajustesPorAlumno[key]) {
+      ajustesPorAlumno[key].push(ajuste);
+    }
+  });
 
-  return {
-    posiciones,
-    promedioXP: Math.round(promedioXP),
-    promedioHP: Math.round(promedioHP)
-  };
+  // Calcular XP/HP acumulativo para cada alumno
+  const estados = {};
+
+  alumnos.forEach(alumno => {
+    const key = alumno._id.toString();
+    let xp = 0;
+    let hp = 100;
+
+    ajustesPorAlumno[key].forEach(ajuste => {
+      if (ajuste.tipo === 'xp') {
+        xp += ajuste.cantidad;
+      } else if (ajuste.tipo === 'hp') {
+        hp += ajuste.cantidad;
+      }
+    });
+
+    xp = Math.max(0, xp);
+    hp = Math.max(0, Math.min(100, hp));
+
+    estados[key] = { xp, hp };
+  });
+
+  return estados;
 }
 
-// Generar snapshots para un alumno
-async function generarSnapshotsAlumno(alumno, fechaInicio, fechaFin) {
-  const snapshots = [];
-  const fechaActual = new Date(fechaInicio);
+// OPTIMIZADO: Calcular ranking de TODOS los grupos en una fecha
+async function calcularRankingsPorGrupo(alumnos, estados) {
+  const alumnosPorGrupo = {};
 
-  log(`  📸 Generando snapshots para: ${alumno.nombreCompleto}`, 'cyan');
+  // Agrupar alumnos por grupo
+  alumnos.forEach(alumno => {
+    const grupoId = alumno.grupo._id ? alumno.grupo._id.toString() : alumno.grupo.toString();
+    if (!alumnosPorGrupo[grupoId]) {
+      alumnosPorGrupo[grupoId] = [];
+    }
+    alumnosPorGrupo[grupoId].push(alumno);
+  });
 
-  while (fechaActual <= fechaFin) {
-    // Calcular estado del alumno en esta fecha
-    const estado = await calcularEstadoEnFecha(alumno, fechaActual);
+  const rankings = {};
 
-    // Calcular ranking del grupo en esta fecha
-    const ranking = await calcularRanking(alumno.grupo, fechaActual);
+  // Calcular ranking para cada grupo
+  Object.entries(alumnosPorGrupo).forEach(([grupoId, alumnosGrupo]) => {
+    // Obtener XP de cada alumno
+    const alumnosConXP = alumnosGrupo.map(alumno => ({
+      alumnoId: alumno._id.toString(),
+      xp: estados[alumno._id.toString()].xp,
+      hp: estados[alumno._id.toString()].hp
+    }));
 
-    // Crear snapshot
-    const snapshot = {
-      alumno: alumno._id,
-      grupo: alumno.grupo,
-      fecha: new Date(fechaActual),
-      xp: estado.xp,
-      hp: estado.hp,
-      posicionRanking: ranking.posiciones[alumno._id.toString()] || null,
-      promedioGrupoXP: ranking.promedioXP,
-      promedioGrupoHP: ranking.promedioHP
+    // Ordenar por XP descendente
+    alumnosConXP.sort((a, b) => b.xp - a.xp);
+
+    // Crear mapa de posiciones
+    const posiciones = {};
+    alumnosConXP.forEach((alumno, index) => {
+      posiciones[alumno.alumnoId] = index + 1;
+    });
+
+    // Calcular promedios
+    const sumaXP = alumnosConXP.reduce((sum, a) => sum + a.xp, 0);
+    const sumaHP = alumnosConXP.reduce((sum, a) => sum + a.hp, 0);
+
+    rankings[grupoId] = {
+      posiciones,
+      promedioXP: Math.round(sumaXP / alumnosConXP.length),
+      promedioHP: Math.round(sumaHP / alumnosConXP.length)
     };
+  });
 
-    snapshots.push(snapshot);
-
-    // Avanzar al siguiente día
-    fechaActual.setDate(fechaActual.getDate() + 1);
-  }
-
-  return snapshots;
+  return rankings;
 }
 
-// Función principal
 async function poblarSnapshots() {
   try {
     await conectarDB();
 
-    log('\n🚀 INICIANDO POBLACIÓN DE SNAPSHOTS HISTÓRICOS', 'azul');
+    log('\n🚀 POBLANDO SNAPSHOTS HISTÓRICOS (OPTIMIZADO)', 'azul');
     log(`📅 Periodo: Últimos ${DIAS_HISTORICOS} días\n`, 'azul');
 
-    // Calcular fechas
     const fechaFin = new Date();
     fechaFin.setHours(0, 0, 0, 0);
 
@@ -166,75 +150,88 @@ async function poblarSnapshots() {
     log(`📆 Desde: ${fechaInicio.toLocaleDateString()}`, 'amarillo');
     log(`📆 Hasta: ${fechaFin.toLocaleDateString()}\n`, 'amarillo');
 
-    // Limpiar snapshots existentes (opcional)
+    // Limpiar snapshots existentes
     log('🗑️  Limpiando snapshots existentes...', 'amarillo');
-    const snapshotsEliminados = await ProgresoSnapshot.deleteMany({});
-    log(`   Eliminados: ${snapshotsEliminados.deletedCount} snapshots\n`, 'verde');
+    await ProgresoSnapshot.deleteMany({});
+    log('   ✓ Limpiado\n', 'verde');
 
-    // Obtener todos los alumnos activos
-    const alumnos = await Alumno.find({ activo: true }).lean();
-    log(`👥 Total de alumnos activos: ${alumnos.length}\n`, 'verde');
+    // Obtener TODOS los alumnos activos con populate de grupo
+    const alumnos = await Alumno.find({ activo: true }).populate('grupo').lean();
+    log(`👥 Total alumnos: ${alumnos.length}\n`, 'verde');
 
     if (alumnos.length === 0) {
-      log('⚠️  No hay alumnos activos. Abortando.', 'amarillo');
+      log('⚠️  No hay alumnos. Abortando.', 'amarillo');
       await mongoose.connection.close();
       return;
     }
 
-    // Procesar alumnos en lotes
+    // PROCESAR POR DÍA (mucho más eficiente)
+    const fechaActual = new Date(fechaInicio);
     let totalSnapshots = 0;
-    let alumnosProcesados = 0;
+    let diaIndex = 0;
 
-    for (let i = 0; i < alumnos.length; i += BATCH_SIZE) {
-      const lote = alumnos.slice(i, i + BATCH_SIZE);
-      log(`📦 Procesando lote ${Math.floor(i / BATCH_SIZE) + 1} (${lote.length} alumnos)...`, 'cyan');
+    while (fechaActual <= fechaFin) {
+      diaIndex++;
+      const fechaStr = fechaActual.toLocaleDateString();
 
-      for (const alumno of lote) {
-        try {
-          // Generar snapshots para este alumno
-          const snapshots = await generarSnapshotsAlumno(alumno, fechaInicio, fechaFin);
+      log(`📅 Día ${diaIndex}/${DIAS_HISTORICOS + 1} - ${fechaStr}`, 'cyan');
 
-          // Guardar en la base de datos
-          if (snapshots.length > 0) {
-            await ProgresoSnapshot.insertMany(snapshots, { ordered: false });
-            totalSnapshots += snapshots.length;
-            alumnosProcesados++;
-            log(`     ✓ ${alumno.nombreCompleto}: ${snapshots.length} snapshots`, 'verde');
-          }
-        } catch (error) {
-          // Ignorar errores de duplicados (por si ya existen)
-          if (error.code === 11000) {
-            log(`     ⚠️ ${alumno.nombreCompleto}: Snapshots ya existen (omitiendo)`, 'amarillo');
-          } else {
-            log(`     ❌ Error en ${alumno.nombreCompleto}: ${error.message}`, 'rojo');
-          }
-        }
+      // Calcular estados de TODOS los alumnos en esta fecha (1 query)
+      const estados = await calcularEstadosEnFecha(alumnos, fechaActual);
+
+      // Calcular rankings de TODOS los grupos (1 vez por grupo)
+      const rankings = await calcularRankingsPorGrupo(alumnos, estados);
+
+      // Crear snapshots para todos los alumnos de este día
+      const snapshotsDia = alumnos.map(alumno => {
+        const alumnoId = alumno._id.toString();
+        const grupoId = alumno.grupo._id ? alumno.grupo._id.toString() : alumno.grupo.toString();
+        const estado = estados[alumnoId];
+        const ranking = rankings[grupoId];
+
+        return {
+          alumno: alumno._id,
+          grupo: alumno.grupo._id || alumno.grupo,
+          fecha: new Date(fechaActual),
+          xp: estado.xp,
+          hp: estado.hp,
+          posicionRanking: ranking.posiciones[alumnoId] || null,
+          promedioGrupoXP: ranking.promedioXP,
+          promedioGrupoHP: ranking.promedioHP
+        };
+      });
+
+      // Guardar todos los snapshots del día
+      try {
+        await ProgresoSnapshot.insertMany(snapshotsDia, { ordered: false });
+        totalSnapshots += snapshotsDia.length;
+        log(`   ✓ ${snapshotsDia.length} snapshots guardados\n`, 'verde');
+      } catch (error) {
+        log(`   ⚠️  Error al guardar: ${error.message}\n`, 'amarillo');
       }
 
-      log(''); // Línea en blanco entre lotes
+      // Avanzar al siguiente día
+      fechaActual.setDate(fechaActual.getDate() + 1);
     }
 
-    // Resumen final
-    log('\n✨ PROCESO COMPLETADO', 'verde');
+    // Resumen
+    log('✨ COMPLETADO', 'verde');
     log('═══════════════════════════════════════', 'verde');
-    log(`👥 Alumnos procesados: ${alumnosProcesados}/${alumnos.length}`, 'azul');
-    log(`📸 Total snapshots creados: ${totalSnapshots}`, 'azul');
-    log(`📅 Días por alumno: ${DIAS_HISTORICOS + 1}`, 'azul');
-    log(`💾 Base de datos actualizada correctamente\n`, 'verde');
+    log(`📸 Total snapshots: ${totalSnapshots}`, 'azul');
+    log(`📅 Días procesados: ${diaIndex}`, 'azul');
+    log(`💾 Base de datos actualizada\n`, 'verde');
 
-    // Cerrar conexión
     await mongoose.connection.close();
-    log('👋 Desconectado de MongoDB\n', 'verde');
+    log('👋 Desconectado\n', 'verde');
 
   } catch (error) {
-    log(`\n❌ ERROR FATAL: ${error.message}`, 'rojo');
+    log(`\n❌ ERROR: ${error.message}`, 'rojo');
     console.error(error);
     await mongoose.connection.close();
     process.exit(1);
   }
 }
 
-// Ejecutar script
 if (require.main === module) {
   poblarSnapshots();
 }
