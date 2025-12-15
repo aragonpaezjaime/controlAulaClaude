@@ -48,7 +48,8 @@ app.get('/', (req, res) => {
       backup: '/api/backup',
       importar: '/api/importar',
       insignias: '/api/insignias',
-      estudiante: '/api/estudiante'
+      estudiante: '/api/estudiante',
+      progreso: '/api/progreso'
     }
   });
 });
@@ -64,6 +65,7 @@ const backupRoutes = require('./routes/backupRoutes');
 const importarRoutes = require('./routes/importarRoutes');
 const insigniaRoutes = require('./routes/insigniaRoutes');
 const estudianteRoutes = require('./routes/estudianteRoutes');
+const progresoRoutes = require('./routes/progresoRoutes');
 
 // Montar las rutas en la aplicación
 app.use('/api/grupos', grupoRoutes);
@@ -76,6 +78,7 @@ app.use('/api/backup', backupRoutes);
 app.use('/api/importar', importarRoutes);
 app.use('/api/insignias', insigniaRoutes);
 app.use('/api/estudiante', estudianteRoutes);
+app.use('/api/progreso', progresoRoutes);
 
 // ============================================
 // MANEJO DE ERRORES
