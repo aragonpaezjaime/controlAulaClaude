@@ -1,6 +1,6 @@
 # 📍 RESUMEN COMPLETO DEL PROYECTO - SISTEMA DE CONTROL DE AULA
 **Fecha:** 14 de diciembre de 2025
-**Última actualización:** Fix de visualización de insignias en dashboard ✅
+**Última actualización:** Sistema de Gráficas de Progreso Completado ✅
 
 ---
 
@@ -17,6 +17,32 @@
 ---
 
 ## 🔧 ÚLTIMOS CAMBIOS (Sesión actual - 14 dic 2025)
+
+### ✨ NUEVO: Sistema de Gráficas de Progreso - COMPLETADO ✅
+**Nueva funcionalidad:** Gráficas visuales de XP/HP en portal de estudiantes
+
+**Implementación:**
+- 📊 Backend completo con 5 endpoints de API
+- 📈 Frontend con Chart.js (2 gráficas + 4 estadísticas)
+- 💾 24,934 snapshots históricos (90 días × 274 alumnos)
+- ⚡ Script optimizado 270x más rápido (~2 minutos)
+
+**Características:**
+- Gráfica de XP con gradiente morado
+- Gráfica de HP con colores dinámicos (verde/amarillo/rojo)
+- 4 mini-cards: Racha, Tendencia, XP Ganado, Cambio Ranking
+- Diseño gaming responsive
+
+**Commits:**
+- `4ec4a60` - Backend completo (modelo, controlador, rutas, scripts)
+- `4ed3ef3` - Optimización de script (270x más rápido)
+- `82acef3` - Documentación de Fase 1
+- `54ccac5` - Frontend completo (Chart.js, gráficas, estadísticas)
+- `0790700` - Fix crítico: claveZipGrade en sesión
+
+**Estado:** ✅ 100% Funcional en producción
+
+---
 
 ### FIX: Insignias no aparecían en Dashboard del Profesor ✅
 **Problema resuelto:** Imagen rota en tarjetas de alumnos con insignias asignadas
@@ -76,21 +102,28 @@
    - Insignia de nivel actual
    - Nombre preferido
 
-3. ✅ **Ranking del Grupo**
+3. ✅ **Gráficas de Progreso del Trimestre** ⭐ NUEVO
+   - Gráfica de XP (línea con gradiente morado)
+   - Gráfica de HP (área con color dinámico)
+   - Estadísticas: Racha, Tendencia, XP Ganado, Cambio Ranking
+   - Histórico de 90 días (3 meses)
+   - Visualización con Chart.js
+
+4. ✅ **Ranking del Grupo**
    - Lista completa ordenada por XP
    - Medallas top 3 (🥇🥈🥉)
    - Resaltado de posición personal
    - Scroll automático
    - Avatares y estadísticas
 
-4. ✅ **Historial de Ajustes**
+5. ✅ **Historial de Ajustes**
    - Timeline visual
    - Filtros por tipo y fecha
    - Estadísticas XP/HP ganado/perdido
    - Comentarios del profesor
    - Valores antes/después
 
-5. ✅ **Diseño Responsive**
+6. ✅ **Diseño Responsive**
    - Funciona en celular, tablet, PC
    - Gradientes morados distintivos
    - Animaciones smooth
@@ -441,6 +474,12 @@ Profesor Jaime
 **Solución:** Agregado filtro para buscar insignia de nivel (`nivel !== null`)
 **Commit:** `712eded`
 
+### 4. Gráficas de Progreso daban error 404 (14 dic 2025) ✅
+**Problema:** claveZipGrade no estaba en objeto de sesión, gráficas no cargaban
+**Solución:** Agregado claveZipGrade al objeto alumno en login
+**Commit:** `0790700`
+**Requiere:** Cerrar sesión y volver a entrar
+
 ---
 
 ## ✅ CHECKLIST COMPLETO DE VERIFICACIÓN
@@ -458,9 +497,37 @@ Profesor Jaime
 - [x] Documentación completa
 - [x] Código en GitHub actualizado
 - [x] Todas las URLs relativas funcionando ⭐ NUEVO
+- [x] Gráficas de progreso en portal estudiante ⭐ NUEVO
+- [x] Sistema de snapshots históricos funcionando ⭐ NUEVO
 - [ ] Dominio personalizado (pendiente decisión)
+- [ ] Automatización de snapshots diarios (manual por ahora)
 - [ ] Tutorial en video (opcional)
 - [ ] Capacitación estudiantes (próximamente)
+
+---
+
+## 🔧 MANTENIMIENTO DIARIO
+
+### ⚠️ **IMPORTANTE: Snapshots Diarios**
+
+Para mantener las gráficas de progreso actualizadas, debes ejecutar **cada noche** después de dar clases:
+
+```bash
+node scripts/guardarSnapshotsDiarios.js
+```
+
+**Qué hace este script:**
+- Guarda el estado actual de XP/HP de todos los alumnos
+- Actualiza las posiciones en el ranking
+- Calcula promedios del grupo
+- Genera datos para las gráficas del día
+
+**Frecuencia:** Diariamente (idealmente a las 23:59 hrs)
+
+**Tiempo de ejecución:** ~10-15 segundos
+
+**Automatización futura:**
+Este script se puede configurar como cron job en Render para que se ejecute automáticamente. Por ahora es manual.
 
 ---
 
@@ -491,6 +558,9 @@ Profesor Jaime
 7. **Transparencia total** con comentarios visibles
 8. **Deployment automático** funcionando perfectamente
 9. **Todos los bugs corregidos** rápidamente
+10. **Gráficas de progreso** implementadas (backend + frontend) ⭐ NUEVO
+11. **24,934 snapshots históricos** generados en 2 minutos ⭐ NUEVO
+12. **Script optimizado 270x** más rápido ⭐ NUEVO
 
 ---
 
