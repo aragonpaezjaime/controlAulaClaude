@@ -80,7 +80,7 @@ const registrarAsistenciaGrupo = async (req, res) => {
         registradas: resultado.length,
         grupo: grupo.obtenerNombreCompleto(),
         horaRegistro: new Date().toLocaleString("es-MX", {
-          timeZone: "America/Mexico_City",
+          timeZone: "America/Mazatlan",
           hour: "2-digit",
           minute: "2-digit",
         }),
@@ -295,7 +295,7 @@ const obtenerTablaAsistencias = async (req, res) => {
               hora: new Date(a.horaRegistro).toLocaleTimeString("es-MX", {
                 hour: "2-digit",
                 minute: "2-digit",
-                timeZone: "America/Mexico_City",
+                timeZone: "America/Mazatlan",
               }),
             }));
         } else {
