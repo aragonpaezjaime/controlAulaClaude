@@ -1,6 +1,6 @@
 # 📍 RESUMEN COMPLETO DEL PROYECTO - SISTEMA DE CONTROL DE AULA
 **Fecha:** 14 de diciembre de 2025
-**Última actualización:** Fix de gestión de insignias ✅
+**Última actualización:** Fix de visualización de insignias en dashboard ✅
 
 ---
 
@@ -17,6 +17,32 @@
 ---
 
 ## 🔧 ÚLTIMOS CAMBIOS (Sesión actual - 14 dic 2025)
+
+### FIX: Insignias no aparecían en Dashboard del Profesor ✅
+**Problema resuelto:** Imagen rota en tarjetas de alumnos con insignias asignadas
+
+**Caso reportado:**
+- Jared Eliomar Acosta Ramirez de 2A tenía insignia asignada
+- En el dashboard del profesor aparecía imagen rota
+- En gestión de insignias sí aparecía correctamente
+
+**Diagnóstico:**
+- `dashboard.html:474-476` solo tomaba la primera insignia (`alumno.insignias[0]`)
+- No filtraba por insignias de nivel (`nivel !== null`)
+- `gestion-insignias.html` sí tenía el filtro correcto implementado
+- Las insignias se guardan en un array y pueden ser de diferentes tipos
+
+**Solución implementada:**
+- ✅ Agregado filtro `alumno.insignias.find(i => i.insigniaId.nivel !== null)`
+- ✅ Ahora busca específicamente la insignia de nivel
+- ✅ Alineado con la lógica de `gestion-insignias.html`
+- ✅ Commit: `712eded` - "FIX: Insignias de nivel ahora aparecen correctamente en dashboard"
+- ✅ Desplegado automáticamente en Render
+
+**Archivos corregidos:**
+- `public/dashboard.html:474-483` - Filtro de insignia de nivel
+
+---
 
 ### FIX: Error en Gestión de Insignias ✅
 **Problema resuelto:** ERR_CONNECTION_REFUSED en gestion-insignias.html
@@ -409,6 +435,11 @@ Profesor Jaime
 **Problema:** `gestion-insignias.html` tenía localhost hardcodeado
 **Solución:** Cambiado a URL relativa `/api`
 **Commit:** `3a16874`
+
+### 3. Insignias no aparecían en Dashboard del Profesor (14 dic 2025) ✅
+**Problema:** Imagen rota en tarjetas de alumnos con insignias asignadas
+**Solución:** Agregado filtro para buscar insignia de nivel (`nivel !== null`)
+**Commit:** `712eded`
 
 ---
 
