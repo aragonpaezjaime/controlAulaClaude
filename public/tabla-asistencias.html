@@ -532,6 +532,16 @@
         function mostrarTabla(data) {
             const { fechas, data: alumnos } = data;
 
+            // DEBUG: Ver qué datos llegan
+            console.log('📊 DATOS RECIBIDOS DEL SERVIDOR:');
+            console.log('Fechas del header:', fechas);
+            console.log('Total alumnos:', alumnos.length);
+            if (alumnos.length > 0) {
+                console.log('Ejemplo de alumno:', alumnos[0]);
+                console.log('Asistencias del primer alumno:', alumnos[0].asistencias);
+                console.log('Keys de asistencias:', Object.keys(alumnos[0].asistencias || {}));
+            }
+
             // Construir header
             const header = document.getElementById('tabla-header');
             header.innerHTML = '<th>Alumno</th>';
@@ -582,6 +592,7 @@
                 // Columnas de asistencia por fecha
                 fechas.forEach(fecha => {
                     const asistenciasDia = alumno.asistencias[fecha];
+                    console.log(`👤 ${alumno.nombreCompleto} - Fecha: "${fecha}" - Datos:`, asistenciasDia);
                     const td = document.createElement('td');
 
                     if (asistenciasDia && asistenciasDia.length > 0) {
