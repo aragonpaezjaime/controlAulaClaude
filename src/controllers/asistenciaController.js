@@ -295,6 +295,7 @@ const obtenerTablaAsistencias = async (req, res) => {
               hora: new Date(a.horaRegistro).toLocaleTimeString("es-MX", {
                 hour: "2-digit",
                 minute: "2-digit",
+                timeZone: "America/Mexico_City",
               }),
             }));
         } else {
