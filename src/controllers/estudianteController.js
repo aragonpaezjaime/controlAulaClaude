@@ -80,6 +80,7 @@ exports.login = async (req, res) => {
         avatar: alumno.avatar,
         xp: alumno.xp,
         salud: alumno.salud,
+        claveZipGrade: alumno.claveZipGrade,
         grupo: {
           id: alumno.grupo._id,
           nombre: `${alumno.grupo.grado}${alumno.grupo.grupo}`,
@@ -152,6 +153,7 @@ exports.obtenerPerfil = async (req, res) => {
         avatar: alumno.avatar,
         xp: alumno.xp,
         salud: alumno.salud,
+        claveZipGrade: alumno.claveZipGrade,
         grupo: {
           id: alumno.grupo._id,
           nombre: `${alumno.grupo.grado}${alumno.grupo.grupo}`,
