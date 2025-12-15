@@ -539,7 +539,7 @@ const upsertAsistenciaGrupo = async (req, res) => {
         total: asistencias.length,
         grupo: grupo.obtenerNombreCompleto(),
         horaGuardado: horaRegistroActual.toLocaleString("es-MX", {
-          timeZone: "America/Mexico_City",
+          timeZone: "America/Mazatlan",
           hour: "2-digit",
           minute: "2-digit",
         }),
