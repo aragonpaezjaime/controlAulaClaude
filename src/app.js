@@ -1,6 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+
+// Crear carpeta uploads si no existe (necesaria para Multer)
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log('✅ Carpeta uploads/ creada');
+}
 
 // Crear la aplicación Express
 const app = express();
