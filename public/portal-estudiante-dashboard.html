@@ -321,9 +321,21 @@
 
         .salidas-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .salidas-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .salidas-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
         .salida-card {
@@ -605,12 +617,12 @@
             </div>
         </div>
 
-        <!-- Sección de Salidas (Baño y Enfermería) -->
+        <!-- Sección de Salidas del Aula -->
         <div class="salidas-section" id="salidasSection" style="display: none;">
             <div class="salidas-header">
-                <h2>🚪 Registro de Salidas</h2>
+                <h2>🚪 Registro de Salidas del Aula</h2>
                 <p style="color: #6b7280; margin: 5px 0 20px 0; font-size: 14px;">
-                    Para que tus padres puedan ver el uso de estos permisos
+                    Para que tus padres puedan ver el uso de todos tus permisos de salida
                 </p>
             </div>
 
@@ -641,6 +653,30 @@
                         </div>
                         <div class="salida-promedio">
                             📊 <span id="salidasEnfermeriaPromedio">0</span>/semana en promedio
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Agua -->
+                <div class="salida-card">
+                    <div class="salida-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">💧</div>
+                    <div class="salida-info">
+                        <div class="salida-label">Salidas por Agua</div>
+                        <div class="salida-value" id="salidasAguaTotal">0</div>
+                        <div class="salida-detail">
+                            Total en el trimestre
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Otros -->
+                <div class="salida-card">
+                    <div class="salida-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">🚶</div>
+                    <div class="salida-info">
+                        <div class="salida-label">Otras Salidas</div>
+                        <div class="salida-value" id="salidasOtrosTotal">0</div>
+                        <div class="salida-detail">
+                            Total en el trimestre
                         </div>
                     </div>
                 </div>
@@ -814,6 +850,12 @@
             document.getElementById('salidasEnfermeriaTotal').textContent = estadisticas.enfermeria.total;
             document.getElementById('salidasEnfermeriaSemana').textContent = estadisticas.enfermeria.ultimaSemana;
             document.getElementById('salidasEnfermeriaPromedio').textContent = estadisticas.enfermeria.promedioPorSemana;
+
+            // Actualizar valores de agua
+            document.getElementById('salidasAguaTotal').textContent = estadisticas.agua.total;
+
+            // Actualizar valores de otros
+            document.getElementById('salidasOtrosTotal').textContent = estadisticas.otros.total;
 
             // Mostrar sección
             section.style.display = 'block';
