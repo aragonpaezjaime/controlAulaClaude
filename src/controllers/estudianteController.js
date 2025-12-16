@@ -2,6 +2,7 @@ const Alumno = require('../models/Alumno');
 const Grupo = require('../models/Grupo');
 const Insignia = require('../models/Insignia');
 const Ajuste = require('../models/Ajuste');
+const { EventoSalida } = require('../models/Evento');
 
 // ============================================
 // AUTENTICACIÓN Y PERFIL DEL ESTUDIANTE
@@ -435,3 +436,150 @@ async function calcularEstadisticas(alumnoId) {
 
   return stats;
 }
+
+// ============================================
+// ESTADÍSTICAS DE SALIDAS (BAÑO Y ENFERMERÍA)
+// ============================================
+
+/**
+ * Obtener estadísticas de salidas del estudiante (baño y enfermería)
+ * GET /api/estudiante/salidas/:alumnoId
+ * Query params opcionales: ?periodo=mes (semana|mes|trimestre|ciclo)
+ */
+exports.obtenerSalidas = async (req, res) => {
+  try {
+    const { alumnoId } = req.params;
+    const { periodo = 'trimestre' } = req.query;
+
+    // Verificar que el alumno existe
+    const alumno = await Alumno.findById(alumnoId);
+    if (!alumno || !alumno.activo) {
+      return res.status(404).json({
+        success: false,
+        mensaje: 'Alumno no encontrado'
+      });
+    }
+
+    // Calcular rango de fechas según el periodo
+    const ahora = new Date();
+    let fechaInicio = new Date();
+
+    switch (periodo) {
+      case 'semana':
+        // Última semana (7 días)
+        fechaInicio.setDate(ahora.getDate() - 7);
+        break;
+      case 'mes':
+        // Último mes (30 días)
+        fechaInicio.setDate(ahora.getDate() - 30);
+        break;
+      case 'trimestre':
+        // Último trimestre (90 días)
+        fechaInicio.setDate(ahora.getDate() - 90);
+        break;
+      case 'ciclo':
+        // Todo el ciclo escolar (desde agosto del año actual o anterior)
+        const mesActual = ahora.getMonth();
+        const anioActual = ahora.getFullYear();
+        // Si estamos antes de agosto, el ciclo empezó en agosto del año pasado
+        fechaInicio = new Date(mesActual < 7 ? anioActual - 1 : anioActual, 7, 1);
+        break;
+      default:
+        fechaInicio.setDate(ahora.getDate() - 90); // Default: trimestre
+    }
+
+    // Obtener todas las salidas del alumno en el periodo
+    const salidas = await EventoSalida.find({
+      alumno: alumnoId,
+      fecha: {
+        $gte: fechaInicio,
+        $lte: ahora
+      }
+    })
+      .sort({ fecha: -1 })
+      .lean();
+
+    // Contar salidas por tipo
+    const estadisticas = {
+      periodo,
+      fechaInicio,
+      fechaFin: ahora,
+      totalSalidas: salidas.length,
+      bano: {
+        total: 0,
+        promedioPorSemana: 0,
+        ultimaSemana: 0
+      },
+      enfermeria: {
+        total: 0,
+        promedioPorSemana: 0,
+        ultimaSemana: 0
+      },
+      agua: {
+        total: 0
+      },
+      otros: {
+        total: 0
+      }
+    };
+
+    // Calcular estadísticas por tipo
+    const haceUnaSemana = new Date();
+    haceUnaSemana.setDate(ahora.getDate() - 7);
+
+    salidas.forEach(salida => {
+      const tipo = salida.tipoSalida;
+      const esUltimaSemana = new Date(salida.fecha) >= haceUnaSemana;
+
+      if (tipo === 'baño') {
+        estadisticas.bano.total++;
+        if (esUltimaSemana) estadisticas.bano.ultimaSemana++;
+      } else if (tipo === 'enfermería') {
+        estadisticas.enfermeria.total++;
+        if (esUltimaSemana) estadisticas.enfermeria.ultimaSemana++;
+      } else if (tipo === 'agua') {
+        estadisticas.agua.total++;
+      } else if (tipo === 'otros') {
+        estadisticas.otros.total++;
+      }
+    });
+
+    // Calcular promedio por semana
+    const diasTranscurridos = Math.ceil((ahora - fechaInicio) / (1000 * 60 * 60 * 24));
+    const semanasTranscurridas = Math.max(diasTranscurridos / 7, 1);
+
+    estadisticas.bano.promedioPorSemana = (estadisticas.bano.total / semanasTranscurridas).toFixed(1);
+    estadisticas.enfermeria.promedioPorSemana = (estadisticas.enfermeria.total / semanasTranscurridas).toFixed(1);
+
+    // Obtener listado de salidas recientes (últimas 10)
+    const salidasRecientes = salidas.slice(0, 10).map(salida => ({
+      id: salida._id,
+      tipo: salida.tipoSalida,
+      fecha: salida.fecha,
+      horaSalida: salida.horaSalida,
+      horaRegreso: salida.horaRegreso,
+      duracionMinutos: salida.horaRegreso
+        ? Math.round((new Date(salida.horaRegreso) - new Date(salida.horaSalida)) / 60000)
+        : null,
+      observaciones: salida.observaciones || null
+    }));
+
+    res.json({
+      success: true,
+      alumno: {
+        id: alumno._id,
+        nombreCompleto: alumno.nombreCompleto
+      },
+      estadisticas,
+      salidasRecientes
+    });
+
+  } catch (error) {
+    console.error('Error al obtener salidas:', error);
+    res.status(500).json({
+      success: false,
+      mensaje: 'Error al obtener las salidas',
+      error: error.message
+    });
+  }
+};

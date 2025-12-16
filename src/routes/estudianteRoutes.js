@@ -36,4 +36,11 @@ router.get('/ranking/:grupoId', estudianteController.obtenerRanking);
  */
 router.get('/historial/:alumnoId', estudianteController.obtenerHistorial);
 
+/**
+ * GET /api/estudiante/salidas/:alumnoId
+ * Obtiene estadísticas de salidas (baño, enfermería) del estudiante
+ * Query params opcionales: ?periodo=trimestre (semana|mes|trimestre|ciclo)
+ */
+router.get('/salidas/:alumnoId', estudianteController.obtenerSalidas);
+
 module.exports = router;
