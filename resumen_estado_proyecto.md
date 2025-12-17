@@ -1,6 +1,6 @@
 # 📍 RESUMEN COMPLETO DEL PROYECTO - SISTEMA DE CONTROL DE AULA
-**Fecha:** 14 de diciembre de 2025
-**Última actualización:** Sistema de Gráficas de Progreso Completado ✅
+**Fecha:** 17 de diciembre de 2025
+**Última actualización:** FIX Crítico - Historial de Ajustes Visible ✅
 
 ---
 
@@ -12,11 +12,46 @@
 
 **Usuarios Activos:**
 - 👨‍🏫 1 Profesor (Jaime)
-- 🎓 273 Estudiantes (todos con claves asignadas)
+- 🎓 274 Estudiantes activos (273 con claves asignadas)
 
 ---
 
-## 🔧 ÚLTIMOS CAMBIOS (Sesión actual - 14 dic 2025)
+## 🔧 ÚLTIMOS CAMBIOS (Sesión actual - 17 dic 2025)
+
+### 🔧 FIX CRÍTICO: Historial de Ajustes Visible para Estudiantes ✅
+**Problema resuelto:** Los estudiantes no veían sus ajustes en "Mi Historial"
+
+**Reporte del usuario:**
+- Los puntos XP SÍ aparecían en el dashboard del estudiante
+- Pero en "Mi Historial" NO aparecían los puntos ni la razón de asignación
+- El historial aparecía vacío a pesar de tener puntos
+
+**Diagnóstico:**
+- Total de ajustes en BD: 899
+- Ajustes visibles para estudiantes: Solo 71 (7.9%)
+- Ajustes sin comentarioAlumno: 829 (92.2%)
+- **Causa raíz:** Ajustes antiguos se crearon antes de implementar campos `visibleParaAlumno` y `comentarioAlumno`
+
+**Solución implementada:**
+- ✅ Migrados 828 ajustes con `visibleParaAlumno: true`
+- ✅ Actualizados 829 ajustes con `comentarioAlumno` (usando observaciones o motivo)
+- ✅ 100% de ajustes (899) ahora visibles con comentarios completos
+- ✅ **113,013 XP total registrado** (todo intacto)
+- ✅ Verificación completa: **NINGÚN DATO SE PERDIÓ**
+
+**Scripts creados:**
+- `scripts/verificarAjustes.js` - Verificar ajustes de un alumno
+- `scripts/diagnosticoHistorial.js` - Diagnóstico completo de ajustes
+- `scripts/migrarAjustesVisibles.js` - Migración masiva (ejecutado)
+- `scripts/verificarDatosCompletos.js` - Verificación de integridad de datos
+
+**Commit:** `41936d8` - "FIX: Historial de ajustes visible para estudiantes"
+
+**Estado:** ✅ 100% Funcional - Estudiantes pueden ver su historial completo
+
+---
+
+## 🔧 CAMBIOS ANTERIORES (14 dic 2025)
 
 ### ✨ NUEVO: Sistema de Gráficas de Progreso - COMPLETADO ✅
 **Nueva funcionalidad:** Gráficas visuales de XP/HP en portal de estudiantes
@@ -258,6 +293,10 @@
 - `scripts/resetearXP.js` - Reset puntos
 - `scripts/verificarHistorialXP.js` - Verificar historial
 - `scripts/exportarPuntos.js` - Exportar datos
+- `scripts/verificarAjustes.js` - Verificar ajustes de un alumno ⭐ NUEVO
+- `scripts/diagnosticoHistorial.js` - Diagnóstico completo de ajustes ⭐ NUEVO
+- `scripts/migrarAjustesVisibles.js` - Migración de visibilidad (ejecutado) ⭐ NUEVO
+- `scripts/verificarDatosCompletos.js` - Verificación de integridad completa ⭐ NUEVO
 
 ### Configuración y Documentación
 - `render.yaml` - Configuración Render
@@ -278,7 +317,8 @@
 
 **Commits recientes:**
 ```
-3a16874 🔧 FIX: URL hardcodeada en gestión de insignias (14 dic 2025) ← NUEVO
+41936d8 🔧 FIX: Historial de ajustes visible para estudiantes (17 dic 2025) ← NUEVO
+3a16874 🔧 FIX: URL hardcodeada en gestión de insignias (14 dic 2025)
 91c02b9 📊 Actualización final: Sistema completo en producción
 7c3ce65 📚 Guía completa para comprar dominio personalizado
 dcd929a 🚀 DEPLOYMENT: Configuración completa para Render
@@ -289,7 +329,7 @@ a2d3958 📜 ETAPA 3.3: Historial de Ajustes para Estudiantes
 8af031c 🏆 FASE 2: Sistema Completo de Insignias de Niveles
 ```
 
-**Total de commits en el proyecto:** 11+
+**Total de commits en el proyecto:** 12+
 
 ---
 
@@ -460,21 +500,28 @@ Profesor Jaime
 
 ## 🐛 PROBLEMAS RESUELTOS
 
-### 1. Observaciones no visibles (5 dic 2025) ✅
+### 1. Historial de Ajustes no visible para estudiantes (17 dic 2025) ✅
+**Problema:** Estudiantes no veían su historial de ajustes en "Mi Historial"
+**Causa:** 828 de 899 ajustes no tenían `visibleParaAlumno: true` y 829 sin `comentarioAlumno`
+**Solución:** Migración masiva de 899 ajustes, 100% ahora visibles con comentarios
+**Commit:** `41936d8`
+**Scripts:** `verificarAjustes.js`, `diagnosticoHistorial.js`, `migrarAjustesVisibles.js`, `verificarDatosCompletos.js`
+
+### 2. Observaciones no visibles (5 dic 2025) ✅
 **Problema:** Comentarios del profesor no aparecían en portal estudiantes
 **Solución:** Corregido `xpController.js`, campo `comentarioAlumno` implementado
 
-### 2. Gestión de Insignias ERR_CONNECTION_REFUSED (14 dic 2025) ✅
+### 3. Gestión de Insignias ERR_CONNECTION_REFUSED (14 dic 2025) ✅
 **Problema:** `gestion-insignias.html` tenía localhost hardcodeado
 **Solución:** Cambiado a URL relativa `/api`
 **Commit:** `3a16874`
 
-### 3. Insignias no aparecían en Dashboard del Profesor (14 dic 2025) ✅
+### 4. Insignias no aparecían en Dashboard del Profesor (14 dic 2025) ✅
 **Problema:** Imagen rota en tarjetas de alumnos con insignias asignadas
 **Solución:** Agregado filtro para buscar insignia de nivel (`nivel !== null`)
 **Commit:** `712eded`
 
-### 4. Gráficas de Progreso daban error 404 (14 dic 2025) ✅
+### 5. Gráficas de Progreso daban error 404 (14 dic 2025) ✅
 **Problema:** claveZipGrade no estaba en objeto de sesión, gráficas no cargaban
 **Solución:** Agregado claveZipGrade al objeto alumno en login
 **Commit:** `0790700`
