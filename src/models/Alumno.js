@@ -59,12 +59,30 @@ const alumnoSchema = new mongoose.Schema({
     trim: true
   },
 
+  // Configuración del avatar de RoboHash
+  // Define el set de estilos: set1 (robots clásicos), set2 (robots simplificados), set3 (abstractos), set4 (monstruos)
+  avatarConfig: {
+    type: String,
+    enum: ['set1', 'set2', 'set3', 'set4'],
+    default: 'set1'
+  },
+
   // Nombre preferido (palabra específica del nombre completo que prefiere)
   // Si es null, se usa el primer nombre por defecto
   nombrePreferido: {
     type: String,
     trim: true,
     default: null
+  },
+
+  // Preferencia de cómo mostrar su nombre en clase
+  // 'nombre': Solo nombre de pila (ej. "Jaime")
+  // 'apellido': Solo apellidos (ej. "Aragón Páez")
+  // 'completo': Nombre completo (ej. "Jaime Aragón Páez")
+  preferenciaNombre: {
+    type: String,
+    enum: ['nombre', 'apellido', 'completo'],
+    default: 'completo'
   },
 
   // Array de insignias obtenidas por el alumno
@@ -177,6 +195,20 @@ alumnoSchema.methods.establecerNombrePreferido = function(palabraPreferida) {
   }
 
   return false;
+};
+
+// Método de instancia: Obtiene el nombre a mostrar según la preferencia del alumno
+// Retorna el nombre en el formato que el alumno prefiere
+alumnoSchema.methods.obtenerNombreParaMostrar = function() {
+  switch (this.preferenciaNombre) {
+    case 'nombre':
+      return this.nombre;
+    case 'apellido':
+      return this.apellidos;
+    case 'completo':
+    default:
+      return this.nombreCompleto;
+  }
 };
 
 // ============================================

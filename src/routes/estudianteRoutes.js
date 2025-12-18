@@ -43,4 +43,11 @@ router.get('/historial/:alumnoId', estudianteController.obtenerHistorial);
  */
 router.get('/salidas/:alumnoId', estudianteController.obtenerSalidas);
 
+/**
+ * PUT /api/estudiante/perfil
+ * Actualiza las preferencias de perfil del estudiante (nombre y avatar)
+ * Body: { claveZipGrade: string, preferenciaNombre?: string, avatarConfig?: string }
+ */
+router.put('/perfil', estudianteController.actualizarPerfil);
+
 module.exports = router;

@@ -535,6 +535,301 @@
         .tendencia-negativa { color: #ef4444; }
         .tendencia-neutral { color: #6b7280; }
 
+        /* Modal de Edición de Perfil */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f3f4f6;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #1f2937;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            background: #f3f4f6;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #e5e7eb;
+            transform: rotate(90deg);
+        }
+
+        .modal-section {
+            margin-bottom: 35px;
+        }
+
+        .modal-section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-section-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        /* Selector de Nombre */
+        .nombre-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .nombre-option {
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+        }
+
+        .nombre-option:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .nombre-option input[type="radio"] {
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .nombre-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .nombre-option-label {
+            flex: 1;
+        }
+
+        .nombre-option-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 3px;
+        }
+
+        .nombre-option-preview {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* Selector de Avatar */
+        .avatar-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .avatar-option {
+            position: relative;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+            text-align: center;
+        }
+
+        .avatar-option:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateY(-3px);
+        }
+
+        .avatar-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .avatar-option input[type="radio"] {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 10px auto;
+            border-radius: 50%;
+            border: 3px solid #e5e7eb;
+            background: white;
+        }
+
+        .avatar-option.selected .avatar-preview {
+            border-color: #667eea;
+        }
+
+        .avatar-option-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        /* Botones del Modal */
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 35px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-modal-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-modal-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-modal-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-modal-secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .btn-modal-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Mensaje de éxito */
+        .mensaje-exito {
+            display: none;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .mensaje-exito.active {
+            display: block;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .dashboard-container {
@@ -569,6 +864,19 @@
                 width: 100%;
                 text-align: center;
             }
+
+            .modal-content {
+                padding: 25px;
+                width: 95%;
+            }
+
+            .avatar-options {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -581,6 +889,9 @@
                 <p id="grupoInfo">Cargando...</p>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-logout" onclick="abrirModalPerfil()" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                    ✏️ Editar Perfil
+                </button>
                 <a href="/portal-estudiante-historial.html" class="btn-logout" style="text-decoration: none; background: linear-gradient(135deg, #10b981, #059669);">
                     📜 Mi Historial
                 </a>
@@ -749,6 +1060,107 @@
         </div>
     </div>
 
+    <!-- Modal de Edición de Perfil -->
+    <div class="modal-overlay" id="modalPerfil">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>
+                    <span>✏️</span>
+                    <span>Editar mi Perfil</span>
+                </h2>
+                <button class="modal-close" onclick="cerrarModalPerfil()">✕</button>
+            </div>
+
+            <div id="mensajeExito" class="mensaje-exito">
+                ✅ ¡Perfil actualizado correctamente!
+            </div>
+
+            <!-- Sección: Preferencia de Nombre -->
+            <div class="modal-section">
+                <div class="modal-section-title">
+                    <span>👤</span>
+                    <span>¿Cómo prefieres que te llame el profe?</span>
+                </div>
+                <div class="modal-section-subtitle">
+                    Elige cómo quieres que aparezca tu nombre cuando el profesor pase lista
+                </div>
+
+                <div class="nombre-options">
+                    <label class="nombre-option" onclick="seleccionarNombre('nombre')">
+                        <input type="radio" name="preferenciaNombre" value="nombre" id="opcionNombre">
+                        <div class="nombre-option-label">
+                            <div class="nombre-option-title">Por mi nombre</div>
+                            <div class="nombre-option-preview" id="previewNombre">Ejemplo: Jaime</div>
+                        </div>
+                    </label>
+
+                    <label class="nombre-option" onclick="seleccionarNombre('apellido')">
+                        <input type="radio" name="preferenciaNombre" value="apellido" id="opcionApellido">
+                        <div class="nombre-option-label">
+                            <div class="nombre-option-title">Por mi apellido</div>
+                            <div class="nombre-option-preview" id="previewApellido">Ejemplo: Aragón</div>
+                        </div>
+                    </label>
+
+                    <label class="nombre-option" onclick="seleccionarNombre('completo')">
+                        <input type="radio" name="preferenciaNombre" value="completo" id="opcionCompleto" checked>
+                        <div class="nombre-option-label">
+                            <div class="nombre-option-title">Nombre completo</div>
+                            <div class="nombre-option-preview" id="previewCompleto">Ejemplo: Jaime Aragón</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Sección: Estilo de Avatar -->
+            <div class="modal-section">
+                <div class="modal-section-title">
+                    <span>🤖</span>
+                    <span>Elige tu estilo de avatar</span>
+                </div>
+                <div class="modal-section-subtitle">
+                    Tu avatar se mostrará en el ranking y en tu perfil
+                </div>
+
+                <div class="avatar-options">
+                    <label class="avatar-option" onclick="seleccionarAvatar('set1')">
+                        <input type="radio" name="avatarConfig" value="set1" id="avatarSet1" checked>
+                        <img class="avatar-preview" id="previewSet1" src="" alt="Robots clásicos">
+                        <div class="avatar-option-name">🤖 Robots clásicos</div>
+                    </label>
+
+                    <label class="avatar-option" onclick="seleccionarAvatar('set2')">
+                        <input type="radio" name="avatarConfig" value="set2" id="avatarSet2">
+                        <img class="avatar-preview" id="previewSet2" src="" alt="Robots simplificados">
+                        <div class="avatar-option-name">⚙️ Robots simples</div>
+                    </label>
+
+                    <label class="avatar-option" onclick="seleccionarAvatar('set3')">
+                        <input type="radio" name="avatarConfig" value="set3" id="avatarSet3">
+                        <img class="avatar-preview" id="previewSet3" src="" alt="Avatares abstractos">
+                        <div class="avatar-option-name">🎨 Abstractos</div>
+                    </label>
+
+                    <label class="avatar-option" onclick="seleccionarAvatar('set4')">
+                        <input type="radio" name="avatarConfig" value="set4" id="avatarSet4">
+                        <img class="avatar-preview" id="previewSet4" src="" alt="Monstruos">
+                        <div class="avatar-option-name">👾 Monstruos</div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="modal-buttons">
+                <button class="btn-modal btn-modal-secondary" onclick="cerrarModalPerfil()">
+                    Cancelar
+                </button>
+                <button class="btn-modal btn-modal-primary" id="btnGuardarPerfil" onclick="guardarPerfil()">
+                    💾 Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = '/api';
         let sesion = null;
@@ -801,8 +1213,9 @@
             const hp = document.getElementById('personalHP');
             const insignia = document.getElementById('personalInsignia');
 
-            // Avatar
-            avatar.src = `https://robohash.org/${sesion.avatar}?set=set1&size=150x150`;
+            // Avatar - usar avatarConfig del estudiante
+            const avatarConfig = sesion.avatarConfig || 'set1';
+            avatar.src = `https://robohash.org/${sesion.avatar}?set=${avatarConfig}&size=150x150`;
             avatar.alt = sesion.nombreCompleto;
 
             // Nombre
@@ -1275,6 +1688,178 @@
                     🔄 Reintentar
                 </button>
             `;
+        }
+
+        // ============================================
+        // FUNCIONES DEL MODAL DE EDICIÓN DE PERFIL
+        // ============================================
+
+        // Abrir modal de edición de perfil
+        function abrirModalPerfil() {
+            const modal = document.getElementById('modalPerfil');
+
+            // Cargar valores actuales
+            cargarPreferenciasActuales();
+
+            // Generar previews de avatares
+            generarPreviewsAvatares();
+
+            // Mostrar modal
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+        }
+
+        // Cerrar modal
+        function cerrarModalPerfil() {
+            const modal = document.getElementById('modalPerfil');
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // Restaurar scroll
+
+            // Ocultar mensaje de éxito si está visible
+            document.getElementById('mensajeExito').classList.remove('active');
+        }
+
+        // Cerrar modal al hacer clic en el overlay
+        document.getElementById('modalPerfil').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModalPerfil();
+            }
+        });
+
+        // Cargar preferencias actuales del estudiante
+        function cargarPreferenciasActuales() {
+            // Preferencia de nombre
+            const preferenciaActual = sesion.preferenciaNombre || 'completo';
+            document.getElementById(`opcion${preferenciaActual.charAt(0).toUpperCase() + preferenciaActual.slice(1)}`).checked = true;
+            seleccionarNombre(preferenciaActual, false);
+
+            // Avatar config
+            const avatarActual = sesion.avatarConfig || 'set1';
+            document.getElementById(`avatarSet${avatarActual.slice(-1)}`).checked = true;
+            seleccionarAvatar(avatarActual, false);
+
+            // Actualizar previews de ejemplos de nombre
+            document.getElementById('previewNombre').textContent = `Ejemplo: ${sesion.nombre}`;
+            document.getElementById('previewApellido').textContent = `Ejemplo: ${sesion.apellidos}`;
+            document.getElementById('previewCompleto').textContent = `Ejemplo: ${sesion.nombreCompleto}`;
+        }
+
+        // Generar previews de avatares con los 4 sets
+        function generarPreviewsAvatares() {
+            const sets = ['set1', 'set2', 'set3', 'set4'];
+            sets.forEach((set, index) => {
+                const img = document.getElementById(`previewSet${index + 1}`);
+                img.src = `https://robohash.org/${sesion.avatar}?set=${set}&size=120x120`;
+            });
+        }
+
+        // Seleccionar opción de nombre
+        function seleccionarNombre(opcion, actualizarRadio = true) {
+            // Actualizar radio button
+            if (actualizarRadio) {
+                document.getElementById(`opcion${opcion.charAt(0).toUpperCase() + opcion.slice(1)}`).checked = true;
+            }
+
+            // Remover clase selected de todas las opciones
+            document.querySelectorAll('.nombre-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+
+            // Agregar clase selected a la opción seleccionada
+            const opcionElemento = document.getElementById(`opcion${opcion.charAt(0).toUpperCase() + opcion.slice(1)}`).closest('.nombre-option');
+            if (opcionElemento) {
+                opcionElemento.classList.add('selected');
+            }
+        }
+
+        // Seleccionar opción de avatar
+        function seleccionarAvatar(set, actualizarRadio = true) {
+            // Actualizar radio button
+            if (actualizarRadio) {
+                const setNumber = set.slice(-1);
+                document.getElementById(`avatarSet${setNumber}`).checked = true;
+            }
+
+            // Remover clase selected de todas las opciones
+            document.querySelectorAll('.avatar-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+
+            // Agregar clase selected a la opción seleccionada
+            const setNumber = set.slice(-1);
+            const opcionElemento = document.getElementById(`avatarSet${setNumber}`).closest('.avatar-option');
+            if (opcionElemento) {
+                opcionElemento.classList.add('selected');
+            }
+        }
+
+        // Guardar perfil actualizado
+        async function guardarPerfil() {
+            const btnGuardar = document.getElementById('btnGuardarPerfil');
+            btnGuardar.disabled = true;
+            btnGuardar.textContent = '⏳ Guardando...';
+
+            try {
+                // Obtener valores seleccionados
+                const preferenciaNombre = document.querySelector('input[name="preferenciaNombre"]:checked').value;
+                const avatarConfig = document.querySelector('input[name="avatarConfig"]:checked').value;
+
+                // Llamar a la API
+                const response = await fetch(`${API_URL}/estudiante/perfil`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        claveZipGrade: sesion.claveZipGrade,
+                        preferenciaNombre,
+                        avatarConfig
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Actualizar sesión en localStorage
+                    sesion.preferenciaNombre = data.alumno.preferenciaNombre;
+                    sesion.avatarConfig = data.alumno.avatarConfig;
+                    sesion.nombreParaMostrar = data.alumno.nombreParaMostrar;
+                    localStorage.setItem('estudianteSesion', JSON.stringify(sesion));
+
+                    // Actualizar UI del dashboard sin recargar
+                    actualizarAvatarDashboard();
+
+                    // Mostrar mensaje de éxito
+                    const mensajeExito = document.getElementById('mensajeExito');
+                    mensajeExito.classList.add('active');
+
+                    // Ocultar mensaje y cerrar modal después de 2 segundos
+                    setTimeout(() => {
+                        mensajeExito.classList.remove('active');
+                        cerrarModalPerfil();
+                    }, 2000);
+
+                } else {
+                    alert(`Error al guardar: ${data.mensaje}`);
+                }
+
+            } catch (error) {
+                console.error('Error al guardar perfil:', error);
+                alert('Error de conexión al guardar el perfil');
+            } finally {
+                btnGuardar.disabled = false;
+                btnGuardar.textContent = '💾 Guardar Cambios';
+            }
+        }
+
+        // Actualizar avatar en el dashboard (sin recargar página)
+        function actualizarAvatarDashboard() {
+            const avatarConfig = sesion.avatarConfig || 'set1';
+            const personalAvatar = document.getElementById('personalAvatar');
+
+            if (personalAvatar) {
+                personalAvatar.src = `https://robohash.org/${sesion.avatar}?set=${avatarConfig}&size=150x150`;
+            }
         }
     </script>
 </body>

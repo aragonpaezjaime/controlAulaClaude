@@ -78,7 +78,10 @@ exports.login = async (req, res) => {
         apellidos: alumno.apellidos,
         nombreCompleto: alumno.nombreCompleto,
         nombrePreferido: alumno.obtenerNombrePreferido(),
+        nombreParaMostrar: alumno.obtenerNombreParaMostrar(),
+        preferenciaNombre: alumno.preferenciaNombre,
         avatar: alumno.avatar,
+        avatarConfig: alumno.avatarConfig,
         xp: alumno.xp,
         salud: alumno.salud,
         claveZipGrade: alumno.claveZipGrade,
@@ -151,7 +154,10 @@ exports.obtenerPerfil = async (req, res) => {
         apellidos: alumno.apellidos,
         nombreCompleto: alumno.nombreCompleto,
         nombrePreferido: alumno.obtenerNombrePreferido(),
+        nombreParaMostrar: alumno.obtenerNombreParaMostrar(),
+        preferenciaNombre: alumno.preferenciaNombre,
         avatar: alumno.avatar,
+        avatarConfig: alumno.avatarConfig,
         xp: alumno.xp,
         salud: alumno.salud,
         claveZipGrade: alumno.claveZipGrade,
@@ -579,6 +585,131 @@ exports.obtenerSalidas = async (req, res) => {
     res.status(500).json({
       success: false,
       mensaje: 'Error al obtener las salidas',
+      error: error.message
+    });
+  }
+};
+
+// ============================================
+// ACTUALIZACIÓN DE PERFIL DEL ESTUDIANTE
+// ============================================
+
+/**
+ * Actualizar perfil del estudiante (preferencias de nombre y avatar)
+ * PUT /api/estudiante/perfil
+ * Body: { claveZipGrade, preferenciaNombre, avatarConfig }
+ */
+exports.actualizarPerfil = async (req, res) => {
+  try {
+    const { claveZipGrade, preferenciaNombre, avatarConfig } = req.body;
+
+    // Validar que se envió la clave
+    if (!claveZipGrade || claveZipGrade.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        mensaje: 'La clave de zipGrade es obligatoria'
+      });
+    }
+
+    // Validar preferenciaNombre
+    const preferenciasValidas = ['nombre', 'apellido', 'completo'];
+    if (preferenciaNombre && !preferenciasValidas.includes(preferenciaNombre)) {
+      return res.status(400).json({
+        success: false,
+        mensaje: 'Preferencia de nombre inválida. Debe ser: nombre, apellido o completo'
+      });
+    }
+
+    // Validar avatarConfig
+    const avatarsValidos = ['set1', 'set2', 'set3', 'set4'];
+    if (avatarConfig && !avatarsValidos.includes(avatarConfig)) {
+      return res.status(400).json({
+        success: false,
+        mensaje: 'Configuración de avatar inválida. Debe ser: set1, set2, set3 o set4'
+      });
+    }
+
+    // Buscar alumno por clave (normalizada a mayúsculas)
+    const alumno = await Alumno.findOne({
+      claveZipGrade: claveZipGrade.toUpperCase().trim(),
+      activo: true
+    })
+      .populate('grupo')
+      .populate({
+        path: 'insignias.insigniaId',
+        model: 'Insignia'
+      });
+
+    // Verificar si existe el alumno
+    if (!alumno) {
+      return res.status(401).json({
+        success: false,
+        mensaje: 'Clave incorrecta o alumno no encontrado'
+      });
+    }
+
+    // Actualizar solo los campos enviados
+    if (preferenciaNombre) {
+      alumno.preferenciaNombre = preferenciaNombre;
+    }
+    if (avatarConfig) {
+      alumno.avatarConfig = avatarConfig;
+    }
+
+    // Guardar cambios
+    await alumno.save();
+
+    // Obtener la insignia de nivel actual
+    let insigniaActual = null;
+    if (alumno.insignias && alumno.insignias.length > 0) {
+      const insigniasNivel = alumno.insignias.filter(
+        ins => ins.insigniaId && ins.insigniaId.tipo === 'nivel'
+      );
+
+      if (insigniasNivel.length > 0) {
+        insigniasNivel.sort((a, b) => b.fechaObtencion - a.fechaObtencion);
+        insigniaActual = insigniasNivel[0].insigniaId;
+      }
+    }
+
+    // Retornar datos actualizados del alumno
+    res.json({
+      success: true,
+      mensaje: 'Perfil actualizado exitosamente',
+      alumno: {
+        id: alumno._id,
+        nombre: alumno.nombre,
+        apellidos: alumno.apellidos,
+        nombreCompleto: alumno.nombreCompleto,
+        nombrePreferido: alumno.obtenerNombrePreferido(),
+        nombreParaMostrar: alumno.obtenerNombreParaMostrar(),
+        preferenciaNombre: alumno.preferenciaNombre,
+        avatar: alumno.avatar,
+        avatarConfig: alumno.avatarConfig,
+        xp: alumno.xp,
+        salud: alumno.salud,
+        claveZipGrade: alumno.claveZipGrade,
+        grupo: {
+          id: alumno.grupo._id,
+          nombre: `${alumno.grupo.grado}${alumno.grupo.grupo}`,
+          materia: alumno.grupo.materia,
+          ciclo: alumno.grupo.ciclo
+        },
+        insigniaActual: insigniaActual ? {
+          id: insigniaActual._id,
+          nombre: insigniaActual.nombre,
+          icono: insigniaActual.icono,
+          color: insigniaActual.color,
+          descripcion: insigniaActual.descripcion
+        } : null
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al actualizar perfil:', error);
+    res.status(500).json({
+      success: false,
+      mensaje: 'Error al actualizar el perfil',
       error: error.message
     });
   }

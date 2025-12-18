@@ -664,14 +664,31 @@
             }
         }
 
+        // Función auxiliar: Obtener nombre del alumno según su preferencia
+        function obtenerNombrePreferido(alumno) {
+            switch (alumno.preferenciaNombre) {
+                case 'nombre':
+                    return alumno.nombre;
+                case 'apellido':
+                    return alumno.apellidos;
+                case 'completo':
+                default:
+                    return alumno.nombreCompleto;
+            }
+        }
+
         // Mostrar alumno actual
         function mostrarAlumnoActual() {
             if (alumnos.length === 0) return;
 
             const alumno = alumnos[indiceActual];
 
-            // Avatar de robot único basado en el nombre del alumno
-            const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alumno.nombreCompleto)}`;
+            // Obtener nombre según preferencia del alumno
+            const nombreParaMostrar = obtenerNombrePreferido(alumno);
+
+            // Avatar de robot único basado en el nombre del alumno - usar avatarConfig si está disponible
+            const avatarConfig = alumno.avatarConfig || 'set1';
+            const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alumno.nombreCompleto)}&set=${avatarConfig}`;
 
             // Actualizar progreso
             const porcentaje = ((indiceActual + 1) / alumnos.length) * 100;
@@ -684,9 +701,9 @@
 
             document.getElementById('alumno-actual').innerHTML = `
                 <div class="alumno-avatar-large">
-                    <img src="${avatarUrl}" alt="${alumno.nombreCompleto}" style="width: 100%; height: 100%; border-radius: 50%;">
+                    <img src="${avatarUrl}" alt="${nombreParaMostrar}" style="width: 100%; height: 100%; border-radius: 50%;">
                 </div>
-                <div class="alumno-nombre-large">${alumno.nombreCompleto}${estadoMarcado}</div>
+                <div class="alumno-nombre-large">${nombreParaMostrar}${estadoMarcado}</div>
                 <div class="alumno-nivel-large">⚡ ${alumno.xp} XP | ❤️ ${alumno.salud} HP</div>
 
                 <div class="asistencia-buttons">
@@ -736,7 +753,7 @@
                 'justificado': '📝'
             };
             const emoji = emojis[estado] || '?';
-            mostrarExito(`${emoji} ${alumno.nombreCompleto}: ${estado.toUpperCase()}`);
+            mostrarExito(`${emoji} ${nombreParaMostrar}: ${estado.toUpperCase()}`);
 
             // Auto-avanzar solo si no estamos en el último alumno
             if (indiceActual < alumnos.length - 1) {
@@ -764,7 +781,7 @@
                 listaAusentes.innerHTML = '<li class="panel-empty">Ninguno</li>';
             } else {
                 listaAusentes.innerHTML = ausentes.map(a =>
-                    `<li class="panel-item">${a.nombreCompleto}</li>`
+                    `<li class="panel-item">${obtenerNombrePreferido(a)}</li>`
                 ).join('');
             }
 
@@ -776,7 +793,7 @@
                 listaRetardos.innerHTML = '<li class="panel-empty">Ninguno</li>';
             } else {
                 listaRetardos.innerHTML = retardos.map(a =>
-                    `<li class="panel-item retardo">${a.nombreCompleto}</li>`
+                    `<li class="panel-item retardo">${obtenerNombrePreferido(a)}</li>`
                 ).join('');
             }
 
@@ -788,7 +805,7 @@
                 listaJustificados.innerHTML = '<li class="panel-empty">Ninguno</li>';
             } else {
                 listaJustificados.innerHTML = justificados.map(a =>
-                    `<li class="panel-item" style="background: rgba(59, 130, 246, 0.1); border-left-color: #3b82f6;">${a.nombreCompleto}</li>`
+                    `<li class="panel-item" style="background: rgba(59, 130, 246, 0.1); border-left-color: #3b82f6;">${obtenerNombrePreferido(a)}</li>`
                 ).join('');
             }
         }
@@ -868,7 +885,7 @@
                 listaAusentesResumen.innerHTML = '<div class="panel-empty">Ninguno</div>';
             } else {
                 listaAusentesResumen.innerHTML = ausentes.map((a, index) =>
-                    `<div class="resumen-lista-item">${index + 1}. ${a.nombreCompleto}</div>`
+                    `<div class="resumen-lista-item">${index + 1}. ${obtenerNombrePreferido(a)}</div>`
                 ).join('');
             }
 
@@ -878,7 +895,7 @@
                 listaRetardosResumen.innerHTML = '<div class="panel-empty">Ninguno</div>';
             } else {
                 listaRetardosResumen.innerHTML = retardos.map((a, index) =>
-                    `<div class="resumen-lista-item">${index + 1}. ${a.nombreCompleto}</div>`
+                    `<div class="resumen-lista-item">${index + 1}. ${obtenerNombrePreferido(a)}</div>`
                 ).join('');
             }
 
@@ -888,7 +905,7 @@
                 listaJustificadosResumen.innerHTML = '<div class="panel-empty">Ninguno</div>';
             } else {
                 listaJustificadosResumen.innerHTML = justificados.map((a, index) =>
-                    `<div class="resumen-lista-item">${index + 1}. ${a.nombreCompleto}</div>`
+                    `<div class="resumen-lista-item">${index + 1}. ${obtenerNombrePreferido(a)}</div>`
                 ).join('');
             }
 
