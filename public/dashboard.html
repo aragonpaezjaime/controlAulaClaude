@@ -6,6 +6,266 @@
     <title>Control de Aula - Dashboard</title>
     <link rel="icon" type="image/svg+xml" href="/images/logo-escuela.svg">
     <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* ============================================
+           ESTILOS PARA SISTEMA DE TOGGLE VIEW
+           ============================================ */
+
+        /* Botones de cambio de vista */
+        .view-toggle-btn {
+            padding: 10px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .view-toggle-btn:hover {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--accent-purple);
+        }
+
+        .view-toggle-btn.active {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-purple-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Contenedor de alumnos - Grid (vista por defecto) */
+        .alumnos-grid.view-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 20px;
+        }
+
+        /* Contenedor de alumnos - List (vista compacta) */
+        .alumnos-grid.view-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 20px;
+        }
+
+        /* ============================================
+           TARJETA DE ALUMNO - VISTA DE LISTA
+           ============================================ */
+        .alumnos-grid.view-list .alumno-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            min-height: 60px;
+            max-height: 60px;
+            border-radius: 12px;
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .alumnos-grid.view-list .alumno-card:hover {
+            transform: translateX(5px);
+            border-color: var(--accent-purple);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Número de lista */
+        .alumno-numero-lista {
+            display: none; /* Oculto en vista grid */
+        }
+
+        .alumnos-grid.view-list .alumno-numero-lista {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-purple-dark));
+            color: white;
+            font-weight: 800;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+            flex-shrink: 0;
+        }
+
+        /* Avatar pequeño en vista lista */
+        .alumnos-grid.view-list .alumno-avatar {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border: 2px solid var(--accent-purple);
+        }
+
+        .alumnos-grid.view-list .alumno-header {
+            flex-direction: row;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .alumnos-grid.view-list .alumno-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .alumnos-grid.view-list .alumno-nombre {
+            font-size: 0.95rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Estadísticas en vista lista - modo compacto */
+        .alumnos-grid.view-list .alumno-stats {
+            display: none; /* Ocultar cajas de stats grandes */
+        }
+
+        .alumno-stats-compact {
+            display: none; /* Oculto en vista grid */
+        }
+
+        .alumnos-grid.view-list .alumno-stats-compact {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .alumnos-grid.view-list .stat-compact {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        .alumnos-grid.view-list .stat-compact.xp {
+            color: var(--accent-purple);
+        }
+
+        .alumnos-grid.view-list .stat-compact.hp {
+            color: #ef4444;
+        }
+
+        .alumnos-grid.view-list .stat-compact.hp.low {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .alumnos-grid.view-list .stat-compact.hp.medium {
+            background: rgba(251, 191, 36, 0.15);
+        }
+
+        /* Barras de progreso ocultas en vista lista */
+        .alumnos-grid.view-list .xp-progress,
+        .alumnos-grid.view-list .health-bar {
+            display: none;
+        }
+
+        /* Botones de acción en vista lista */
+        .alumnos-grid.view-list .actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .alumnos-grid.view-list .action-btn {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            min-width: auto;
+        }
+
+        .alumnos-grid.view-list .btn-cambiar-estado {
+            padding: 6px 10px;
+            font-size: 0.75rem;
+        }
+
+        /* Badge de estado en vista lista */
+        .alumnos-grid.view-list .estado-badge {
+            position: static;
+            margin-left: auto;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            border-radius: 6px;
+        }
+
+        /* Estados de asistencia en vista lista */
+        .alumnos-grid.view-list .alumno-card.alumno-ausente {
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .alumnos-grid.view-list .alumno-card.alumno-retardo {
+            background: rgba(251, 191, 36, 0.05);
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+
+        .alumnos-grid.view-list .alumno-card.alumno-justificado {
+            background: rgba(59, 130, 246, 0.05);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        /* Responsive para vista lista en móvil */
+        @media (max-width: 768px) {
+            .alumnos-grid.view-list .alumno-stats-compact {
+                flex-direction: column;
+                gap: 4px;
+                font-size: 0.75rem;
+            }
+
+            .alumnos-grid.view-list .actions {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .alumnos-grid.view-list .action-btn {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+
+            .alumnos-grid.view-list .alumno-numero-lista {
+                min-width: 35px;
+                height: 35px;
+                font-size: 0.95rem;
+            }
+
+            .alumnos-grid.view-list .alumno-nombre {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Optimización para pantallas muy pequeñas */
+        @media (max-width: 480px) {
+            .alumnos-grid.view-list .alumno-card {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .alumnos-grid.view-list .alumno-avatar {
+                width: 35px;
+                height: 35px;
+                min-width: 35px;
+            }
+
+            .alumnos-grid.view-list .stat-compact {
+                font-size: 0.7rem;
+                padding: 3px 6px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -19,7 +279,7 @@
             <div id="indicador-guardado" style="display: none; position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 20px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); z-index: 9999; animation: fadeIn 0.3s ease;">
                 💾 Guardando asistencias...
             </div>
-            <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap; align-items: center;">
                 <button class="back-button" onclick="window.location.href='/'">← Volver a grupos</button>
                 <button id="btn-iniciar-clase" class="back-button" onclick="tomarLista()" style="background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark)); color: #1f2937; border-color: var(--accent-gold);">
                     📋 Tomar Lista
@@ -45,6 +305,25 @@
                 <button class="back-button" onclick="window.location.href='/gestion-insignias.html' + window.location.search" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: #f59e0b;">
                     🏆 Gestionar Insignias
                 </button>
+
+                <!-- Botón de cambio de vista -->
+                <div style="margin-left: auto; display: flex; gap: 5px; background: var(--card-bg); padding: 5px; border-radius: 12px; border: 2px solid var(--card-border);">
+                    <button id="btn-view-grid" class="view-toggle-btn active" onclick="cambiarVista('grid')" title="Vista de Cuadrícula">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <rect x="2" y="2" width="7" height="7" rx="1"/>
+                            <rect x="11" y="2" width="7" height="7" rx="1"/>
+                            <rect x="2" y="11" width="7" height="7" rx="1"/>
+                            <rect x="11" y="11" width="7" height="7" rx="1"/>
+                        </svg>
+                    </button>
+                    <button id="btn-view-list" class="view-toggle-btn" onclick="cambiarVista('list')" title="Vista de Lista Compacta">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <rect x="2" y="3" width="16" height="2" rx="1"/>
+                            <rect x="2" y="9" width="16" height="2" rx="1"/>
+                            <rect x="2" y="15" width="16" height="2" rx="1"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -412,13 +691,18 @@
             }
 
             loading.style.display = 'none';
-            container.style.display = 'grid';
+
+            // Aplicar la vista actual (grid o list)
+            const vistaGuardada = localStorage.getItem('dashboardView') || 'grid';
+            container.classList.add(`view-${vistaGuardada}`);
+            container.style.display = vistaGuardada === 'grid' ? 'grid' : 'flex';
 
             // Ordenar alumnos por apellidos
             alumnos.sort((a, b) => a.apellidos.localeCompare(b.apellidos));
 
-            container.innerHTML = alumnos.map(alumno => {
+            container.innerHTML = alumnos.map((alumno, index) => {
                 const saludClase = alumno.salud <= 30 ? 'low' : alumno.salud <= 60 ? 'medium' : '';
+                const numeroLista = index + 1; // Número de lista basado en orden alfabético
 
                 // Sistema de XP: 0 a 10000 puntos totales
                 const xpMaximo = 10000;
@@ -458,6 +742,8 @@
                 return `
                     <div class="alumno-card ${estadoClase}">
                         ${badgeHTML}
+                        <!-- Número de lista (solo visible en vista lista) -->
+                        <div class="alumno-numero-lista">${numeroLista}</div>
                         <div class="alumno-header">
                             <div class="alumno-avatar">
                                 <img src="${avatarUrl}" alt="${alumno.nombreCompleto}" style="width: 100%; height: 100%; border-radius: 50%;">
@@ -508,6 +794,16 @@
                                 <div class="health-bar-fill ${saludClase}" style="width: ${alumno.salud}%">
                                     ${alumno.salud}
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Estadísticas compactas (solo visible en vista lista) -->
+                        <div class="alumno-stats-compact">
+                            <div class="stat-compact xp" title="XP Total">
+                                ⚡ ${alumno.xp}
+                            </div>
+                            <div class="stat-compact hp ${saludClase}" title="HP (Salud)">
+                                ❤️ ${alumno.salud}
                             </div>
                         </div>
 
@@ -1239,8 +1535,67 @@
             }
         }
 
+        // ============================================
+        // SISTEMA DE CAMBIO DE VISTA (GRID/LIST)
+        // ============================================
+
+        // Variable global para la vista actual
+        let vistaActual = 'grid';
+
+        // Función para cambiar entre vista Grid y Lista
+        function cambiarVista(vista) {
+            vistaActual = vista;
+            const container = document.getElementById('alumnos-container');
+            const btnGrid = document.getElementById('btn-view-grid');
+            const btnList = document.getElementById('btn-view-list');
+
+            // Remover todas las clases de vista
+            container.classList.remove('view-grid', 'view-list');
+
+            // Agregar la clase de vista seleccionada
+            container.classList.add(`view-${vista}`);
+
+            // Actualizar botones activos
+            btnGrid.classList.remove('active');
+            btnList.classList.remove('active');
+
+            if (vista === 'grid') {
+                btnGrid.classList.add('active');
+                // Cambiar display a grid
+                container.style.display = 'grid';
+            } else {
+                btnList.classList.add('active');
+                // Cambiar display a flex (para la lista)
+                container.style.display = 'flex';
+            }
+
+            // Guardar preferencia en localStorage
+            localStorage.setItem('dashboardView', vista);
+
+            console.log(`✅ Vista cambiada a: ${vista}`);
+        }
+
+        // Función para cargar la vista guardada del localStorage
+        function cargarVistaGuardada() {
+            const vistaGuardada = localStorage.getItem('dashboardView');
+
+            if (vistaGuardada && (vistaGuardada === 'grid' || vistaGuardada === 'list')) {
+                // Aplicar la vista guardada
+                cambiarVista(vistaGuardada);
+                console.log(`✅ Vista cargada desde localStorage: ${vistaGuardada}`);
+            } else {
+                // Por defecto usar vista grid
+                cambiarVista('grid');
+                console.log('✅ Vista por defecto: grid');
+            }
+        }
+
         // Inicializar
         cargarDatos();
+        // Cargar vista guardada después de cargar datos
+        setTimeout(() => {
+            cargarVistaGuardada();
+        }, 500);
     </script>
 </body>
 </html>
