@@ -1,6 +1,6 @@
 # 📍 RESUMEN COMPLETO DEL PROYECTO - SISTEMA DE CONTROL DE AULA
-**Fecha:** 17 de diciembre de 2025
-**Última actualización:** FIX Crítico - Historial de Ajustes Visible ✅
+**Fecha:** 19 de diciembre de 2025
+**Última actualización:** FIX Crítico - Toma de Asistencia Avanza Correctamente ✅
 
 ---
 
@@ -16,9 +16,39 @@
 
 ---
 
-## 🔧 ÚLTIMOS CAMBIOS (Sesión actual - 17 dic 2025)
+## 🔧 ÚLTIMOS CAMBIOS (Sesión actual - 19 dic 2025)
 
-### 🔧 FIX CRÍTICO: Historial de Ajustes Visible para Estudiantes ✅
+### 🐛 FIX CRÍTICO: Toma de Asistencia Avanza Correctamente ✅
+**Problema resuelto:** Al tomar lista, el sistema no avanzaba al siguiente alumno
+
+**Reporte del usuario:**
+- Al hacer clic en Presente/Ausente/Retardo/Justificado, no avanzaba automáticamente
+- El sistema se quedaba congelado en el mismo alumno
+- Impedía completar la toma de lista
+
+**Diagnóstico:**
+- Variable `nombreParaMostrar` no definida en función `marcarAsistencia()` (línea 756)
+- Error de JavaScript bloqueaba la ejecución del código
+- El código de auto-avance (líneas 759-764) nunca se ejecutaba
+- Problema introducido en commit `cc522ad` (FEATURE: Identidad del Estudiante)
+
+**Solución implementada:**
+- ✅ Agregada definición de `nombreParaMostrar` en `marcarAsistencia()`
+- ✅ Corregido `obtenerNombrePreferido()` en `actualizarPanelLateral()`
+- ✅ Corregido `obtenerNombrePreferido()` en `mostrarResumen()`
+- ✅ Ahora busca el objeto alumno completo para respetar preferencia de nombre
+- ✅ 4 funciones corregidas en total
+
+**Archivos corregidos:**
+- `public/asistencia.html` (25 líneas modificadas)
+
+**Commit:** `3f410f0` - "FIX CRÍTICO: Toma de asistencia ahora avanza correctamente"
+
+**Estado:** ✅ 100% Funcional - Sistema de asistencias operando correctamente
+
+---
+
+### 🔧 FIX CRÍTICO: Historial de Ajustes Visible para Estudiantes ✅ (17 dic 2025)
 **Problema resuelto:** Los estudiantes no veían sus ajustes en "Mi Historial"
 
 **Reporte del usuario:**
@@ -317,7 +347,9 @@
 
 **Commits recientes:**
 ```
-41936d8 🔧 FIX: Historial de ajustes visible para estudiantes (17 dic 2025) ← NUEVO
+3f410f0 🐛 FIX CRÍTICO: Toma de asistencia ahora avanza correctamente (19 dic 2025) ← NUEVO
+cc522ad ✨ FEATURE: Identidad del Estudiante - Personalización de perfil (17 dic 2025)
+41936d8 🔧 FIX: Historial de ajustes visible para estudiantes (17 dic 2025)
 3a16874 🔧 FIX: URL hardcodeada en gestión de insignias (14 dic 2025)
 91c02b9 📊 Actualización final: Sistema completo en producción
 7c3ce65 📚 Guía completa para comprar dominio personalizado
@@ -325,11 +357,9 @@ dcd929a 🚀 DEPLOYMENT: Configuración completa para Render
 5f629f3 🔧 FIX: Observaciones ahora visibles en portal de estudiantes
 a2d3958 📜 ETAPA 3.3: Historial de Ajustes para Estudiantes
 32f8d60 🎓 ETAPA 3.2: MVP del Portal de Estudiantes
-1d050ff ⚙️ ETAPA 3.1: Panel de Administración de Grupos
-8af031c 🏆 FASE 2: Sistema Completo de Insignias de Niveles
 ```
 
-**Total de commits en el proyecto:** 12+
+**Total de commits en el proyecto:** 15+
 
 ---
 
@@ -500,28 +530,35 @@ Profesor Jaime
 
 ## 🐛 PROBLEMAS RESUELTOS
 
-### 1. Historial de Ajustes no visible para estudiantes (17 dic 2025) ✅
+### 1. Toma de asistencia no avanzaba al siguiente alumno (19 dic 2025) ✅
+**Problema:** Al marcar asistencia, el sistema no avanzaba automáticamente al siguiente alumno
+**Causa:** Variable `nombreParaMostrar` no definida en función `marcarAsistencia()` causando error de JavaScript
+**Solución:** Agregada definición de variable + corregidas 4 funciones en `asistencia.html`
+**Commit:** `3f410f0`
+**Impacto:** Bloqueaba completamente la toma de lista, fix crítico
+
+### 2. Historial de Ajustes no visible para estudiantes (17 dic 2025) ✅
 **Problema:** Estudiantes no veían su historial de ajustes en "Mi Historial"
 **Causa:** 828 de 899 ajustes no tenían `visibleParaAlumno: true` y 829 sin `comentarioAlumno`
 **Solución:** Migración masiva de 899 ajustes, 100% ahora visibles con comentarios
 **Commit:** `41936d8`
 **Scripts:** `verificarAjustes.js`, `diagnosticoHistorial.js`, `migrarAjustesVisibles.js`, `verificarDatosCompletos.js`
 
-### 2. Observaciones no visibles (5 dic 2025) ✅
+### 3. Observaciones no visibles (5 dic 2025) ✅
 **Problema:** Comentarios del profesor no aparecían en portal estudiantes
 **Solución:** Corregido `xpController.js`, campo `comentarioAlumno` implementado
 
-### 3. Gestión de Insignias ERR_CONNECTION_REFUSED (14 dic 2025) ✅
+### 4. Gestión de Insignias ERR_CONNECTION_REFUSED (14 dic 2025) ✅
 **Problema:** `gestion-insignias.html` tenía localhost hardcodeado
 **Solución:** Cambiado a URL relativa `/api`
 **Commit:** `3a16874`
 
-### 4. Insignias no aparecían en Dashboard del Profesor (14 dic 2025) ✅
+### 5. Insignias no aparecían en Dashboard del Profesor (14 dic 2025) ✅
 **Problema:** Imagen rota en tarjetas de alumnos con insignias asignadas
 **Solución:** Agregado filtro para buscar insignia de nivel (`nivel !== null`)
 **Commit:** `712eded`
 
-### 5. Gráficas de Progreso daban error 404 (14 dic 2025) ✅
+### 6. Gráficas de Progreso daban error 404 (14 dic 2025) ✅
 **Problema:** claveZipGrade no estaba en objeto de sesión, gráficas no cargaban
 **Solución:** Agregado claveZipGrade al objeto alumno en login
 **Commit:** `0790700`
@@ -536,6 +573,7 @@ Profesor Jaime
 - [x] Portal de estudiantes accesible
 - [x] Dashboard del profesor operativo
 - [x] HTTPS activo y seguro
+- [x] Toma de asistencia funcionando correctamente ⭐ FIX CRÍTICO 19/12/25
 - [x] Observaciones visibles para estudiantes
 - [x] Historial de ajustes funcionando
 - [x] Sistema de insignias activo ⭐ CORREGIDO
@@ -651,5 +689,5 @@ Tu sistema de Control de Aula con gamificación está ahora disponible para tus 
 
 **Desarrollado para Secundaria Técnica #50**
 **Ciclo Escolar 2025-2026**
-**Última actualización:** 14 de diciembre de 2025
+**Última actualización:** 19 de diciembre de 2025
 **🤖 Desarrollado con asistencia de Claude Code**
