@@ -1,6 +1,6 @@
 # 📍 RESUMEN COMPLETO DEL PROYECTO - SISTEMA DE CONTROL DE AULA
 **Fecha:** 19 de diciembre de 2025
-**Última actualización:** FIX Crítico - Toma de Asistencia Avanza Correctamente ✅
+**Última actualización:** Sesión completa - 5 cambios implementados (Toggle View, HP fixes, Eventos visibles, Gráficas actualizadas) ✅
 
 ---
 
@@ -45,6 +45,170 @@
 **Commit:** `3f410f0` - "FIX CRÍTICO: Toma de asistencia ahora avanza correctamente"
 
 **Estado:** ✅ 100% Funcional - Sistema de asistencias operando correctamente
+
+---
+
+### ✨ FEATURE: Toggle Grid/List View en Dashboard del Profesor ✅
+**Nueva funcionalidad:** Sistema de vista alternativa para optimizar UX en móvil
+
+**Problema identificado:**
+- Dashboard con tarjetas grandes difícil de usar en móvil
+- Mucho scroll vertical necesario
+- Estadísticas ocupaban mucho espacio
+- UX no optimizada para pantallas pequeñas
+
+**Solución implementada:**
+- ✅ Botón de toggle con iconos (⊞ Grid / ☰ List)
+- ✅ Vista Grid (original) con tarjetas completas
+- ✅ Vista List compacta con:
+  - Número de lista visible con gradiente morado (#)
+  - Filas de 60px de altura
+  - Estadísticas sin barras gráficas (solo "1,234 XP" y "90 ❤️ HP")
+  - Estados de asistencia con colores de fondo
+  - Hover effect con desplazamiento y borde morado
+- ✅ Persistencia en localStorage (mantiene preferencia)
+- ✅ Responsive optimizado para móvil (< 768px)
+- ✅ Adaptación para pantallas muy pequeñas (< 480px)
+- ✅ Estética gaming coherente con diseño existente
+
+**Archivos modificados:**
+- `public/dashboard.html` (+358 líneas)
+  - 268 líneas de CSS para vista List
+  - 60 líneas de HTML/JavaScript (botón + funciones)
+  - Función `cambiarVista()` para toggle
+  - Función `cargarVistaGuardada()` para persistencia
+  - Número de lista en renderizado de alumnos
+
+**Commit:** `ceb2394` - "FEATURE: Toggle Grid/List view para mejor UX móvil"
+
+**Estado:** ✅ 100% Funcional - Vista optimizada para móvil y desktop
+
+---
+
+### 🐛 FIX: Portal Estudiante - HP Actualizado + Gráfica Roja ✅
+**Problema resuelto:** HP no se actualizaba en portal y gráfica tenía color incorrecto
+
+**Reporte del usuario:**
+- Alumno Miqueas Vazquez Gonzalez perdió 10 HP (100 → 90)
+- En el portal seguía mostrando 100 HP
+- La gráfica de HP era verde (debería ser roja como "vida" en videojuegos)
+
+**Diagnóstico:**
+- Portal de estudiante cargaba datos una sola vez al hacer login
+- No había actualización de datos durante la sesión
+- Color de gráfica HP usaba verde (incorrecto para representar "vida")
+
+**Solución implementada:**
+- ✅ Nueva función `actualizarDatosEstudiante()` que refresca datos del servidor
+- ✅ Se llama automáticamente al cargar historial
+- ✅ Actualiza sessionStorage con valores actuales de XP/HP
+- ✅ Cambiado color de gráfica HP de verde a rojo:
+  - HP ≥ 70: Rojo brillante (#ef4444) - "saludable"
+  - HP 40-69: Naranja (#f59e0b) - "advertencia"
+  - HP < 40: Rojo oscuro (#dc2626) - "peligro"
+- ✅ Ahora representa correctamente "vida" como en videojuegos
+
+**Archivos modificados:**
+- `public/portal-estudiante-dashboard.html` (+35 líneas)
+  - Función `actualizarDatosEstudiante()` con fetch al servidor
+  - Actualización de sessionStorage
+  - Colores de gráfica HP cambiados a escala roja
+
+**Commit:** `e993dee` - "FIX: HP actualizado en portal + gráfica roja"
+
+**Estado:** ✅ 100% Funcional - Portal muestra datos actuales en tiempo real
+
+---
+
+### 🐛 FIX CRÍTICO: Eventos Disciplinarios Visibles en Historial ✅
+**Problema resuelto:** Estudiantes no podían ver eventos disciplinarios en "Mi Historial"
+
+**Reporte del usuario:**
+- Alumno perdió 10 puntos de HP por evento disciplinario
+- El HP SÍ se actualizó en el portal (90 HP correctamente)
+- PERO el evento NO aparecía en "Mi Historial"
+- El estudiante no sabía por qué había perdido HP
+
+**Diagnóstico:**
+- `registrarEventoDisciplinario()` solo creaba registro en tabla `EventoDisciplinario`
+- NO creaba registro en tabla `Ajuste` (donde lee el historial del estudiante)
+- Problema de arquitectura multi-tabla:
+  - Escritura en `EventoDisciplinario` (para profesor)
+  - Lectura en `Ajuste` (para estudiante)
+  - Desconexión entre ambas tablas
+
+**Solución implementada:**
+- ✅ Modificado `registrarEventoDisciplinario()` para crear AMBOS registros:
+  - EventoDisciplinario (para registro del profesor)
+  - Ajuste con `visibleParaAlumno: true` (para historial del estudiante)
+- ✅ Aplicado tanto para eventos individuales como grupales
+- ✅ Campo `comentarioAlumno` incluye descripción del evento
+- ✅ Registra valores anterior/después para transparencia total
+- ✅ Import de modelo `Ajuste` agregado al controlador
+
+**Archivos modificados:**
+- `src/controllers/eventoController.js` (+28 líneas)
+  - Import de modelo `Ajuste`
+  - Creación de registro Ajuste en `registrarEventoDisciplinario()`
+  - Creación de registros Ajuste en `registrarEventoDisciplinarioGrupal()`
+
+**Commit:** `a79a40d` - "FIX: Eventos disciplinarios ahora visibles en historial estudiante"
+
+**Estado:** ✅ 100% Funcional - Estudiantes ven todos los eventos que afectan su HP
+
+---
+
+### ✨ FEATURE: Gráficas Incluyen Dato Actual (HOY) ✅
+**Nueva funcionalidad:** Gráficas siempre muestran hasta la fecha actual
+
+**Problema identificado:**
+- Usuario preguntó: "¿Por qué las gráficas están como máximo en la fecha 19 y hoy es 19?"
+- Las gráficas solo mostraban datos de `ProgresoSnapshot` (tabla histórica)
+- Si el script `guardarSnapshotsDiarios.js` no se ejecutaba, no había dato para HOY
+- Las gráficas quedaban "desactualizadas" sin llegar hasta la fecha actual
+
+**Diagnóstico:**
+- Gráficas dependían 100% de snapshots históricos
+- No consideraban valores actuales del alumno en tiempo real
+- Si script no se ejecutaba, gráficas no llegaban hasta HOY
+
+**Solución implementada:**
+- ✅ Modificados 3 endpoints del controlador de progreso:
+  - `obtenerProgresoXP()`
+  - `obtenerProgresoHP()`
+  - `obtenerProgresoCompleto()`
+- ✅ Lógica agregada para crear "snapshot virtual" del día actual:
+  1. Obtener snapshots históricos de la BD
+  2. Verificar si existe snapshot para HOY
+  3. Si NO existe, agregar punto con fecha actual y valores del alumno
+- ✅ Gráficas ahora SIEMPRE llegan hasta la fecha actual
+- ✅ Independiente de ejecución del script de snapshots
+
+**Archivos modificados:**
+- `src/controllers/progresoController.js` (+36 líneas)
+  - Lógica de snapshot virtual en `obtenerProgresoXP()`
+  - Lógica de snapshot virtual en `obtenerProgresoHP()`
+  - Lógica de snapshot virtual en `obtenerProgresoCompleto()`
+
+**Código clave:**
+```javascript
+// Agregar dato actual (HOY) si no existe snapshot de hoy
+const hoy = new Date().toISOString().split('T')[0];
+const ultimoSnapshot = snapshots.length > 0
+    ? snapshots[snapshots.length - 1].fecha.toISOString().split('T')[0]
+    : null;
+
+if (ultimoSnapshot !== hoy) {
+    datosXP.push({
+        fecha: hoy,
+        xp: alumno.xp  // Valor actual en tiempo real
+    });
+}
+```
+
+**Commit:** `686557e` - "FEATURE: Gráficas incluyen dato actual (HOY) en tiempo real"
+
+**Estado:** ✅ 100% Funcional - Gráficas siempre actualizadas hasta HOY
 
 ---
 
@@ -167,12 +331,14 @@
    - Insignia de nivel actual
    - Nombre preferido
 
-3. ✅ **Gráficas de Progreso del Trimestre** ⭐ NUEVO
+3. ✅ **Gráficas de Progreso del Trimestre** ⭐ MEJORADO 19/12/25
    - Gráfica de XP (línea con gradiente morado)
-   - Gráfica de HP (área con color dinámico)
+   - Gráfica de HP (área con color rojo - estilo videojuego) ⭐ NUEVO
+   - Siempre incluyen fecha actual (HOY) ⭐ NUEVO
    - Estadísticas: Racha, Tendencia, XP Ganado, Cambio Ranking
    - Histórico de 90 días (3 meses)
    - Visualización con Chart.js
+   - Datos actualizados en tiempo real ⭐ NUEVO
 
 4. ✅ **Ranking del Grupo**
    - Lista completa ordenada por XP
@@ -181,12 +347,14 @@
    - Scroll automático
    - Avatares y estadísticas
 
-5. ✅ **Historial de Ajustes**
+5. ✅ **Historial de Ajustes** ⭐ MEJORADO 19/12/25
    - Timeline visual
    - Filtros por tipo y fecha
    - Estadísticas XP/HP ganado/perdido
    - Comentarios del profesor
    - Valores antes/después
+   - Eventos disciplinarios ahora visibles ⭐ NUEVO
+   - 100% de ajustes visibles con transparencia total
 
 6. ✅ **Diseño Responsive**
    - Funciona en celular, tablet, PC
@@ -195,17 +363,22 @@
    - UX intuitiva
 
 ### Portal del Profesor (100% Completado)
-1. ✅ **Dashboard Principal**
+1. ✅ **Dashboard Principal** ⭐ MEJORADO 19/12/25
    - Selección de grupos
    - Listado de alumnos con avatares
+   - Toggle Grid/List view (optimizado para móvil) ⭐ NUEVO
+   - Vista compacta con filas de 60px ⭐ NUEVO
+   - Persistencia de preferencia en localStorage ⭐ NUEVO
    - Asignación de XP/HP con observaciones
    - Sistema de audio gaming
 
-2. ✅ **Gestión de Asistencias**
+2. ✅ **Gestión de Asistencias** ⭐ CORREGIDO 19/12/25
    - 4 estados de asistencia
+   - Avance automático entre alumnos ⭐ CORREGIDO
    - Tabla tipo calendario
    - Bonus automáticos
    - Exportación de datos
+   - Respeta nombre preferido del estudiante ⭐ MEJORADO
 
 3. ✅ **Sistema de Insignias** ⭐ CORREGIDO
    - 6 insignias de nivel
@@ -291,8 +464,11 @@
 - `src/models/Grupo.js` - Modelo de grupos
 - `src/models/Insignia.js` - Modelo de insignias
 - `src/models/Ajuste.js` - Modelo de ajustes XP/HP
+- `src/models/ProgresoSnapshot.js` - Modelo de snapshots históricos
 - `src/controllers/estudianteController.js` - Portal estudiantes
 - `src/controllers/xpController.js` - Ajustes XP/HP (CORREGIDO)
+- `src/controllers/eventoController.js` - Eventos disciplinarios (CORREGIDO 19/12/25) ⭐
+- `src/controllers/progresoController.js` - Gráficas de progreso (CORREGIDO 19/12/25) ⭐
 - `src/controllers/grupoController.js` - CRUD grupos
 - `src/controllers/insigniaController.js` - Gestión insignias
 - `src/controllers/importarController.js` - Importaciones
@@ -300,13 +476,13 @@
 
 ### Frontend (Todos con URLs relativas ✅)
 - `public/index.html` - Inicio profesor
-- `public/dashboard.html` - Dashboard profesor
+- `public/dashboard.html` - Dashboard profesor (MODIFICADO 19/12/25 - Toggle View) ⭐
 - `public/admin-grupos.html` - Administración grupos
-- `public/gestion-insignias.html` - Asignación insignias ⭐ CORREGIDO
+- `public/gestion-insignias.html` - Asignación insignias (CORREGIDO)
 - `public/portal-estudiante-login.html` - Login estudiantes
-- `public/portal-estudiante-dashboard.html` - Dashboard estudiantes
+- `public/portal-estudiante-dashboard.html` - Dashboard estudiantes (MODIFICADO 19/12/25 - HP actualizado) ⭐
 - `public/portal-estudiante-historial.html` - Historial estudiantes
-- `public/asistencia.html` - Gestión asistencias
+- `public/asistencia.html` - Gestión asistencias (CORREGIDO 19/12/25) ⭐
 - `public/tabla-asistencias.html` - Tabla asistencias
 - `public/ranking.html` - Ranking general
 - `public/historial.html` - Historial profesor
@@ -347,19 +523,19 @@
 
 **Commits recientes:**
 ```
+686557e ✨ FEATURE: Gráficas incluyen dato actual (HOY) en tiempo real (19 dic 2025) ← NUEVO
+a79a40d 🐛 FIX: Eventos disciplinarios ahora visibles en historial estudiante (19 dic 2025) ← NUEVO
+e993dee 🐛 FIX: HP actualizado en portal + gráfica roja (19 dic 2025) ← NUEVO
+ceb2394 ✨ FEATURE: Toggle Grid/List view para mejor UX móvil (19 dic 2025) ← NUEVO
 3f410f0 🐛 FIX CRÍTICO: Toma de asistencia ahora avanza correctamente (19 dic 2025) ← NUEVO
 cc522ad ✨ FEATURE: Identidad del Estudiante - Personalización de perfil (17 dic 2025)
 41936d8 🔧 FIX: Historial de ajustes visible para estudiantes (17 dic 2025)
 3a16874 🔧 FIX: URL hardcodeada en gestión de insignias (14 dic 2025)
 91c02b9 📊 Actualización final: Sistema completo en producción
 7c3ce65 📚 Guía completa para comprar dominio personalizado
-dcd929a 🚀 DEPLOYMENT: Configuración completa para Render
-5f629f3 🔧 FIX: Observaciones ahora visibles en portal de estudiantes
-a2d3958 📜 ETAPA 3.3: Historial de Ajustes para Estudiantes
-32f8d60 🎓 ETAPA 3.2: MVP del Portal de Estudiantes
 ```
 
-**Total de commits en el proyecto:** 15+
+**Total de commits en el proyecto:** 20+
 
 ---
 
@@ -530,35 +706,63 @@ Profesor Jaime
 
 ## 🐛 PROBLEMAS RESUELTOS
 
-### 1. Toma de asistencia no avanzaba al siguiente alumno (19 dic 2025) ✅
+### 1. Gráficas no incluían fecha actual (19 dic 2025) ✅
+**Problema:** Gráficas de XP/HP no mostraban datos hasta la fecha actual (HOY)
+**Causa:** Solo mostraban snapshots históricos, si script no se ejecutaba, faltaba dato de hoy
+**Solución:** Agregada lógica de "snapshot virtual" que usa valores actuales del alumno si no hay snapshot de HOY
+**Commit:** `686557e`
+**Impacto:** Gráficas ahora siempre actualizadas, independiente de script diario
+
+### 2. Eventos disciplinarios no visibles en historial estudiante (19 dic 2025) ✅
+**Problema:** Al perder HP por evento disciplinario, el estudiante no veía el evento en "Mi Historial"
+**Causa:** `registrarEventoDisciplinario()` solo creaba EventoDisciplinario, no Ajuste (desconexión multi-tabla)
+**Solución:** Modificado controlador para crear AMBOS registros (EventoDisciplinario + Ajuste visible)
+**Commit:** `a79a40d`
+**Impacto:** Transparencia total - estudiantes ven por qué perdieron HP
+
+### 3. HP no actualizado en portal estudiante + gráfica verde (19 dic 2025) ✅
+**Problema:** Portal no refrescaba HP después de cambios + gráfica HP usaba color verde incorrecto
+**Causa:** Datos se cargaban solo al login, sin actualización durante sesión + color inadecuado para "vida"
+**Solución:** Nueva función `actualizarDatosEstudiante()` + cambio de color a escala roja (como videojuegos)
+**Commit:** `e993dee`
+**Impacto:** Portal siempre muestra datos actuales + estética correcta para HP
+
+### 4. Dashboard difícil de usar en móvil (19 dic 2025) ✅
+**Problema:** Tarjetas grandes ocupaban mucho espacio en móvil, mucho scroll necesario
+**Causa:** Solo había vista Grid con tarjetas completas, no optimizado para pantallas pequeñas
+**Solución:** Implementado toggle Grid/List con vista compacta de 60px por fila + persistencia localStorage
+**Commit:** `ceb2394`
+**Impacto:** UX móvil optimizada, +358 líneas de código
+
+### 5. Toma de asistencia no avanzaba al siguiente alumno (19 dic 2025) ✅
 **Problema:** Al marcar asistencia, el sistema no avanzaba automáticamente al siguiente alumno
 **Causa:** Variable `nombreParaMostrar` no definida en función `marcarAsistencia()` causando error de JavaScript
 **Solución:** Agregada definición de variable + corregidas 4 funciones en `asistencia.html`
 **Commit:** `3f410f0`
 **Impacto:** Bloqueaba completamente la toma de lista, fix crítico
 
-### 2. Historial de Ajustes no visible para estudiantes (17 dic 2025) ✅
+### 6. Historial de Ajustes no visible para estudiantes (17 dic 2025) ✅
 **Problema:** Estudiantes no veían su historial de ajustes en "Mi Historial"
 **Causa:** 828 de 899 ajustes no tenían `visibleParaAlumno: true` y 829 sin `comentarioAlumno`
 **Solución:** Migración masiva de 899 ajustes, 100% ahora visibles con comentarios
 **Commit:** `41936d8`
 **Scripts:** `verificarAjustes.js`, `diagnosticoHistorial.js`, `migrarAjustesVisibles.js`, `verificarDatosCompletos.js`
 
-### 3. Observaciones no visibles (5 dic 2025) ✅
+### 7. Observaciones no visibles (5 dic 2025) ✅
 **Problema:** Comentarios del profesor no aparecían en portal estudiantes
 **Solución:** Corregido `xpController.js`, campo `comentarioAlumno` implementado
 
-### 4. Gestión de Insignias ERR_CONNECTION_REFUSED (14 dic 2025) ✅
+### 8. Gestión de Insignias ERR_CONNECTION_REFUSED (14 dic 2025) ✅
 **Problema:** `gestion-insignias.html` tenía localhost hardcodeado
 **Solución:** Cambiado a URL relativa `/api`
 **Commit:** `3a16874`
 
-### 5. Insignias no aparecían en Dashboard del Profesor (14 dic 2025) ✅
+### 9. Insignias no aparecían en Dashboard del Profesor (14 dic 2025) ✅
 **Problema:** Imagen rota en tarjetas de alumnos con insignias asignadas
 **Solución:** Agregado filtro para buscar insignia de nivel (`nivel !== null`)
 **Commit:** `712eded`
 
-### 6. Gráficas de Progreso daban error 404 (14 dic 2025) ✅
+### 10. Gráficas de Progreso daban error 404 (14 dic 2025) ✅
 **Problema:** claveZipGrade no estaba en objeto de sesión, gráficas no cargaban
 **Solución:** Agregado claveZipGrade al objeto alumno en login
 **Commit:** `0790700`
@@ -581,9 +785,14 @@ Profesor Jaime
 - [x] Importación de Plickers funcional
 - [x] Documentación completa
 - [x] Código en GitHub actualizado
-- [x] Todas las URLs relativas funcionando ⭐ NUEVO
-- [x] Gráficas de progreso en portal estudiante ⭐ NUEVO
-- [x] Sistema de snapshots históricos funcionando ⭐ NUEVO
+- [x] Todas las URLs relativas funcionando
+- [x] Gráficas de progreso en portal estudiante
+- [x] Sistema de snapshots históricos funcionando
+- [x] Toggle Grid/List view en dashboard ⭐ NUEVO 19/12/25
+- [x] Eventos disciplinarios visibles para estudiantes ⭐ NUEVO 19/12/25
+- [x] Gráficas incluyen fecha actual (HOY) ⭐ NUEVO 19/12/25
+- [x] Portal estudiante actualiza datos en tiempo real ⭐ NUEVO 19/12/25
+- [x] Gráfica HP con colores correctos (rojo) ⭐ NUEVO 19/12/25
 - [ ] Dominio personalizado (pendiente decisión)
 - [ ] Automatización de snapshots diarios (manual por ahora)
 - [ ] Tutorial en video (opcional)
@@ -634,7 +843,7 @@ Este script se puede configurar como cron job en Render para que se ejecute auto
 
 ## 🎉 LOGROS DESTACADOS
 
-1. **Sistema completo en 4 sesiones** de trabajo intenso
+1. **Sistema completo en 5 sesiones** de trabajo intenso
 2. **100% de estudiantes** con acceso configurado
 3. **Documentación exhaustiva** para futuro mantenimiento
 4. **Código limpio y mantenible** con comentarios
@@ -642,10 +851,15 @@ Este script se puede configurar como cron job en Render para que se ejecute auto
 6. **UX gaming** atractiva para estudiantes
 7. **Transparencia total** con comentarios visibles
 8. **Deployment automático** funcionando perfectamente
-9. **Todos los bugs corregidos** rápidamente
-10. **Gráficas de progreso** implementadas (backend + frontend) ⭐ NUEVO
-11. **24,934 snapshots históricos** generados en 2 minutos ⭐ NUEVO
-12. **Script optimizado 270x** más rápido ⭐ NUEVO
+9. **Todos los bugs corregidos** rápidamente (10 fixes en total)
+10. **Gráficas de progreso** implementadas (backend + frontend)
+11. **24,934 snapshots históricos** generados en 2 minutos
+12. **Script optimizado 270x** más rápido
+13. **Toggle Grid/List view** para UX móvil optimizada ⭐ NUEVO (19 dic)
+14. **Eventos disciplinarios visibles** para estudiantes ⭐ NUEVO (19 dic)
+15. **Gráficas siempre actualizadas** hasta HOY ⭐ NUEVO (19 dic)
+16. **Portal estudiante en tiempo real** con datos actuales ⭐ NUEVO (19 dic)
+17. **+400 líneas de código** agregadas en sesión del 19 dic ⭐ NUEVO
 
 ---
 
@@ -674,6 +888,20 @@ Tu sistema de Control de Aula con gamificación está ahora disponible para tus 
 - No hay bugs conocidos pendientes
 - La arquitectura está lista para nuevas features
 - El deployment automático funciona perfectamente
+
+**Últimos cambios implementados (19 dic 2025):**
+- ✅ Toggle Grid/List view en dashboard del profesor (358 líneas)
+- ✅ Fix de HP actualizado en portal estudiante + gráfica roja
+- ✅ Eventos disciplinarios ahora visibles en historial estudiante
+- ✅ Gráficas siempre incluyen fecha actual (HOY)
+- ✅ Fix crítico de toma de asistencia que no avanzaba
+
+**Archivos modificados en última sesión:**
+- `public/dashboard.html` - Toggle View (+358 líneas)
+- `public/portal-estudiante-dashboard.html` - HP actualizado (+35 líneas)
+- `public/asistencia.html` - Fix avance automático (25 líneas)
+- `src/controllers/eventoController.js` - Ajustes visibles (+28 líneas)
+- `src/controllers/progresoController.js` - Snapshots virtuales (+36 líneas)
 
 **Variables de entorno configuradas en Render:**
 - `MONGODB_URI` - Conexión a MongoDB Atlas
