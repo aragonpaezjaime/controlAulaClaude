@@ -753,6 +753,7 @@
                 'justificado': '📝'
             };
             const emoji = emojis[estado] || '?';
+            const nombreParaMostrar = obtenerNombrePreferido(alumno);
             mostrarExito(`${emoji} ${nombreParaMostrar}: ${estado.toUpperCase()}`);
 
             // Auto-avanzar solo si no estamos en el último alumno
@@ -780,9 +781,10 @@
             if (ausentes.length === 0) {
                 listaAusentes.innerHTML = '<li class="panel-empty">Ninguno</li>';
             } else {
-                listaAusentes.innerHTML = ausentes.map(a =>
-                    `<li class="panel-item">${obtenerNombrePreferido(a)}</li>`
-                ).join('');
+                listaAusentes.innerHTML = ausentes.map(a => {
+                    const alumno = alumnos.find(al => al._id === a.alumnoId);
+                    return `<li class="panel-item">${obtenerNombrePreferido(alumno)}</li>`;
+                }).join('');
             }
 
             // Actualizar retardos
@@ -792,9 +794,10 @@
             if (retardos.length === 0) {
                 listaRetardos.innerHTML = '<li class="panel-empty">Ninguno</li>';
             } else {
-                listaRetardos.innerHTML = retardos.map(a =>
-                    `<li class="panel-item retardo">${obtenerNombrePreferido(a)}</li>`
-                ).join('');
+                listaRetardos.innerHTML = retardos.map(a => {
+                    const alumno = alumnos.find(al => al._id === a.alumnoId);
+                    return `<li class="panel-item retardo">${obtenerNombrePreferido(alumno)}</li>`;
+                }).join('');
             }
 
             // Actualizar justificados
@@ -804,9 +807,10 @@
             if (justificados.length === 0) {
                 listaJustificados.innerHTML = '<li class="panel-empty">Ninguno</li>';
             } else {
-                listaJustificados.innerHTML = justificados.map(a =>
-                    `<li class="panel-item" style="background: rgba(59, 130, 246, 0.1); border-left-color: #3b82f6;">${obtenerNombrePreferido(a)}</li>`
-                ).join('');
+                listaJustificados.innerHTML = justificados.map(a => {
+                    const alumno = alumnos.find(al => al._id === a.alumnoId);
+                    return `<li class="panel-item" style="background: rgba(59, 130, 246, 0.1); border-left-color: #3b82f6;">${obtenerNombrePreferido(alumno)}</li>`;
+                }).join('');
             }
         }
 
@@ -884,9 +888,10 @@
             if (ausentes.length === 0) {
                 listaAusentesResumen.innerHTML = '<div class="panel-empty">Ninguno</div>';
             } else {
-                listaAusentesResumen.innerHTML = ausentes.map((a, index) =>
-                    `<div class="resumen-lista-item">${index + 1}. ${obtenerNombrePreferido(a)}</div>`
-                ).join('');
+                listaAusentesResumen.innerHTML = ausentes.map((a, index) => {
+                    const alumno = alumnos.find(al => al._id === a.alumnoId);
+                    return `<div class="resumen-lista-item">${index + 1}. ${obtenerNombrePreferido(alumno)}</div>`;
+                }).join('');
             }
 
             // Mostrar lista de retardos
@@ -894,9 +899,10 @@
             if (retardos.length === 0) {
                 listaRetardosResumen.innerHTML = '<div class="panel-empty">Ninguno</div>';
             } else {
-                listaRetardosResumen.innerHTML = retardos.map((a, index) =>
-                    `<div class="resumen-lista-item">${index + 1}. ${obtenerNombrePreferido(a)}</div>`
-                ).join('');
+                listaRetardosResumen.innerHTML = retardos.map((a, index) => {
+                    const alumno = alumnos.find(al => al._id === a.alumnoId);
+                    return `<div class="resumen-lista-item">${index + 1}. ${obtenerNombrePreferido(alumno)}</div>`;
+                }).join('');
             }
 
             // Mostrar lista de justificados
@@ -904,9 +910,10 @@
             if (justificados.length === 0) {
                 listaJustificadosResumen.innerHTML = '<div class="panel-empty">Ninguno</div>';
             } else {
-                listaJustificadosResumen.innerHTML = justificados.map((a, index) =>
-                    `<div class="resumen-lista-item">${index + 1}. ${obtenerNombrePreferido(a)}</div>`
-                ).join('');
+                listaJustificadosResumen.innerHTML = justificados.map((a, index) => {
+                    const alumno = alumnos.find(al => al._id === a.alumnoId);
+                    return `<div class="resumen-lista-item">${index + 1}. ${obtenerNombrePreferido(alumno)}</div>`;
+                }).join('');
             }
 
             document.getElementById('asistencia-screen').style.display = 'none';
