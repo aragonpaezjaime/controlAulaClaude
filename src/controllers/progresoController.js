@@ -34,15 +34,26 @@ exports.obtenerProgresoXP = async (req, res) => {
       xp: snapshot.xp
     }));
 
+    // Agregar dato actual (HOY) si no existe snapshot de hoy
+    const hoy = new Date().toISOString().split('T')[0];
+    const ultimoSnapshot = snapshots.length > 0 ? snapshots[snapshots.length - 1].fecha.toISOString().split('T')[0] : null;
+
+    if (ultimoSnapshot !== hoy) {
+      datosGrafica.push({
+        fecha: hoy,
+        xp: alumno.xp
+      });
+    }
+
     res.json({
       success: true,
       data: datosGrafica,
       meta: {
         alumno: alumno.nombreCompleto,
-        totalDias: snapshots.length,
+        totalDias: datosGrafica.length,
         xpInicial: snapshots.length > 0 ? snapshots[0].xp : alumno.xp,
-        xpActual: snapshots.length > 0 ? snapshots[snapshots.length - 1].xp : alumno.xp,
-        diferencia: snapshots.length > 0 ? snapshots[snapshots.length - 1].xp - snapshots[0].xp : 0
+        xpActual: alumno.xp, // Siempre el valor actual
+        diferencia: snapshots.length > 0 ? alumno.xp - snapshots[0].xp : 0
       }
     });
 
@@ -83,14 +94,25 @@ exports.obtenerProgresoHP = async (req, res) => {
       hp: snapshot.hp
     }));
 
+    // Agregar dato actual (HOY) si no existe snapshot de hoy
+    const hoy = new Date().toISOString().split('T')[0];
+    const ultimoSnapshot = snapshots.length > 0 ? snapshots[snapshots.length - 1].fecha.toISOString().split('T')[0] : null;
+
+    if (ultimoSnapshot !== hoy) {
+      datosGrafica.push({
+        fecha: hoy,
+        hp: alumno.salud
+      });
+    }
+
     res.json({
       success: true,
       data: datosGrafica,
       meta: {
         alumno: alumno.nombreCompleto,
-        totalDias: snapshots.length,
+        totalDias: datosGrafica.length,
         hpInicial: snapshots.length > 0 ? snapshots[0].hp : alumno.salud,
-        hpActual: snapshots.length > 0 ? snapshots[snapshots.length - 1].hp : alumno.salud,
+        hpActual: alumno.salud, // Siempre el valor actual
         hpPromedio: snapshots.length > 0
           ? Math.round(snapshots.reduce((sum, s) => sum + s.hp, 0) / snapshots.length)
           : alumno.salud
@@ -182,6 +204,23 @@ exports.obtenerProgresoCompleto = async (req, res) => {
       fecha: s.fecha.toISOString().split('T')[0],
       hp: s.hp
     }));
+
+    // Agregar dato actual (HOY) si no existe snapshot de hoy
+    const hoy = new Date().toISOString().split('T')[0];
+    const ultimoSnapshot = snapshots.length > 0 ? snapshots[snapshots.length - 1].fecha.toISOString().split('T')[0] : null;
+
+    if (ultimoSnapshot !== hoy) {
+      // Agregar punto actual para que la gráfica llegue hasta HOY
+      datosXP.push({
+        fecha: hoy,
+        xp: alumno.xp
+      });
+
+      datosHP.push({
+        fecha: hoy,
+        hp: alumno.salud
+      });
+    }
 
     res.json({
       success: true,
