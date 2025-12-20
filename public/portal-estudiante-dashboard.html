@@ -1185,8 +1185,49 @@
             }
         });
 
+        // Actualizar datos del estudiante desde el backend
+        async function actualizarDatosEstudiante() {
+            try {
+                const response = await fetch(`${API_URL}/estudiante/perfil/${sesion.id}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // Actualizar datos en la sesión
+                    sesion.xp = data.alumno.xp;
+                    sesion.salud = data.alumno.salud;
+                    sesion.nombre = data.alumno.nombre;
+                    sesion.apellidos = data.alumno.apellidos;
+                    sesion.nombreCompleto = data.alumno.nombreCompleto;
+
+                    // Actualizar insignia si existe
+                    if (data.alumno.insignias && data.alumno.insignias.length > 0) {
+                        const insigniaNivel = data.alumno.insignias.find(i => i.insigniaId && i.insigniaId.nivel !== null);
+                        if (insigniaNivel) {
+                            sesion.insigniaActual = {
+                                nombre: insigniaNivel.insigniaId.nombre,
+                                icono: insigniaNivel.insigniaId.icono,
+                                imagen: insigniaNivel.insigniaId.imagen
+                            };
+                        }
+                    }
+
+                    // Guardar sesión actualizada en localStorage
+                    localStorage.setItem('estudianteSesion', JSON.stringify(sesion));
+
+                    console.log('✅ Datos del estudiante actualizados:', { xp: sesion.xp, hp: sesion.salud });
+                } else {
+                    console.error('Error al actualizar datos del estudiante:', data.mensaje);
+                }
+            } catch (error) {
+                console.error('Error al actualizar datos del estudiante:', error);
+            }
+        }
+
         // Cargar datos del dashboard
         async function cargarDashboard() {
+            // PRIMERO: Actualizar datos del estudiante desde el backend
+            await actualizarDatosEstudiante();
+
             // Mostrar información del grupo
             document.getElementById('grupoInfo').textContent =
                 `${sesion.grupo.nombre} - ${sesion.grupo.materia} (${sesion.grupo.ciclo})`;
@@ -1506,21 +1547,25 @@
             const valores = datosHP.map(d => d.hp);
 
             // Determinar color según HP promedio
+            // Rojo = vida/salud (como en videojuegos)
             const hpPromedio = valores.reduce((a, b) => a + b, 0) / valores.length;
             let colorLinea, colorGradiente1, colorGradiente2;
 
-            if (hpPromedio > 70) {
-                colorLinea = '#10b981';
-                colorGradiente1 = 'rgba(16, 185, 129, 0.6)';
-                colorGradiente2 = 'rgba(16, 185, 129, 0.1)';
-            } else if (hpPromedio > 40) {
+            if (hpPromedio >= 70) {
+                // HP alto (70-100) = Rojo brillante (saludable)
+                colorLinea = '#ef4444';
+                colorGradiente1 = 'rgba(239, 68, 68, 0.6)';
+                colorGradiente2 = 'rgba(239, 68, 68, 0.1)';
+            } else if (hpPromedio >= 40) {
+                // HP medio (40-69) = Naranja (advertencia)
                 colorLinea = '#f59e0b';
                 colorGradiente1 = 'rgba(245, 158, 11, 0.6)';
                 colorGradiente2 = 'rgba(245, 158, 11, 0.1)';
             } else {
-                colorLinea = '#ef4444';
-                colorGradiente1 = 'rgba(239, 68, 68, 0.6)';
-                colorGradiente2 = 'rgba(239, 68, 68, 0.1)';
+                // HP bajo (0-39) = Rojo oscuro (peligro)
+                colorLinea = '#dc2626';
+                colorGradiente1 = 'rgba(220, 38, 38, 0.6)';
+                colorGradiente2 = 'rgba(220, 38, 38, 0.1)';
             }
 
             // Crear gradiente
