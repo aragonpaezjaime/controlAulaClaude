@@ -1,6 +1,7 @@
 const { Evento, EventoSalida, EventoDisciplinario } = require('../models/Evento');
 const Alumno = require('../models/Alumno');
 const Grupo = require('../models/Grupo');
+const Ajuste = require('../models/Ajuste');
 
 // ============================================
 // EVENTOS DE SALIDA
@@ -214,9 +215,26 @@ const registrarEventoDisciplinario = async (req, res) => {
 
     const eventoGuardado = await eventoDisciplinario.save();
 
+    // Guardar HP anterior
+    const hpAnterior = alumnoExiste.salud;
+
     // Descontar puntos de salud del alumno
     alumnoExiste.salud = Math.max(0, alumnoExiste.salud - puntosDescontados);
     await alumnoExiste.save();
+
+    // Registrar ajuste en tabla de Ajustes para que sea visible en historial del estudiante
+    const comentarioParaAlumno = observaciones || `${tipoDisciplina}: ${descripcion}`;
+    await Ajuste.create({
+      alumno: alumno,
+      tipo: 'hp',
+      cantidad: -puntosDescontados, // Negativo porque es un descuento
+      motivo: `Evento disciplinario: ${tipoDisciplina}`,
+      observaciones: descripcion,
+      comentarioAlumno: comentarioParaAlumno,
+      visibleParaAlumno: true,
+      valorAnterior: hpAnterior,
+      valorDespues: alumnoExiste.salud
+    });
 
     await eventoGuardado.populate('alumno', 'nombre apellidos salud xp');
 
@@ -280,9 +298,27 @@ const registrarFaltaGrupal = async (req, res) => {
 
     // Descontar puntos de salud a todos los alumnos del grupo
     const alumnosAfectados = [];
+    const comentarioParaAlumno = observaciones || `Falta grupal: ${descripcion}`;
+
     for (const alumno of alumnos) {
+      const hpAnterior = alumno.salud;
+
       alumno.salud = Math.max(0, alumno.salud - puntosDescontados);
       await alumno.save();
+
+      // Registrar ajuste individual para cada alumno para que sea visible en su historial
+      await Ajuste.create({
+        alumno: alumno._id,
+        tipo: 'hp',
+        cantidad: -puntosDescontados, // Negativo porque es un descuento
+        motivo: 'Evento disciplinario: Falta grupal',
+        observaciones: descripcion,
+        comentarioAlumno: comentarioParaAlumno,
+        visibleParaAlumno: true,
+        valorAnterior: hpAnterior,
+        valorDespues: alumno.salud
+      });
+
       alumnosAfectados.push({
         id: alumno._id,
         nombre: alumno.nombreCompleto,
